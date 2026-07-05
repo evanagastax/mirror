@@ -18,8 +18,8 @@ export default function GitHubSyncScreen() {
   const [token, setToken] = useState("");
   const [syncing, setSyncing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [result, setResult] = useState<{ synced: number; total: number } | null>(null);
 
-  // Load saved credentials
   useEffect(() => {
     async function load() {
       const { data } = await supabase
@@ -41,8 +41,8 @@ export default function GitHubSyncScreen() {
     if (!token.trim()) return Alert.alert("Enter your GitHub token.");
 
     setSyncing(true);
+    setResult(null);
     try {
-      // Save credentials
       const { data } = await supabase
         .from("profiles")
         .select("privacy_settings")
@@ -60,8 +60,7 @@ export default function GitHubSyncScreen() {
         })
         .eq("id", userId);
 
-      // Run sync
-      const count = await syncGitHubToImpact(userId, {
+      const { synced, total } = await syncGitHubToImpact(userId, {
         token: token.trim(),
         username: username.trim(),
       });
@@ -69,15 +68,7 @@ export default function GitHubSyncScreen() {
       queryClient.invalidateQueries({ queryKey: ["pillars", userId] });
       queryClient.invalidateQueries({ queryKey: ["logs", userId] });
 
-      if (count === 0) {
-        Alert.alert("Up to date", "No new GitHub activity found in recent events.");
-      } else {
-        Alert.alert(
-          "Synced!",
-          `${count} GitHub event${count > 1 ? "s" : ""} added to your Impact pillar.`,
-          [{ text: "OK", onPress: () => router.back() }]
-        );
-      }
+      setResult({ synced, total });
     } catch (e: any) {
       Alert.alert("Sync failed", e.message ?? "Check your token and try again.");
     } finally {
@@ -105,14 +96,14 @@ export default function GitHubSyncScreen() {
         <Text style={styles.infoText}>• Opened PR → 7pts</Text>
         <Text style={styles.infoText}>• Closed issue → 5pts</Text>
         <Text style={styles.infoText}>• New repo → 8pts</Text>
-        <Text style={styles.infoSub}>Only events from the last 30 days. Already-synced events are skipped.</Text>
+        <Text style={styles.infoText}>• Published release → 10pts</Text>
       </View>
 
       <View style={styles.fields}>
         <Field label="GitHub username">
           <TextInput
             style={styles.input}
-            placeholder="made-agastya"
+            placeholder="your-github-username"
             placeholderTextColor="#aaa"
             autoCapitalize="none"
             autoCorrect={false}
@@ -121,10 +112,10 @@ export default function GitHubSyncScreen() {
           />
         </Field>
 
-        <Field label="Personal Access Token">
+        <Field label="Personal Access Token (classic)">
           <TextInput
             style={styles.input}
-            placeholder="github_pat_..."
+            placeholder="ghp_..."
             placeholderTextColor="#aaa"
             autoCapitalize="none"
             autoCorrect={false}
@@ -135,10 +126,41 @@ export default function GitHubSyncScreen() {
         </Field>
 
         <Text style={styles.tokenHint}>
-          Generate at: GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens{"\n"}
-          Permissions needed: Contents (read), Metadata (read), Pull requests (read)
+          Use a Classic token (not fine-grained) with repo and read:user scopes.{"\n"}
+          GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
         </Text>
       </View>
+
+      {/* Result */}
+      {result && (
+        <View style={[
+          styles.resultCard,
+          { backgroundColor: result.synced > 0 ? "#F0FBF7" : "#fafafa" }
+        ]}>
+          {result.total === 0 ? (
+            <>
+              <Text style={styles.resultTitle}>No activity found</Text>
+              <Text style={styles.resultSub}>
+                GitHub returned no recent events. Make sure you have pushed commits or opened PRs recently.
+              </Text>
+            </>
+          ) : result.synced === 0 ? (
+            <>
+              <Text style={styles.resultTitle}>Already up to date</Text>
+              <Text style={styles.resultSub}>
+                Found {result.total} event{result.total > 1 ? "s" : ""} but all were already synced.
+              </Text>
+            </>
+          ) : (
+            <>
+              <Text style={[styles.resultTitle, { color: "#1D9E75" }]}>
+                ✓ {result.synced} event{result.synced > 1 ? "s" : ""} synced
+              </Text>
+              <Text style={styles.resultSub}>Added to your Impact pillar.</Text>
+            </>
+          )}
+        </View>
+      )}
 
       <Pressable
         onPress={handleSync}
@@ -173,12 +195,14 @@ const styles = StyleSheet.create({
   infoCard: { backgroundColor: "#F0F7FE", borderRadius: 12, padding: 14, marginBottom: 24 },
   infoTitle: { fontSize: 13, fontWeight: "600", color: "#185FA5", marginBottom: 8 },
   infoText: { fontSize: 13, color: "#378ADD", marginBottom: 4 },
-  infoSub: { fontSize: 12, color: "#888", marginTop: 8 },
-  fields: { gap: 16, marginBottom: 8 },
+  fields: { gap: 16, marginBottom: 16 },
   fieldWrap: { gap: 6 },
   fieldLabel: { fontSize: 12, color: "#888", fontWeight: "500", textTransform: "uppercase", letterSpacing: 0.5 },
   input: { borderWidth: 1, borderColor: "#e5e5e5", borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: "#111", backgroundColor: "#fafafa" },
-  tokenHint: { fontSize: 12, color: "#aaa", lineHeight: 18, marginTop: 4 },
-  syncBtn: { backgroundColor: "#378ADD", borderRadius: 12, paddingVertical: 14, alignItems: "center", marginTop: 24 },
+  tokenHint: { fontSize: 12, color: "#aaa", lineHeight: 18 },
+  resultCard: { borderRadius: 12, padding: 14, marginBottom: 16 },
+  resultTitle: { fontSize: 15, fontWeight: "600", color: "#111", marginBottom: 4 },
+  resultSub: { fontSize: 13, color: "#888" },
+  syncBtn: { backgroundColor: "#378ADD", borderRadius: 12, paddingVertical: 14, alignItems: "center" },
   syncBtnText: { fontSize: 15, fontWeight: "600", color: "#fff" },
 });

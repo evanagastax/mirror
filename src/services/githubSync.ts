@@ -8,16 +8,23 @@ export type GitHubConfig = {
 };
 
 async function fetchRecentEvents(config: GitHubConfig) {
+  // Use /users/{username}/events with auth — returns both public and private repo events
   const res = await fetch(
-    `${GITHUB_API}/users/${config.username}/events?per_page=30`,
+    `${GITHUB_API}/users/${config.username}/events?per_page=100`,
     {
       headers: {
-        Authorization: `Bearer ${config.token}`,
+        Authorization: `token ${config.token}`,
         Accept: "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
       },
     }
   );
-  if (!res.ok) throw new Error(`GitHub API error: ${res.status}`);
+
+  if (!res.ok) {
+    const body = await res.json();
+    throw new Error(body.message ?? `GitHub API error: ${res.status}`);
+  }
+
   return res.json();
 }
 
@@ -34,10 +41,12 @@ function scoreEvent(event: any): { value: number; description: string; url: stri
     }
     case "PullRequestEvent": {
       const action = event.payload?.action;
-      if (!["opened", "merged"].includes(action)) return null;
+      if (!["opened", "closed"].includes(action)) return null;
+      const merged = event.payload?.pull_request?.merged;
+      if (action === "closed" && !merged) return null;
       return {
-        value: action === "merged" ? 10 : 7,
-        description: `${action === "merged" ? "Merged" : "Opened"} PR: ${event.payload?.pull_request?.title}`,
+        value: merged ? 10 : 7,
+        description: `${merged ? "Merged" : "Opened"} PR: ${event.payload?.pull_request?.title}`,
         url: event.payload?.pull_request?.html_url ?? "",
       };
     }
@@ -57,6 +66,14 @@ function scoreEvent(event: any): { value: number; description: string; url: stri
         url: `https://github.com/${event.repo?.name}`,
       };
     }
+    case "ReleaseEvent": {
+      if (event.payload?.action !== "published") return null;
+      return {
+        value: 10,
+        description: `Released: ${event.payload?.release?.name ?? event.repo?.name}`,
+        url: event.payload?.release?.html_url ?? "",
+      };
+    }
     default:
       return null;
   }
@@ -65,8 +82,12 @@ function scoreEvent(event: any): { value: number; description: string; url: stri
 export async function syncGitHubToImpact(
   userId: string,
   config: GitHubConfig
-): Promise<number> {
+): Promise<{ synced: number; total: number }> {
   const events = await fetchRecentEvents(config);
+
+  if (!events || events.length === 0) {
+    return { synced: 0, total: 0 };
+  }
 
   // Get already-synced event IDs
   const { data: existing } = await supabase
@@ -80,6 +101,7 @@ export async function syncGitHubToImpact(
   const syncedIds = new Set((existing ?? []).map((l: any) => l.evidence_url));
 
   let synced = 0;
+  const scoreable = events.filter((e: any) => scoreEvent(e) !== null);
 
   for (const event of events) {
     const eventId = `gh:${event.id}`;
@@ -92,10 +114,11 @@ export async function syncGitHubToImpact(
       user_id: userId,
       pillar_type: "impact",
       value: scored.value,
-      evidence_url: scored.url || eventId,
+      evidence_url: eventId,
       metadata: {
         source: "github",
         description: scored.description,
+        link: scored.url,
         event_type: event.type,
         event_id: event.id,
         auto_synced: true,
@@ -106,5 +129,5 @@ export async function syncGitHubToImpact(
     if (!error) synced++;
   }
 
-  return synced;
+  return { synced, total: scoreable.length };
 }
