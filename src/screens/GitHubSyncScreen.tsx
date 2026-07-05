@@ -7,7 +7,10 @@ import { useRouter } from "expo-router";
 import { useAuthStore } from "../store/authStore";
 import { useQueryClient } from "@tanstack/react-query";
 import { syncGitHubToImpact } from "../services/githubSync";
-import { supabase } from "../api/supabase";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const STORAGE_KEY_TOKEN = "github_token";
+const STORAGE_KEY_USERNAME = "github_username";
 
 export default function GitHubSyncScreen() {
   const router = useRouter();
@@ -20,21 +23,22 @@ export default function GitHubSyncScreen() {
   const [loading, setLoading] = useState(true);
   const [result, setResult] = useState<{ synced: number; total: number } | null>(null);
 
+  // Load credentials from device storage only — never from the database
   useEffect(() => {
     async function load() {
-      const { data } = await supabase
-        .from("profiles")
-        .select("privacy_settings")
-        .eq("id", userId)
-        .single();
-
-      const settings = data?.privacy_settings ?? {};
-      if (settings.github_username) setUsername(settings.github_username);
-      if (settings.github_token) setToken(settings.github_token);
-      setLoading(false);
+      try {
+        const savedUsername = await AsyncStorage.getItem(STORAGE_KEY_USERNAME);
+        const savedToken = await AsyncStorage.getItem(STORAGE_KEY_TOKEN);
+        if (savedUsername) setUsername(savedUsername);
+        if (savedToken) setToken(savedToken);
+      } catch (e) {
+        console.warn("Could not load GitHub credentials from storage:", e);
+      } finally {
+        setLoading(false);
+      }
     }
     load();
-  }, [userId]);
+  }, []);
 
   async function handleSync() {
     if (!username.trim()) return Alert.alert("Enter your GitHub username.");
@@ -42,23 +46,11 @@ export default function GitHubSyncScreen() {
 
     setSyncing(true);
     setResult(null);
-    try {
-      const { data } = await supabase
-        .from("profiles")
-        .select("privacy_settings")
-        .eq("id", userId)
-        .single();
 
-      await supabase
-        .from("profiles")
-        .update({
-          privacy_settings: {
-            ...(data?.privacy_settings ?? {}),
-            github_username: username.trim(),
-            github_token: token.trim(),
-          },
-        })
-        .eq("id", userId);
+    try {
+      // Save credentials to device only — not to the database
+      await AsyncStorage.setItem(STORAGE_KEY_USERNAME, username.trim());
+      await AsyncStorage.setItem(STORAGE_KEY_TOKEN, token.trim());
 
       const { synced, total } = await syncGitHubToImpact(userId, {
         token: token.trim(),
@@ -76,6 +68,27 @@ export default function GitHubSyncScreen() {
     }
   }
 
+  async function handleClearCredentials() {
+    Alert.alert(
+      "Clear credentials?",
+      "Your GitHub username and token will be removed from this device.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Clear",
+          style: "destructive",
+          onPress: async () => {
+            await AsyncStorage.removeItem(STORAGE_KEY_TOKEN);
+            await AsyncStorage.removeItem(STORAGE_KEY_USERNAME);
+            setUsername("");
+            setToken("");
+            setResult(null);
+          },
+        },
+      ]
+    );
+  }
+
   if (loading) {
     return <View style={styles.center}><ActivityIndicator color="#111" /></View>;
   }
@@ -89,13 +102,22 @@ export default function GitHubSyncScreen() {
         <Text style={styles.title}>Sync GitHub</Text>
       </View>
 
+      {/* Security notice */}
+      <View style={styles.securityCard}>
+        <Text style={styles.securityTitle}>🔒 Stored on device only</Text>
+        <Text style={styles.securityText}>
+          Your GitHub token is saved locally on this device using AsyncStorage.
+          It is never sent to or stored in the database.
+        </Text>
+      </View>
+
       <View style={styles.infoCard}>
         <Text style={styles.infoTitle}>What gets synced</Text>
         <Text style={styles.infoText}>• Pushes → 2pts per commit (max 10)</Text>
         <Text style={styles.infoText}>• Merged PR → 10pts</Text>
         <Text style={styles.infoText}>• Opened PR → 7pts</Text>
         <Text style={styles.infoText}>• Closed issue → 5pts</Text>
-        <Text style={styles.infoText}>• New repo → 8pts</Text>
+        <Text style={styles.infoText}>• New repository → 8pts</Text>
         <Text style={styles.infoText}>• Published release → 10pts</Text>
       </View>
 
@@ -172,6 +194,13 @@ export default function GitHubSyncScreen() {
           : <Text style={styles.syncBtnText}>Sync now</Text>
         }
       </Pressable>
+
+      {/* Clear credentials */}
+      {(username || token) && (
+        <Pressable onPress={handleClearCredentials} style={styles.clearBtn}>
+          <Text style={styles.clearBtnText}>Clear saved credentials</Text>
+        </Pressable>
+      )}
     </ScrollView>
   );
 }
@@ -192,6 +221,9 @@ const styles = StyleSheet.create({
   header: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 24 },
   back: { fontSize: 15, color: "#aaa" },
   title: { fontSize: 18, fontWeight: "600", color: "#111" },
+  securityCard: { backgroundColor: "#F5F5F5", borderRadius: 12, padding: 14, marginBottom: 12 },
+  securityTitle: { fontSize: 13, fontWeight: "600", color: "#333", marginBottom: 6 },
+  securityText: { fontSize: 12, color: "#666", lineHeight: 18 },
   infoCard: { backgroundColor: "#F0F7FE", borderRadius: 12, padding: 14, marginBottom: 24 },
   infoTitle: { fontSize: 13, fontWeight: "600", color: "#185FA5", marginBottom: 8 },
   infoText: { fontSize: 13, color: "#378ADD", marginBottom: 4 },
@@ -203,6 +235,8 @@ const styles = StyleSheet.create({
   resultCard: { borderRadius: 12, padding: 14, marginBottom: 16 },
   resultTitle: { fontSize: 15, fontWeight: "600", color: "#111", marginBottom: 4 },
   resultSub: { fontSize: 13, color: "#888" },
-  syncBtn: { backgroundColor: "#378ADD", borderRadius: 12, paddingVertical: 14, alignItems: "center" },
+  syncBtn: { backgroundColor: "#378ADD", borderRadius: 12, paddingVertical: 14, alignItems: "center", marginBottom: 12 },
   syncBtnText: { fontSize: 15, fontWeight: "600", color: "#fff" },
+  clearBtn: { alignItems: "center", paddingVertical: 10 },
+  clearBtnText: { fontSize: 13, color: "#D85A30" },
 });
