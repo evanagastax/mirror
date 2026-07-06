@@ -59,15 +59,23 @@ export default function CompassScreen() {
         />
       </View>
 
+      {/* Pillar cards — tappable */}
       <View style={styles.grid}>
         {PILLAR_META.map((meta) => (
-          <View key={meta.key} style={styles.gridItem}>
+          <Pressable
+            key={meta.key}
+            style={styles.gridItem}
+            onPress={() => meta.key === "soul" ? router.push("/soul") : null}
+          >
             <PillarStatCard
               label={meta.label}
               value={pillars[meta.key]}
               accentColor={meta.color}
             />
-          </View>
+            {meta.key === "soul" && (
+              <Text style={styles.pillarHint}>Tap to read Qur'an →</Text>
+            )}
+          </Pressable>
         ))}
       </View>
 
@@ -115,6 +123,7 @@ const styles = StyleSheet.create({
   ringWrap: { alignItems: "center", marginBottom: 24 },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 16 },
   gridItem: { width: "48%" },
+  pillarHint: { fontSize: 11, color: "#1D9E75", marginTop: 4, textAlign: "center" },
   logBtn: { borderWidth: 1, borderColor: "#e5e5e5", borderRadius: 12, paddingVertical: 14, alignItems: "center", marginBottom: 10 },
   logBtnText: { fontSize: 15, fontWeight: "500", color: "#111" },
   syncRow: { flexDirection: "row", gap: 10 },

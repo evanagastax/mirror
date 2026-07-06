@@ -30,6 +30,7 @@ export default function RootLayout() {
         <Stack.Screen name="(app)" />
         <Stack.Screen name="log/new" options={{ presentation: "modal" }} />
         <Stack.Screen name="github-sync" options={{ presentation: "modal" }} />
+        <Stack.Screen name="soul" options={{ presentation: "card" }} />
       </Stack>
     </QueryClientProvider>
   );
