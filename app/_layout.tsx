@@ -3,13 +3,18 @@ import { Stack } from "expo-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { supabase } from "../src/api/supabase";
 import { useAuthStore } from "../src/store/authStore";
+import { useThemeStore } from "../src/store/themeStore";
 
 const queryClient = new QueryClient();
 
 export default function RootLayout() {
   const setUserId = useAuthStore((s) => s.setUserId);
+  const hydrate = useThemeStore((s) => s.hydrate);
 
   useEffect(() => {
+    // Load the persisted theme preference before anything renders
+    hydrate();
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUserId(session?.user.id ?? undefined);
     });
@@ -21,7 +26,7 @@ export default function RootLayout() {
     );
 
     return () => subscription.unsubscribe();
-  }, [setUserId]);
+  }, [setUserId, hydrate]);
 
   return (
     <QueryClientProvider client={queryClient}>

@@ -5,6 +5,7 @@ import {
 } from "react-native";
 import { supabase } from "../api/supabase";
 import { useAuthStore } from "../store/authStore";
+import { useThemeStore } from "../store/themeStore";
 import { usePillars } from "../hooks/usePillars";
 import { useGoals } from "../hooks/useGoals";
 
@@ -21,6 +22,7 @@ export default function FellowshipScreen() {
   const userId = useAuthStore((s) => s.userId)!;
   const { data: pillars } = usePillars(userId);
   const { data: goals } = useGoals(userId);
+  const { isDark, colors, toggle: toggleTheme } = useThemeStore();
 
   const [username, setUsername] = useState("");
   const [editingUsername, setEditingUsername] = useState(false);
@@ -79,62 +81,77 @@ export default function FellowshipScreen() {
     : 0;
 
   if (loading) {
-    return <View style={styles.center}><ActivityIndicator color="#111" /></View>;
+    return (
+      <View style={[styles.center, { backgroundColor: colors.bg }]}>
+        <ActivityIndicator color={colors.textPrimary} />
+      </View>
+    );
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-
-      {/* Avatar + name */}
+    <ScrollView
+      style={[styles.container, { backgroundColor: colors.bg }]}
+      contentContainerStyle={styles.content}
+    >
+      {/* Profile header */}
       <View style={styles.profileHeader}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>
-            {(username || email).charAt(0).toUpperCase()}
+        <View style={[styles.avatar, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
+          <Text style={[styles.avatarText, { color: colors.textPrimary }]}>
+            {username ? username[0].toUpperCase() : "?"}
           </Text>
         </View>
         <View style={styles.profileInfo}>
           {editingUsername ? (
             <View style={styles.editRow}>
               <TextInput
-                style={styles.usernameInput}
+                style={[styles.usernameInput, {
+                  borderColor: colors.border,
+                  color: colors.textPrimary,
+                  backgroundColor: colors.bgInput,
+                }]}
                 value={newUsername}
                 onChangeText={setNewUsername}
-                autoCapitalize="none"
                 autoFocus
-                placeholder="username"
-                placeholderTextColor="#aaa"
+                autoCapitalize="none"
               />
-              <Pressable onPress={saveUsername} disabled={saving} style={styles.saveBtn}>
-                {saving
-                  ? <ActivityIndicator color="#fff" size="small" />
-                  : <Text style={styles.saveBtnText}>Save</Text>
-                }
+              <Pressable
+                onPress={saveUsername}
+                disabled={saving}
+                style={[styles.saveBtn, { backgroundColor: colors.textPrimary }]}
+              >
+                <Text style={[styles.saveBtnText, { color: colors.bg }]}>
+                  {saving ? "…" : "Save"}
+                </Text>
               </Pressable>
               <Pressable onPress={() => setEditingUsername(false)} style={styles.cancelBtn}>
-                <Text style={styles.cancelBtnText}>✕</Text>
+                <Text style={[styles.cancelBtnText, { color: colors.textMuted }]}>Cancel</Text>
               </Pressable>
             </View>
           ) : (
             <Pressable onPress={() => { setNewUsername(username); setEditingUsername(true); }}>
-              <Text style={styles.username}>
-                {username || "Set username"} <Text style={styles.editHint}>edit</Text>
+              <Text style={[styles.username, { color: colors.textPrimary }]}>
+                @{username || "set username"}{" "}
+                <Text style={[styles.editHint, { color: colors.textMuted }]}>✎</Text>
               </Text>
             </Pressable>
           )}
-          <Text style={styles.email}>{email}</Text>
+          <Text style={[styles.email, { color: colors.textMuted }]}>{email}</Text>
         </View>
       </View>
 
-      {/* Synergy score */}
-      <View style={styles.synergyCard}>
-        <Text style={styles.synergyNum}>{synergy}</Text>
-        <Text style={styles.synergyLabel}>synergy score</Text>
-        <Text style={styles.synergyGoals}>{doneGoals} of {totalGoals} goals complete</Text>
+      {/* Synergy card */}
+      <View style={[styles.synergyCard, { borderColor: colors.border, backgroundColor: colors.bgSubtle }]}>
+        <Text style={[styles.synergyNum, { color: colors.textPrimary }]}>{synergy}</Text>
+        <Text style={[styles.synergyLabel, { color: colors.textMuted }]}>SYNERGY SCORE</Text>
+        <Text style={[styles.synergyGoals, { color: colors.textDisabled }]}>
+          {doneGoals}/{totalGoals} goals complete
+        </Text>
       </View>
 
-      {/* Pillar stats */}
+      {/* Pillars section */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Your pillars</Text>
+        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Attributes</Text>
+        <Text style={[styles.sectionSub, { color: colors.textMuted }]}>Your pillar scores at a glance.</Text>
         <View style={styles.pillarsGrid}>
           {PILLAR_META.map((meta) => (
             <View key={meta.key} style={[styles.pillarCard, { backgroundColor: meta.bg }]}>
@@ -147,28 +164,58 @@ export default function FellowshipScreen() {
         </View>
       </View>
 
-      {/* Privacy settings */}
+      {/* Appearance section */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Privacy</Text>
-        <Text style={styles.sectionSub}>Choose what others can see. Financials are always private.</Text>
-        <View style={styles.privacyList}>
+        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Appearance</Text>
+        <Text style={[styles.sectionSub, { color: colors.textMuted }]}>
+          Choose how the app looks.
+        </Text>
+        <View style={[styles.themeRow, { borderColor: colors.border }]}>
+          <View style={styles.themeInfo}>
+            <Text style={[styles.themeLabel, { color: colors.textPrimary }]}>
+              {isDark ? "🌙 Dark mode" : "☀️ Light mode"}
+            </Text>
+            <Text style={[styles.themeDesc, { color: colors.textMuted }]}>
+              {isDark ? "Switch to a bright theme" : "Switch to a dark theme"}
+            </Text>
+          </View>
+          <Switch
+            value={isDark}
+            onValueChange={toggleTheme}
+            trackColor={{ false: "#e5e5e5", true: "#333" }}
+            thumbColor={isDark ? "#fff" : "#111"}
+          />
+        </View>
+      </View>
+
+      {/* Privacy section */}
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Privacy</Text>
+        <Text style={[styles.sectionSub, { color: colors.textMuted }]}>
+          Choose what others can see. Financials are always private.
+        </Text>
+        <View style={[styles.privacyList, { borderColor: colors.borderStrong }]}>
           <PrivacyRow
             label="Vessel (gym)"
             description="Share workout activity"
             value={privacy.gym}
             onToggle={() => togglePrivacy("gym")}
+            colors={colors}
           />
           <PrivacyRow
             label="Soul (spirit)"
             description="Share spiritual activity"
             value={privacy.spirit}
             onToggle={() => togglePrivacy("spirit")}
+            colors={colors}
           />
           <PrivacyRow
             label="Impact (work)"
             description="Share professional activity"
             value={privacy.impact}
             onToggle={() => togglePrivacy("impact")}
+            colors={colors}
+            last
           />
         </View>
       </View>
@@ -176,29 +223,40 @@ export default function FellowshipScreen() {
       {/* Sign out */}
       <Pressable
         onPress={() => supabase.auth.signOut()}
-        style={styles.signOutBtn}
+        style={[styles.signOutBtn, { borderColor: colors.borderStrong }]}
       >
-        <Text style={styles.signOutText}>Sign out</Text>
+        <Text style={[styles.signOutText, { color: colors.textMuted }]}>Sign out</Text>
       </Pressable>
 
-      <Text style={styles.versionText}>The Mirror v0.1</Text>
+      <Text style={[styles.versionText, { color: colors.textDisabled }]}>The Mirror v0.1</Text>
     </ScrollView>
   );
 }
 
 function PrivacyRow({
-  label, description, value, onToggle,
-}: { label: string; description: string; value: boolean; onToggle: () => void }) {
+  label, description, value, onToggle, colors, last = false,
+}: {
+  label: string;
+  description: string;
+  value: boolean;
+  onToggle: () => void;
+  colors: ReturnType<typeof useThemeStore.getState>["colors"];
+  last?: boolean;
+}) {
   return (
-    <View style={styles.privacyRow}>
+    <View style={[
+      styles.privacyRow,
+      { borderBottomColor: colors.borderStrong },
+      last && styles.privacyRowLast,
+    ]}>
       <View style={styles.privacyInfo}>
-        <Text style={styles.privacyLabel}>{label}</Text>
-        <Text style={styles.privacyDesc}>{description}</Text>
+        <Text style={[styles.privacyLabel, { color: colors.textPrimary }]}>{label}</Text>
+        <Text style={[styles.privacyDesc, { color: colors.textMuted }]}>{description}</Text>
       </View>
       <Switch
         value={value}
         onValueChange={onToggle}
-        trackColor={{ false: "#e5e5e5", true: "#111" }}
+        trackColor={{ false: "#e5e5e5", true: "#333" }}
         thumbColor="#fff"
       />
     </View>
@@ -206,39 +264,65 @@ function PrivacyRow({
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
+  container: { flex: 1 },
   content: { padding: 20, paddingBottom: 48 },
-  center: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#fff" },
+  center: { flex: 1, alignItems: "center", justifyContent: "center" },
   profileHeader: { flexDirection: "row", alignItems: "center", gap: 14, marginBottom: 24 },
-  avatar: { width: 56, height: 56, borderRadius: 28, backgroundColor: "#111", alignItems: "center", justifyContent: "center" },
-  avatarText: { fontSize: 22, fontWeight: "600", color: "#fff" },
+  avatar: {
+    width: 56, height: 56, borderRadius: 28,
+    borderWidth: 1,
+    alignItems: "center", justifyContent: "center",
+  },
+  avatarText: { fontSize: 22, fontWeight: "600" },
   profileInfo: { flex: 1 },
   editRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  usernameInput: { flex: 1, borderWidth: 1, borderColor: "#e5e5e5", borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, fontSize: 15, color: "#111" },
-  saveBtn: { backgroundColor: "#111", paddingHorizontal: 12, paddingVertical: 7, borderRadius: 8 },
-  saveBtnText: { color: "#fff", fontSize: 13, fontWeight: "500" },
+  usernameInput: {
+    flex: 1, borderWidth: 1, borderRadius: 8,
+    paddingHorizontal: 10, paddingVertical: 6, fontSize: 15,
+  },
+  saveBtn: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 8 },
+  saveBtnText: { fontSize: 13, fontWeight: "500" },
   cancelBtn: { padding: 6 },
-  cancelBtnText: { fontSize: 14, color: "#aaa" },
-  username: { fontSize: 18, fontWeight: "600", color: "#111" },
-  editHint: { fontSize: 12, color: "#aaa", fontWeight: "400" },
-  email: { fontSize: 13, color: "#aaa", marginTop: 2 },
-  synergyCard: { borderWidth: 1, borderColor: "#e5e5e5", borderRadius: 16, padding: 20, alignItems: "center", marginBottom: 24, backgroundColor: "#fafafa" },
-  synergyNum: { fontSize: 48, fontWeight: "700", color: "#111", letterSpacing: -2 },
-  synergyLabel: { fontSize: 13, color: "#aaa", textTransform: "uppercase", letterSpacing: 1, marginTop: 2 },
-  synergyGoals: { fontSize: 12, color: "#ccc", marginTop: 6 },
+  cancelBtnText: { fontSize: 14 },
+  username: { fontSize: 18, fontWeight: "600" },
+  editHint: { fontSize: 12, fontWeight: "400" },
+  email: { fontSize: 13, marginTop: 2 },
+  synergyCard: {
+    borderWidth: 1, borderRadius: 16, padding: 20,
+    alignItems: "center", marginBottom: 24,
+  },
+  synergyNum: { fontSize: 48, fontWeight: "700", letterSpacing: -2 },
+  synergyLabel: { fontSize: 13, textTransform: "uppercase", letterSpacing: 1, marginTop: 2 },
+  synergyGoals: { fontSize: 12, marginTop: 6 },
   section: { marginBottom: 24 },
-  sectionTitle: { fontSize: 15, fontWeight: "600", color: "#111", marginBottom: 4 },
-  sectionSub: { fontSize: 13, color: "#aaa", marginBottom: 12 },
+  sectionTitle: { fontSize: 15, fontWeight: "600", marginBottom: 4 },
+  sectionSub: { fontSize: 13, marginBottom: 12 },
   pillarsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   pillarCard: { width: "47%", borderRadius: 12, padding: 14 },
   pillarLabel: { fontSize: 12, fontWeight: "600", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 },
   pillarValue: { fontSize: 28, fontWeight: "700" },
-  privacyList: { borderWidth: 1, borderColor: "#f0f0f0", borderRadius: 12, overflow: "hidden" },
-  privacyRow: { flexDirection: "row", alignItems: "center", padding: 14, borderBottomWidth: 1, borderBottomColor: "#f0f0f0" },
+  // Appearance
+  themeRow: {
+    flexDirection: "row", alignItems: "center",
+    padding: 14, borderWidth: 1, borderRadius: 12,
+  },
+  themeInfo: { flex: 1 },
+  themeLabel: { fontSize: 14, fontWeight: "500" },
+  themeDesc: { fontSize: 12, marginTop: 2 },
+  // Privacy
+  privacyList: { borderWidth: 1, borderRadius: 12, overflow: "hidden" },
+  privacyRow: {
+    flexDirection: "row", alignItems: "center",
+    padding: 14, borderBottomWidth: 1,
+  },
+  privacyRowLast: { borderBottomWidth: 0 },
   privacyInfo: { flex: 1 },
-  privacyLabel: { fontSize: 14, fontWeight: "500", color: "#111" },
-  privacyDesc: { fontSize: 12, color: "#aaa", marginTop: 2 },
-  signOutBtn: { borderWidth: 1, borderColor: "#f0f0f0", borderRadius: 12, paddingVertical: 14, alignItems: "center", marginBottom: 12 },
-  signOutText: { fontSize: 15, color: "#aaa" },
-  versionText: { textAlign: "center", fontSize: 12, color: "#ddd" },
+  privacyLabel: { fontSize: 14, fontWeight: "500" },
+  privacyDesc: { fontSize: 12, marginTop: 2 },
+  signOutBtn: {
+    borderWidth: 1, borderRadius: 12,
+    paddingVertical: 14, alignItems: "center", marginBottom: 12,
+  },
+  signOutText: { fontSize: 15 },
+  versionText: { textAlign: "center", fontSize: 12 },
 });

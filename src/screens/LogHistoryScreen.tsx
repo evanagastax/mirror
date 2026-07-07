@@ -5,6 +5,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuthStore } from "../store/authStore";
+import { useThemeStore } from "../store/themeStore";
 import { useLogs, Log } from "../hooks/useLogs";
 
 type Filter = "all" | "soul" | "vessel" | "impact";
@@ -56,23 +57,24 @@ function groupByDate(logs: Log[]): { date: string; logs: Log[] }[] {
 export default function LogHistoryScreen() {
   const router = useRouter();
   const userId = useAuthStore((s) => s.userId);
+  const colors = useThemeStore((s) => s.colors);
   const { data: logs, isLoading, isError, refetch, isRefetching } = useLogs(userId);
   const [filter, setFilter] = useState<Filter>("all");
 
   if (isLoading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator color="#111" />
+      <View style={[styles.center, { backgroundColor: colors.bg }]}>
+        <ActivityIndicator color={colors.textPrimary} />
       </View>
     );
   }
 
   if (isError || !logs) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.errorText}>Couldn't load logs.</Text>
-        <Pressable onPress={() => refetch()} style={styles.retryBtn}>
-          <Text style={styles.retryText}>Retry</Text>
+      <View style={[styles.center, { backgroundColor: colors.bg }]}>
+        <Text style={[styles.errorText, { color: colors.textMuted }]}>Couldn't load logs.</Text>
+        <Pressable onPress={() => refetch()} style={[styles.retryBtn, { borderColor: colors.border }]}>
+          <Text style={[styles.retryText, { color: colors.textPrimary }]}>Retry</Text>
         </Pressable>
       </View>
     );
@@ -88,16 +90,16 @@ export default function LogHistoryScreen() {
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.bg }]}
       contentContainerStyle={styles.content}
       refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
     >
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()}>
-          <Text style={styles.back}>← Back</Text>
+          <Text style={[styles.back, { color: colors.textMuted }]}>← Back</Text>
         </Pressable>
-        <Text style={styles.title}>Activity Log</Text>
+        <Text style={[styles.title, { color: colors.textPrimary }]}>Activity Log</Text>
       </View>
 
       {/* Quick stats */}
@@ -113,9 +115,17 @@ export default function LogHistoryScreen() {
           <Pressable
             key={f}
             onPress={() => setFilter(f)}
-            style={[styles.filterPill, filter === f && styles.filterPillActive]}
+            style={[
+              styles.filterPill,
+              { borderColor: colors.border },
+              filter === f && { backgroundColor: colors.textPrimary, borderColor: colors.textPrimary },
+            ]}
           >
-            <Text style={[styles.filterText, filter === f && styles.filterTextActive]}>
+            <Text style={[
+              styles.filterText,
+              { color: colors.textMuted },
+              filter === f && { color: colors.bg, fontWeight: "500" },
+            ]}>
               {f.charAt(0).toUpperCase() + f.slice(1)}
             </Text>
           </Pressable>
@@ -125,23 +135,26 @@ export default function LogHistoryScreen() {
       {/* Log list grouped by date */}
       {grouped.length === 0 ? (
         <View style={styles.emptyWrap}>
-          <Text style={styles.emptyText}>No logs yet.</Text>
-          <Text style={styles.emptySub}>Tap below to log your first activity.</Text>
+          <Text style={[styles.emptyText, { color: colors.textMuted }]}>No logs yet.</Text>
+          <Text style={[styles.emptySub, { color: colors.textDisabled }]}>Tap below to log your first activity.</Text>
         </View>
       ) : (
         grouped.map(({ date, logs: dayLogs }) => (
           <View key={date} style={styles.group}>
-            <Text style={styles.groupDate}>{date}</Text>
+            <Text style={[styles.groupDate, { color: colors.textMuted }]}>{date}</Text>
             {dayLogs.map((log) => (
-              <LogRow key={log.id} log={log} />
+              <LogRow key={log.id} log={log} colors={colors} />
             ))}
           </View>
         ))
       )}
 
       {/* Log button */}
-      <Pressable onPress={() => router.push("/log/new")} style={styles.logBtn}>
-        <Text style={styles.logBtnText}>+ Log an activity</Text>
+      <Pressable
+        onPress={() => router.push("/log/new")}
+        style={[styles.logBtn, { borderColor: colors.border }]}
+      >
+        <Text style={[styles.logBtnText, { color: colors.textPrimary }]}>+ Log an activity</Text>
       </Pressable>
     </ScrollView>
   );
@@ -158,19 +171,19 @@ function StatChip({ label, value, color, bg }: {
   );
 }
 
-function LogRow({ log }: { log: Log }) {
+function LogRow({ log, colors }: { log: Log; colors: ReturnType<typeof useThemeStore.getState>["colors"] }) {
   const meta = PILLAR_META[log.pillar_type];
   return (
-    <View style={styles.row}>
+    <View style={[styles.row, { borderBottomColor: colors.borderStrong }]}>
       <View style={[styles.rowIcon, { backgroundColor: meta.bg }]}>
         <Text style={{ fontSize: 16, color: meta.color }}>{meta.icon}</Text>
       </View>
       <View style={styles.rowInfo}>
-        <Text style={styles.rowTitle} numberOfLines={1}>{getLogTitle(log)}</Text>
-        <Text style={styles.rowSub}>{getLogSubtitle(log)}</Text>
+        <Text style={[styles.rowTitle, { color: colors.textPrimary }]} numberOfLines={1}>{getLogTitle(log)}</Text>
+        <Text style={[styles.rowSub, { color: colors.textMuted }]}>{getLogSubtitle(log)}</Text>
       </View>
       <View style={styles.rowRight}>
-        <Text style={styles.rowTime}>{formatTime(log.created_at)}</Text>
+        <Text style={[styles.rowTime, { color: colors.textDisabled }]}>{formatTime(log.created_at)}</Text>
         {log.evidence_url && (
           <Pressable onPress={() => Linking.openURL(log.evidence_url!)}>
             <Text style={[styles.rowEvidence, { color: meta.color }]}>Evidence ↗</Text>
@@ -182,37 +195,35 @@ function LogRow({ log }: { log: Log }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
+  container: { flex: 1 },
   content: { padding: 20, paddingBottom: 40 },
-  center: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#fff" },
-  errorText: { color: "#aaa", marginBottom: 12, fontSize: 15 },
-  retryBtn: { paddingHorizontal: 16, paddingVertical: 8, borderWidth: 1, borderColor: "#e5e5e5", borderRadius: 8 },
-  retryText: { fontSize: 14, color: "#111" },
+  center: { flex: 1, alignItems: "center", justifyContent: "center" },
+  errorText: { marginBottom: 12, fontSize: 15 },
+  retryBtn: { paddingHorizontal: 16, paddingVertical: 8, borderWidth: 1, borderRadius: 8 },
+  retryText: { fontSize: 14 },
   header: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 24 },
-  back: { fontSize: 15, color: "#aaa" },
-  title: { fontSize: 18, fontWeight: "600", color: "#111" },
+  back: { fontSize: 15 },
+  title: { fontSize: 18, fontWeight: "600" },
   statsRow: { flexDirection: "row", gap: 8, marginBottom: 16 },
   statChip: { flex: 1, borderRadius: 10, padding: 12, gap: 2 },
   statLabel: { fontSize: 11, fontWeight: "600", textTransform: "uppercase", letterSpacing: 0.5 },
   statValue: { fontSize: 15, fontWeight: "700" },
   filterRow: { flexDirection: "row", gap: 8, marginBottom: 20 },
-  filterPill: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 99, borderWidth: 1, borderColor: "#e5e5e5" },
-  filterPillActive: { backgroundColor: "#111", borderColor: "#111" },
-  filterText: { fontSize: 13, color: "#888" },
-  filterTextActive: { color: "#fff", fontWeight: "500" },
+  filterPill: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 99, borderWidth: 1 },
+  filterText: { fontSize: 13 },
   emptyWrap: { alignItems: "center", paddingVertical: 40 },
-  emptyText: { fontSize: 15, color: "#aaa", fontWeight: "500" },
-  emptySub: { fontSize: 13, color: "#ccc", marginTop: 4 },
+  emptyText: { fontSize: 15, fontWeight: "500" },
+  emptySub: { fontSize: 13, marginTop: 4 },
   group: { marginBottom: 20 },
-  groupDate: { fontSize: 12, color: "#aaa", fontWeight: "600", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 10 },
-  row: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#f5f5f5" },
+  groupDate: { fontSize: 12, fontWeight: "600", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 10 },
+  row: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12, borderBottomWidth: 1 },
   rowIcon: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center" },
   rowInfo: { flex: 1 },
-  rowTitle: { fontSize: 14, fontWeight: "500", color: "#111" },
-  rowSub: { fontSize: 12, color: "#aaa", marginTop: 2 },
+  rowTitle: { fontSize: 14, fontWeight: "500" },
+  rowSub: { fontSize: 12, marginTop: 2 },
   rowRight: { alignItems: "flex-end", gap: 4 },
-  rowTime: { fontSize: 12, color: "#ccc" },
+  rowTime: { fontSize: 12 },
   rowEvidence: { fontSize: 11, fontWeight: "600" },
-  logBtn: { borderWidth: 1, borderColor: "#e5e5e5", borderRadius: 12, paddingVertical: 14, alignItems: "center", marginTop: 8 },
-  logBtnText: { fontSize: 15, fontWeight: "500", color: "#111" },
+  logBtn: { borderWidth: 1, borderRadius: 12, paddingVertical: 14, alignItems: "center", marginTop: 8 },
+  logBtnText: { fontSize: 15, fontWeight: "500" },
 });

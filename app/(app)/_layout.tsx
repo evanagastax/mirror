@@ -2,10 +2,12 @@ import React, { useEffect } from "react";
 import { Tabs, useRouter } from "expo-router";
 import { Text } from "react-native";
 import { useAuthStore } from "../../src/store/authStore";
+import { useThemeStore } from "../../src/store/themeStore";
 
 export default function AppLayout() {
   const userId = useAuthStore((s) => s.userId);
   const router = useRouter();
+  const colors = useThemeStore((s) => s.colors);
 
   useEffect(() => {
     if (!userId) router.replace("/(auth)");
@@ -16,14 +18,14 @@ export default function AppLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: "#0D0D0D",
-          borderTopColor: "#1a1a1a",
+          backgroundColor: colors.tabBar,
+          borderTopColor: colors.tabBarBorder,
           borderTopWidth: 1,
           paddingTop: 8,
           height: 60,
         },
-        tabBarActiveTintColor: "#fff",
-        tabBarInactiveTintColor: "#444",
+        tabBarActiveTintColor: colors.tabActive,
+        tabBarInactiveTintColor: colors.tabInactive,
         tabBarLabelStyle: { fontSize: 11, fontWeight: "600", marginBottom: 4 },
       }}
     >
