@@ -4,14 +4,12 @@ import {
   Text,
   ScrollView,
   Pressable,
-  ActivityIndicator,
   StyleSheet,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { usePillars } from "../hooks/usePillars";
 import { useAuthStore } from "../store/authStore";
 import { useThemeStore } from "../store/themeStore";
-import { useHealthSync } from "../hooks/useHealthSync";
 import { calculateSynergy } from "../utils/synergy";
 import { scoreToLevel } from "../utils/pillarLevel";
 
@@ -76,7 +74,6 @@ export default function CompassScreen() {
   const userId = useAuthStore((s) => s.userId);
   const colors = useThemeStore((s) => s.colors);
   const { data: pillars, isLoading, isError, refetch } = usePillars(userId);
-  const { sync: syncHealth, syncing: syncingHealth, isSupported } = useHealthSync(userId!);
 
   if (isLoading) {
     return <View style={[styles.center, { backgroundColor: colors.bg }]}><ActivityIndicator color={colors.textPrimary} /></View>;
@@ -194,23 +191,6 @@ export default function CompassScreen() {
           <Text style={[styles.syncIcon, { color: "#378ADD" }]}>⟳</Text>
           <Text style={[styles.syncBtnText, { color: "#378ADD" }]}>GitHub</Text>
         </Pressable>
-
-        {isSupported && (
-          <Pressable
-            onPress={syncHealth}
-            disabled={syncingHealth}
-            style={[styles.syncBtn, { backgroundColor: "#FEF3EE" }, syncingHealth && { opacity: 0.5 }]}
-          >
-            {syncingHealth ? (
-              <ActivityIndicator color="#D85A30" size="small" />
-            ) : (
-              <>
-                <Text style={[styles.syncIcon, { color: "#D85A30" }]}>⟳</Text>
-                <Text style={[styles.syncBtnText, { color: "#D85A30" }]}>Workouts</Text>
-              </>
-            )}
-          </Pressable>
-        )}
 
         <Pressable
           onPress={() => router.push("/(app)/roadmap")}

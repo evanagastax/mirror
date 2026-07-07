@@ -37,6 +37,9 @@ yarn-error.*
 .env.production
 .env.staging
 
+# Google Play service account key (never commit)
+google-play-key.json
+
 # typescript
 *.tsbuildinfo
 

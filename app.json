@@ -8,8 +8,7 @@
     "userInterfaceStyle": "light",
     "scheme": "the-mirror",
     "plugins": [
-      "expo-router",
-      "react-native-health-connect"
+      "expo-router"
     ],
     "ios": {
       "supportsTablet": true
@@ -22,10 +21,20 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.themirror"
+      "package": "com.evanagastax.themirror",
+      "compileSdkVersion": 35,
+      "targetSdkVersion": 35,
+      "minSdkVersion": 24,
+      "newArchEnabled": false
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "580f5717-ca3f-4d4d-b31d-e5fd2ae1e4ae"
+      }
     }
   }
 }
