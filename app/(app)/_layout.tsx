@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { Tabs, useRouter } from "expo-router";
 import { Text } from "react-native";
 import { useAuthStore } from "../../src/store/authStore";
@@ -16,17 +16,18 @@ export default function AppLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: "#fff",
-          borderTopColor: "#f0f0f0",
+          backgroundColor: "#0D0D0D",
+          borderTopColor: "#1a1a1a",
           borderTopWidth: 1,
           paddingTop: 8,
           height: 60,
         },
-        tabBarActiveTintColor: "#111",
-        tabBarInactiveTintColor: "#ccc",
-        tabBarLabelStyle: { fontSize: 11, fontWeight: "500", marginBottom: 4 },
+        tabBarActiveTintColor: "#fff",
+        tabBarInactiveTintColor: "#444",
+        tabBarLabelStyle: { fontSize: 11, fontWeight: "600", marginBottom: 4 },
       }}
     >
+      {/* ── Visible tabs (3) ── */}
       <Tabs.Screen
         name="index"
         options={{
@@ -42,26 +43,18 @@ export default function AppLayout() {
         }}
       />
       <Tabs.Screen
-        name="roadmap"
-        options={{
-          title: "Roadmap",
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 18, color }}>◈</Text>,
-        }}
-      />
-      <Tabs.Screen
-        name="ledger"
-        options={{
-          title: "Ledger",
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 18, color }}>₿</Text>,
-        }}
-      />
-      <Tabs.Screen
         name="fellowship"
         options={{
           title: "Profile",
           tabBarIcon: ({ color }) => <Text style={{ fontSize: 18, color }}>◉</Text>,
         }}
       />
+
+      {/* ── Hidden routes — reachable via navigation, not tab bar ── */}
+      <Tabs.Screen name="vessel"     options={{ href: null }} />
+      <Tabs.Screen name="ledger"     options={{ href: null }} />
+      <Tabs.Screen name="roadmap"    options={{ href: null }} />
+      <Tabs.Screen name="impact"     options={{ href: null }} />
     </Tabs>
   );
 }

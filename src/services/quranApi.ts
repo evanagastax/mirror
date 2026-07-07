@@ -4,6 +4,8 @@
 // Both are free and require no API key
 // =============================================================
 
+import { cacheGet, cacheSet, CACHE_KEYS, TTL } from "../utils/offlineCache";
+
 const EQURAN_BASE = "https://equran.id/api/v2";
 const ALQURAN_BASE = "https://api.alquran.cloud/v1";
 const ALADHAN_BASE = "https://api.aladhan.com/v1";
@@ -48,7 +50,51 @@ export type DailyDua = {
   source: string;
 };
 
-// Curated daily duas
+// ─── fromCache flag ───────────────────────────────────────────────────────────
+// All async functions return { data, fromCache } so callers can show an
+// offline indicator when serving stale data.
+
+export type WithCacheFlag<T> = { data: T; fromCache: boolean };
+
+// ─── helpers ──────────────────────────────────────────────────────────────────
+
+function dayOfYear(): number {
+  return Math.floor(
+    (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000
+  );
+}
+
+/**
+ * Generic cache-first fetch wrapper.
+ * 1. Return fresh cache if within TTL.
+ * 2. Fetch from network, store, return.
+ * 3. On network failure fall back to stale cache (any age) → fromCache=true.
+ * 4. No cache + no network → rethrow.
+ */
+async function cachedFetch<T>(
+  key: string,
+  ttl: number,
+  fetcher: () => Promise<T>
+): Promise<WithCacheFlag<T>> {
+  // Fresh hit
+  const fresh = await cacheGet<T>(key, ttl);
+  if (fresh !== null) return { data: fresh, fromCache: false };
+
+  // Network
+  try {
+    const data = await fetcher();
+    await cacheSet(key, data);
+    return { data, fromCache: false };
+  } catch {
+    // Stale fallback
+    const stale = await cacheGet<T>(key, Infinity);
+    if (stale !== null) return { data: stale, fromCache: true };
+    throw new Error("Offline and no cached data available.");
+  }
+}
+
+// ─── curated daily duas (hardcoded — always available offline) ────────────────
+
 export const DAILY_DUAS: DailyDua[] = [
   {
     arabic: "رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ",
@@ -101,106 +147,151 @@ export const DAILY_DUAS: DailyDua[] = [
   },
 ];
 
-// Get today's dua based on day of year
+// Get today's dua — always works offline (hardcoded data)
 export function getDailyDua(): DailyDua {
-  const dayOfYear = Math.floor(
-    (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000
+  return DAILY_DUAS[dayOfYear() % DAILY_DUAS.length];
+}
+
+// ─── Surah list ───────────────────────────────────────────────────────────────
+
+export async function fetchSurahList(): Promise<WithCacheFlag<Surah[]>> {
+  return cachedFetch(
+    CACHE_KEYS.surahList(),
+    TTL.SURAH_LIST,
+    async () => {
+      const res = await fetch(`${EQURAN_BASE}/surat`);
+      if (!res.ok) throw new Error("Failed to fetch surah list");
+      const json = await res.json();
+      return json.data as Surah[];
+    }
   );
-  return DAILY_DUAS[dayOfYear % DAILY_DUAS.length];
 }
 
-// Fetch list of all surahs
-export async function fetchSurahList(): Promise<Surah[]> {
-  const res = await fetch(`${EQURAN_BASE}/surat`);
-  if (!res.ok) throw new Error("Failed to fetch surah list");
-  const json = await res.json();
-  return json.data as Surah[];
+// ─── Surah detail (Indonesian text + ayahs) ───────────────────────────────────
+
+export async function fetchSurahID(number: number): Promise<WithCacheFlag<SurahDetail>> {
+  return cachedFetch(
+    CACHE_KEYS.surahDetail(number),
+    TTL.SURAH_DETAIL,
+    async () => {
+      const res = await fetch(`${EQURAN_BASE}/surat/${number}`);
+      if (!res.ok) throw new Error(`Failed to fetch surah ${number}`);
+      const json = await res.json();
+      return json.data as SurahDetail;
+    }
+  );
 }
 
-// Fetch a single surah with Indonesian translation
-export async function fetchSurahID(number: number): Promise<SurahDetail> {
-  const res = await fetch(`${EQURAN_BASE}/surat/${number}`);
-  if (!res.ok) throw new Error(`Failed to fetch surah ${number}`);
-  const json = await res.json();
-  return json.data as SurahDetail;
+// ─── English translation ──────────────────────────────────────────────────────
+
+export async function fetchSurahEN(
+  number: number
+): Promise<WithCacheFlag<Record<number, string>>> {
+  return cachedFetch(
+    CACHE_KEYS.surahEN(number),
+    TTL.SURAH_DETAIL,
+    async () => {
+      const res = await fetch(`${ALQURAN_BASE}/surah/${number}/en.asad`);
+      if (!res.ok) throw new Error(`Failed to fetch English translation for surah ${number}`);
+      const json = await res.json();
+      const map: Record<number, string> = {};
+      for (const ayah of json.data.ayahs) {
+        map[ayah.numberInSurah] = ayah.text;
+      }
+      return map;
+    }
+  );
 }
 
-// Fetch English translation from alquran.cloud
-export async function fetchSurahEN(number: number): Promise<Record<number, string>> {
-  const res = await fetch(`${ALQURAN_BASE}/surah/${number}/en.asad`);
-  if (!res.ok) throw new Error(`Failed to fetch English translation for surah ${number}`);
-  const json = await res.json();
-  const map: Record<number, string> = {};
-  for (const ayah of json.data.ayahs) {
-    map[ayah.numberInSurah] = ayah.text;
-  }
-  return map;
+// ─── Tafsir ───────────────────────────────────────────────────────────────────
+
+export async function fetchTafsir(
+  number: number
+): Promise<WithCacheFlag<Record<number, string>>> {
+  return cachedFetch(
+    CACHE_KEYS.tafsir(number),
+    TTL.SURAH_DETAIL,
+    async () => {
+      const res = await fetch(`${EQURAN_BASE}/tafsir/${number}`);
+      if (!res.ok) throw new Error(`Failed to fetch tafsir for surah ${number}`);
+      const json = await res.json();
+      const map: Record<number, string> = {};
+      for (const item of json.data.tafsir) {
+        map[item.ayat] = item.teks;
+      }
+      return map;
+    }
+  );
 }
 
-// Fetch tafsir (Indonesian only — equran.id)
-export async function fetchTafsir(number: number): Promise<Record<number, string>> {
-  const res = await fetch(`${EQURAN_BASE}/tafsir/${number}`);
-  if (!res.ok) throw new Error(`Failed to fetch tafsir for surah ${number}`);
-  const json = await res.json();
-  const map: Record<number, string> = {};
-  for (const item of json.data.tafsir) {
-    map[item.ayat] = item.teks;
-  }
-  return map;
-}
+// ─── Prayer times ─────────────────────────────────────────────────────────────
 
-// Fetch prayer times by coordinates
 export async function fetchPrayerTimes(
   latitude: number,
   longitude: number
-): Promise<PrayerTimes> {
-  const date = new Date();
-  const dateStr = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
-  const res = await fetch(
-    `${ALADHAN_BASE}/timings/${dateStr}?latitude=${latitude}&longitude=${longitude}&method=11`
+): Promise<WithCacheFlag<PrayerTimes>> {
+  return cachedFetch(
+    CACHE_KEYS.prayerTimes(latitude, longitude),
+    TTL.PRAYER_TIMES,
+    async () => {
+      const date = new Date();
+      const dateStr = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
+      const res = await fetch(
+        `${ALADHAN_BASE}/timings/${dateStr}?latitude=${latitude}&longitude=${longitude}&method=11`
+      );
+      if (!res.ok) throw new Error("Failed to fetch prayer times");
+      const json = await res.json();
+      const t = json.data.timings;
+      return {
+        Fajr: t.Fajr,
+        Sunrise: t.Sunrise,
+        Dhuhr: t.Dhuhr,
+        Asr: t.Asr,
+        Maghrib: t.Maghrib,
+        Isha: t.Isha,
+      } as PrayerTimes;
+    }
   );
-  if (!res.ok) throw new Error("Failed to fetch prayer times");
-  const json = await res.json();
-  const t = json.data.timings;
-  return {
-    Fajr: t.Fajr,
-    Sunrise: t.Sunrise,
-    Dhuhr: t.Dhuhr,
-    Asr: t.Asr,
-    Maghrib: t.Maghrib,
-    Isha: t.Isha,
-  };
 }
 
-// Get a random ayah for "ayah of the day"
-export async function fetchDailyAyah(): Promise<{
+// ─── Daily ayah ───────────────────────────────────────────────────────────────
+
+export type DailyAyah = {
   surahName: string;
   surahNumber: number;
   ayahNumber: number;
   arabic: string;
   translation_id: string;
   translation_en: string;
-}> {
-  // Pick surah based on day so it changes daily but is consistent within the day
-  const dayOfYear = Math.floor(
-    (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000
+};
+
+export async function fetchDailyAyah(): Promise<WithCacheFlag<DailyAyah>> {
+  const doy = dayOfYear();
+  return cachedFetch(
+    CACHE_KEYS.dailyAyah(doy),
+    TTL.DAILY_AYAH,
+    async () => {
+      const surahNumber = (doy % 114) + 1;
+
+      const [surahResult, enResult] = await Promise.all([
+        fetchSurahID(surahNumber),
+        fetchSurahEN(surahNumber),
+      ]);
+
+      const surahID = surahResult.data;
+      const enMap = enResult.data;
+
+      const ayahIndex = doy % surahID.ayat.length;
+      const ayah = surahID.ayat[ayahIndex];
+
+      return {
+        surahName: surahID.namaLatin,
+        surahNumber,
+        ayahNumber: ayah.nomorAyat,
+        arabic: ayah.teksArab,
+        translation_id: ayah.teksIndonesia,
+        translation_en: enMap[ayah.nomorAyat] ?? "",
+      } as DailyAyah;
+    }
   );
-  const surahNumber = (dayOfYear % 114) + 1;
-
-  const [surahID, enMap] = await Promise.all([
-    fetchSurahID(surahNumber),
-    fetchSurahEN(surahNumber),
-  ]);
-
-  const ayahIndex = dayOfYear % surahID.ayat.length;
-  const ayah = surahID.ayat[ayahIndex];
-
-  return {
-    surahName: surahID.namaLatin,
-    surahNumber,
-    ayahNumber: ayah.nomorAyat,
-    arabic: ayah.teksArab,
-    translation_id: ayah.teksIndonesia,
-    translation_en: enMap[ayah.nomorAyat] ?? "",
-  };
 }
