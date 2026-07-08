@@ -23,6 +23,9 @@ import {
   planProgress, HafalanPlan, HafalanMilestone, MilestoneStatus,
 } from "../services/hafalanStore";
 import { SalahTracker } from "../components/Soul/SalahTracker";
+import {
+  loadNotifSettings, schedulePrayerNotifications,
+} from "../services/notificationService";
 
 type Tab = "daily" | "dua" | "dzikir" | "asmaul" | "quran" | "hafalan";
 type Lang = "id" | "en";
@@ -123,6 +126,14 @@ function DailyTab({ colors, userId }: { colors: C; userId: string }) {
       setAyah(ayahResult.data);
       setPrayerTimes(timesResult.data);
       setFromCache(ayahResult.fromCache || timesResult.fromCache);
+      // Reschedule prayer notifications with fresh times (silent — no-op if disabled)
+      if (timesResult.data) {
+        loadNotifSettings().then((s) => {
+          if (s.prayerEnabled) {
+            schedulePrayerNotifications(timesResult.data).catch(console.warn);
+          }
+        });
+      }
     } catch (e) { console.warn("Daily load error:", e); }
     finally { setLoading(false); setRefreshing(false); }
   }, []);

@@ -5,6 +5,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
+import { useRouter } from "expo-router";
 import { supabase } from "../api/supabase";
 import { useAuthStore } from "../store/authStore";
 import { useThemeStore } from "../store/themeStore";
@@ -25,6 +26,7 @@ export default function FellowshipScreen() {
   const { data: pillars } = usePillars(userId);
   const { data: goals } = useGoals(userId);
   const { isDark, colors, toggle: toggleTheme } = useThemeStore();
+  const router = useRouter();
 
   const [username, setUsername] = useState("");
   const [editingUsername, setEditingUsername] = useState(false);
@@ -211,6 +213,24 @@ export default function FellowshipScreen() {
           </View>
         </View>
 
+        {/* ── Notifications ── */}
+        <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>NOTIFICATIONS</Text>
+        <Pressable
+          style={[styles.settingCard, { backgroundColor: colors.bgCard, borderColor: colors.border }]}
+          onPress={() => router.push("/notification-settings" as any)}
+          android_ripple={{ color: colors.bgSubtle }}
+        >
+          <View style={styles.settingRow}>
+            <View style={styles.settingInfo}>
+              <Text style={[styles.settingTitle, { color: colors.textPrimary }]}>🔔 Notification settings</Text>
+              <Text style={[styles.settingDesc, { color: colors.textMuted }]}>
+                Prayer alerts, daily reminder, streak warnings
+              </Text>
+            </View>
+            <Text style={[styles.settingArrow, { color: colors.textDisabled }]}>›</Text>
+          </View>
+        </Pressable>
+
         {/* ── Privacy ── */}
         <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>PRIVACY</Text>
         <View style={[styles.settingCard, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
@@ -348,6 +368,7 @@ const styles = StyleSheet.create({
   settingInfo: { flex: 1 },
   settingTitle: { fontSize: 14, fontWeight: "500" },
   settingDesc: { fontSize: 12, marginTop: 2 },
+  settingArrow: { fontSize: 20 },
   divider: { height: 1 },
 
   // Sign out

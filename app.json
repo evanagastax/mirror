@@ -8,7 +8,15 @@
     "userInterfaceStyle": "light",
     "scheme": "the-mirror",
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#1D9E75",
+          "sounds": []
+        }
+      ]
     ],
     "ios": {
       "supportsTablet": true
