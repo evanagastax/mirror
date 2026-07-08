@@ -91,15 +91,22 @@ export default function VesselProfileScreen() {
       return;
     }
     setSaving(true);
-    const profile: VesselProfile = {
-      weight: wKg, height: hCm, age: aYr,
-      sex, goal, daysPerWeek, equipment,
-      createdAt: existing?.createdAt ?? new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    await saveProfile(userId, profile);
-    setSaving(false);
-    router.back();
+    try {
+      const profile: VesselProfile = {
+        weight: wKg, height: hCm, age: aYr,
+        sex, goal, daysPerWeek, equipment,
+        createdAt: existing?.createdAt ?? new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      await saveProfile(userId, profile);
+      Alert.alert("Profile saved ✓", "Your fitness profile has been updated.", [
+        { text: "OK", onPress: () => router.back() },
+      ]);
+    } catch (e: any) {
+      Alert.alert("Save failed", e.message ?? "Couldn't save your profile. Try again.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (loading) {

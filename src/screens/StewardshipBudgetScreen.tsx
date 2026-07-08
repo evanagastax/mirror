@@ -47,14 +47,21 @@ export default function StewardshipBudgetScreen() {
 
   async function handleSave() {
     setSaving(true);
-    await saveBudget(userId, {
-      investmentTarget:  parseRp(investTarget),
-      consumptionLimit:  parseRp(consumptionLimit),
-      leakLimit:         parseRp(leakLimit),
-      savingsTarget:     parseRp(savingsTarget),
-    });
-    setSaving(false);
-    router.back();
+    try {
+      await saveBudget(userId, {
+        investmentTarget:  parseRp(investTarget),
+        consumptionLimit:  parseRp(consumptionLimit),
+        leakLimit:         parseRp(leakLimit),
+        savingsTarget:     parseRp(savingsTarget),
+      });
+      Alert.alert("Budget saved ✓", "Your monthly budget goals have been updated.", [
+        { text: "OK", onPress: () => router.back() },
+      ]);
+    } catch (e: any) {
+      Alert.alert("Save failed", e.message ?? "Couldn't save your budget goals. Try again.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (loading) {

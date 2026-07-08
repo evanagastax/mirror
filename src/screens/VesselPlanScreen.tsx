@@ -153,6 +153,10 @@ export default function VesselPlanScreen() {
       await savePlanToStorage(userId, saved);
       setPlan(saved);
       setActiveDay(0);
+      Alert.alert(
+        "Plan generated ✓",
+        `Your ${days}-day workout plan is ready. ${planDays.filter(d => d.exercises.length > 0).length} of ${days} days have exercises loaded.`
+      );
     } catch (e: any) {
       Alert.alert("Couldn't generate plan", "Make sure you've browsed exercises at least once so they're cached. " + (e.message ?? ""));
     } finally {
@@ -169,12 +173,17 @@ export default function VesselPlanScreen() {
 
   async function markDayComplete(dayIdx: number) {
     if (!plan) return;
+    const day = plan.days[dayIdx];
+    const nowComplete = !day.completed;
     const updated: SavedPlan = {
       ...plan,
-      days: plan.days.map((d, i) => i === dayIdx ? { ...d, completed: !d.completed } : d),
+      days: plan.days.map((d, i) => i === dayIdx ? { ...d, completed: nowComplete } : d),
     };
     await savePlanToStorage(userId, updated);
     setPlan(updated);
+    if (nowComplete) {
+      Alert.alert("Day complete 💪", `Great work on ${day.template.label}!`);
+    }
   }
 
   if (loading) {

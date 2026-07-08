@@ -76,7 +76,9 @@ export default function NotificationSettingsScreen() {
       return;
     }
     setSaving(false);
-    goBack();
+    Alert.alert("Settings saved ✓", "Your notification preferences have been updated.", [
+      { text: "OK", onPress: goBack },
+    ]);
   }
 
   async function handleDisableAll() {
