@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../api/supabase";
 
 export type Transaction = {
@@ -33,6 +33,21 @@ export function useLedger(userId: string | undefined) {
     queryFn: () => fetchTransactions(userId as string),
     enabled: !!userId,
     staleTime: 1000 * 30,
+  });
+}
+
+export function useDeleteTransaction(userId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("transactions").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ledger",  userId] });
+      queryClient.invalidateQueries({ queryKey: ["pillars", userId] });
+      queryClient.invalidateQueries({ queryKey: ["streak",  userId] });
+    },
   });
 }
 

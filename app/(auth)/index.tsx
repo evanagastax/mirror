@@ -166,7 +166,7 @@ export default function AuthScreen() {
             </View>
           )}
 
-          <Text style={[S.versionText, { color: colors.textDisabled }]}>The Mirror v0.1</Text>
+          <Text style={[S.versionText, { color: colors.textDisabled }]}>The Mirror v1.0</Text>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

@@ -59,7 +59,7 @@ function scoreEvent(event: any): { value: number; description: string; url: stri
       };
     }
     case "CreateEvent": {
-   if (!["repository", "branch"].includes(event.payload?.ref_type)) return null;
+      if (event.payload?.ref_type !== "repository") return null;
       return {
         value: 8,
         description: `Created repository: ${event.repo?.name}`,
