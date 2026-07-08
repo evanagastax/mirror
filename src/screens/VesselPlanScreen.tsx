@@ -15,15 +15,16 @@ import {
   recommendedVolume, estimateSetCalories,
 } from "../services/vesselCalc";
 import { searchCachedExercises, Exercise } from "../services/exerciseDb";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import {
+  DayTemplate, PlanDay, SavedPlan,
+  loadSavedPlan, savePlanToStorage, deleteSavedPlan,
+} from "../services/vesselPlan";
 
 const VESSEL_COLOR = "#D85A30";
 const VESSEL_BG    = "#FEF3EE";
 type C = ReturnType<typeof useThemeStore.getState>["colors"];
 
 // ─── Day split templates ──────────────────────────────────────────────────────
-
-type DayTemplate = { label: string; bodyParts: string[]; icon: string };
 
 const SPLITS: Record<number, DayTemplate[]> = {
   2: [
@@ -59,34 +60,6 @@ const SPLITS: Record<number, DayTemplate[]> = {
 };
 
 const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-
-// ─── Plan persistence ─────────────────────────────────────────────────────────
-
-type PlanDay = {
-  dayIndex: number;  // 0 = Mon
-  template: DayTemplate;
-  exercises: Exercise[];
-  completed: boolean;
-};
-
-type SavedPlan = { days: PlanDay[]; generatedAt: string };
-
-function planKey(userId: string) { return `vessel_plan_${userId}`; }
-
-async function loadSavedPlan(userId: string): Promise<SavedPlan | null> {
-  try {
-    const raw = await AsyncStorage.getItem(planKey(userId));
-    return raw ? JSON.parse(raw) : null;
-  } catch { return null; }
-}
-
-async function savePlanToStorage(userId: string, plan: SavedPlan) {
-  await AsyncStorage.setItem(planKey(userId), JSON.stringify(plan));
-}
-
-async function deleteSavedPlan(userId: string) {
-  await AsyncStorage.removeItem(planKey(userId));
-}
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 

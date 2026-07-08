@@ -15,8 +15,9 @@ import { useCreateLog } from "../hooks/useCreateLog";
 import { scoreToLevel } from "../utils/pillarLevel";
 import { Exercise, BODY_PARTS } from "../services/exerciseDb";
 import { OfflineBanner } from "../components/OfflineBanner";
-import { loadProfile, VesselProfile, EQUIPMENT_META, GOAL_META } from "../services/vesselProfile";
+import { loadProfile, VesselProfile, GOAL_META } from "../services/vesselProfile";
 import { calcBmi, bmiCategory, BMI_META, calcBmr, calcTdee, targetCalories, estimateSetCalories, recommendedVolume } from "../services/vesselCalc";
+import { loadSavedPlan, addExerciseToPlanDay, SavedPlan } from "../services/vesselPlan";
 
 const VESSEL_COLOR = "#D85A30";
 const VESSEL_BG    = "#FEF3EE";
@@ -33,6 +34,19 @@ const PART_META: Record<string, { emoji: string; label: string; desc: string }> 
   "upper legs": { emoji: "🦿", label: "Quads",      desc: "Quads, hamstrings, glutes" },
   waist:        { emoji: "⭕", label: "Core",       desc: "Abs, obliques, lower back" },
 };
+
+// Equipment chips shown in the exercise list — "all" + each type that exists in the API data
+const EQUIP_FILTERS: { label: string; icon: string; apiValue: string }[] = [
+  { label: "All",        icon: "✦",  apiValue: "" },
+  { label: "Bodyweight", icon: "🤸", apiValue: "body weight" },
+  { label: "Dumbbell",   icon: "🏋️", apiValue: "dumbbell" },
+  { label: "Barbell",    icon: "🏋️", apiValue: "barbell" },
+  { label: "Cable",      icon: "🔗", apiValue: "cable" },
+  { label: "Machine",    icon: "⚙️",  apiValue: "machine" },
+  { label: "Band",       icon: "🎗️", apiValue: "band" },
+  { label: "Kettlebell", icon: "🔔", apiValue: "kettlebell" },
+  { label: "EZ-Bar",     icon: "〰️", apiValue: "ez barbell" },
+];
 
 // Ordered for the grid — 2 columns
 const GRID_PARTS = BODY_PARTS as readonly string[];
@@ -60,14 +74,6 @@ export default function VesselScreen() {
 
   const { level, xp, xpMax } = scoreToLevel(pillars?.vessel ?? 0);
   const barPct = xp / xpMax;
-
-  // Equipment API values from profile for filtering
-  const equipmentApiValues = useMemo(() => {
-    if (!profile) return undefined;
-    const vals = profile.equipment.map((k) => EQUIPMENT_META[k].apiValue);
-    vals.push("body weight");
-    return vals;
-  }, [profile]);
 
   return (
     <SafeAreaView style={[S.root, { backgroundColor: colors.bg }]} edges={["top"]}>
@@ -113,7 +119,6 @@ export default function VesselScreen() {
             userId={userId!}
             colors={colors}
             isDark={isDark}
-            equipmentFilter={equipmentApiValues}
           />
         : <CategoryMenu
             colors={colors}
@@ -219,14 +224,21 @@ function CategoryMenu({ colors, onSelect, profile, router }: {
 
 // ─── Exercise list (drill-down view) ─────────────────────────────────────────
 
-function ExerciseList({ bodyPart, userId, colors, isDark, equipmentFilter }: {
+function ExerciseList({ bodyPart, userId, colors, isDark }: {
   bodyPart: string; userId: string; colors: C; isDark: boolean;
-  equipmentFilter?: string[];
 }) {
-  const [search,    setSearch]    = useState("");
-  const [debounced, setDebounced] = useState("");
-  const [selected,  setSelected]  = useState<Exercise | null>(null);
-  const [modalVisible, setModal]  = useState(false);
+  const [search,          setSearch]          = useState("");
+  const [debounced,       setDebounced]       = useState("");
+  const [selected,        setSelected]        = useState<Exercise | null>(null);
+  const [modalVisible,    setModal]           = useState(false);
+  const [plan,            setPlan]            = useState<SavedPlan | null>(null);
+  // "" = no equipment filter (show all)
+  const [activeEquipment, setActiveEquipment] = useState("");
+
+  // Load current plan so LogModal can offer "Add to plan"
+  useEffect(() => {
+    loadSavedPlan(userId).then(setPlan);
+  }, [userId]);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleSearch = useCallback((t: string) => {
@@ -254,19 +266,29 @@ function ExerciseList({ bodyPart, userId, colors, isDark, equipmentFilter }: {
       seen.add(e.exerciseId);
       return true;
     });
-    // Client-side equipment filter if profile has equipment set
-    if (!equipmentFilter || equipmentFilter.length === 0) return deduped;
-    const eqSet = new Set(equipmentFilter.map((e) => e.toLowerCase()));
-    return deduped.filter((ex) =>
-      ex.equipments.length === 0 ||
-      ex.equipments.some((eq) => eqSet.has(eq.toLowerCase()))
+
+    // 1. Enforce bodyPart — re-filter on the client so only exercises
+    //    that actually belong to the selected category are shown.
+    const partFiltered = deduped.filter((ex) =>
+      ex.bodyParts.some((p) => p.toLowerCase() === bodyPart.toLowerCase())
     );
-  }, [data, equipmentFilter]);
+
+    // 2. In-list equipment filter — only applied when user has selected one
+    if (!activeEquipment) return partFiltered;
+    return partFiltered.filter((ex) =>
+      ex.equipments.length === 0 ||
+      ex.equipments.some((eq) => eq.toLowerCase() === activeEquipment.toLowerCase())
+    );
+  }, [data, activeEquipment, bodyPart]);
 
   const isOffline = useMemo(() => data?.pages.some((p) => p.fromCache) ?? false, [data]);
 
   function openModal(ex: Exercise) { setSelected(ex); setModal(true); }
   function closeModal() { setModal(false); setTimeout(() => setSelected(null), 300); }
+
+  function handleAddedToPlan(updated: SavedPlan) {
+    setPlan(updated);
+  }
 
   return (
     <>
@@ -292,18 +314,43 @@ function ExerciseList({ bodyPart, userId, colors, isDark, equipmentFilter }: {
         </View>
       </View>
 
-      {/* Equipment filter badge */}
-      {equipmentFilter && equipmentFilter.length > 0 && (
-        <View style={[S.equipBadgeBar, { borderBottomColor: colors.border }]}>
-          <Text style={[S.equipBadgeBarLabel, { color: colors.textMuted }]}>Filtered by your equipment</Text>
-          <View style={[S.equipBadgeDot, { backgroundColor: VESSEL_COLOR }]} />
-        </View>
-      )}
+      {/* Equipment filter chips */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={[S.equipFilterScroll, { borderBottomColor: colors.border }]}
+        contentContainerStyle={S.equipFilterRow}
+      >
+        {EQUIP_FILTERS.map((f) => {
+          const active = activeEquipment === f.apiValue;
+          return (
+            <Pressable
+              key={f.apiValue}
+              onPress={() => setActiveEquipment(active ? "" : f.apiValue)}
+              style={[
+                S.equipChip,
+                { borderColor: colors.border, backgroundColor: colors.bgSubtle },
+                active && { backgroundColor: VESSEL_COLOR, borderColor: VESSEL_COLOR },
+              ]}
+            >
+              <Text style={S.equipChipIcon}>{f.icon}</Text>
+              <Text style={[
+                S.equipChipText,
+                { color: active ? "#fff" : colors.textMuted },
+                active && { fontWeight: "700" },
+              ]}>
+                {f.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
 
       {/* Result count */}
       {!isLoading && !isError && exercises.length > 0 && (
         <Text style={[S.resultCount, { color: colors.textDisabled }]}>
           {exercises.length}+ exercises
+          {activeEquipment ? ` · ${EQUIP_FILTERS.find(f => f.apiValue === activeEquipment)?.label}` : ""}
         </Text>
       )}
 
@@ -348,6 +395,7 @@ function ExerciseList({ bodyPart, userId, colors, isDark, equipmentFilter }: {
 
       {selected && (
         <LogModal exercise={selected} visible={modalVisible} userId={userId}
+          plan={plan} onAddedToPlan={handleAddedToPlan}
           onClose={closeModal} colors={colors} isDark={isDark} />
       )}
     </>
@@ -394,19 +442,27 @@ function ExerciseCard({ exercise, onPress, colors }: {
 
 // ─── Log modal ────────────────────────────────────────────────────────────────
 
-function LogModal({ exercise, visible, userId, onClose, colors, isDark }: {
+function LogModal({ exercise, visible, userId, plan, onAddedToPlan, onClose, colors, isDark }: {
   exercise: Exercise; visible: boolean; userId: string;
+  plan: SavedPlan | null;
+  onAddedToPlan: (updated: SavedPlan) => void;
   onClose: () => void; colors: C; isDark: boolean;
 }) {
   const createLog = useCreateLog(userId);
   const isCardio  = exercise.bodyParts.includes("cardio") ||
     exercise.targetMuscles.some((m) => m.toLowerCase().includes("cardiovascular"));
 
-  const [logType,  setLogType]  = useState<"strength" | "cardio">(isCardio ? "cardio" : "strength");
-  const [sets,     setSets]     = useState<SetEntry[]>([{ sets: "", reps: "", weight: "" }]);
-  const [minutes,  setMinutes]  = useState("");
-  const [distance, setDistance] = useState("");
-  const [showHow,  setShowHow]  = useState(false);
+  const [logType,       setLogType]       = useState<"strength" | "cardio">(isCardio ? "cardio" : "strength");
+  const [sets,          setSets]          = useState<SetEntry[]>([{ sets: "", reps: "", weight: "" }]);
+  const [minutes,       setMinutes]       = useState("");
+  const [distance,      setDistance]      = useState("");
+  const [showHow,       setShowHow]       = useState(false);
+  const [addingToPlan,  setAddingToPlan]  = useState(false);
+  // Which plan day the user wants to add to (default: 0)
+  const [planDayIdx,    setPlanDayIdx]    = useState(0);
+  const [showDayPicker, setShowDayPicker] = useState(false);
+
+  const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
   function addSet() {
     const last = sets[sets.length - 1];
@@ -450,6 +506,27 @@ function LogModal({ exercise, visible, userId, onClose, colors, isDark }: {
     } catch (e: any) { Alert.alert("Error", e.message ?? "Try again."); }
   }
 
+  async function handleAddToPlan() {
+    if (!plan) {
+      Alert.alert("No plan yet", "Generate a workout plan first from My Plan.");
+      return;
+    }
+    setAddingToPlan(true);
+    try {
+      const { plan: updated, alreadyPresent } = await addExerciseToPlanDay(userId, planDayIdx, exercise);
+      if (alreadyPresent) {
+        Alert.alert("Already in plan", `${cap(exercise.name)} is already in ${DAY_NAMES[plan.days[planDayIdx]?.dayIndex ?? planDayIdx]}'s workout.`);
+      } else {
+        onAddedToPlan(updated);
+        Alert.alert("Added to plan ✓", `${cap(exercise.name)} added to ${plan.days[planDayIdx]?.template.label ?? "your plan"}.`);
+      }
+    } catch (e: any) {
+      Alert.alert("Couldn't add to plan", e.message ?? "Try again.");
+    } finally {
+      setAddingToPlan(false);
+    }
+  }
+
   const inp = [S.inp, { borderColor: colors.border, color: colors.textPrimary, backgroundColor: colors.bgInput }];
 
   return (
@@ -484,6 +561,78 @@ function LogModal({ exercise, visible, userId, onClose, colors, isDark }: {
               <MetaPill label="Target"    value={exercise.targetMuscles.map(cap).join(", ")} color={VESSEL_COLOR} bg={VESSEL_BG} />
               <MetaPill label="Equipment" value={exercise.equipments.map(cap).join(", ")}    color={colors.textSecondary} bg={colors.bgSubtle} />
             </View>
+
+            {/* ── Add to plan ── */}
+            <View style={[S.planBox, { backgroundColor: colors.bgSubtle, borderColor: colors.border }]}>
+              <View style={S.planBoxLeft}>
+                <Text style={[S.planBoxTitle, { color: colors.textPrimary }]}>⚡ Add to My Plan</Text>
+                {plan ? (
+                  <Text style={[S.planBoxSub, { color: colors.textMuted }]}>
+                    {plan.days.length} day plan · adding to{" "}
+                    <Text style={{ fontWeight: "700", color: VESSEL_COLOR }}>
+                      {plan.days[planDayIdx]?.template.label ?? "Day 1"}
+                    </Text>
+                  </Text>
+                ) : (
+                  <Text style={[S.planBoxSub, { color: colors.textMuted }]}>No plan yet — generate one from My Plan</Text>
+                )}
+              </View>
+              <View style={S.planBoxRight}>
+                {/* Day picker — only shown if plan exists and has >1 day */}
+                {plan && plan.days.length > 1 && (
+                  <Pressable
+                    onPress={() => setShowDayPicker(!showDayPicker)}
+                    style={[S.planDayBtn, { borderColor: colors.border }]}
+                  >
+                    <Text style={[S.planDayBtnText, { color: colors.textMuted }]}>
+                      {plan.days[planDayIdx]?.template.icon ?? "📅"} Day {planDayIdx + 1}
+                    </Text>
+                    <Text style={[S.planDayChevron, { color: colors.textMuted }]}>
+                      {showDayPicker ? "▲" : "▼"}
+                    </Text>
+                  </Pressable>
+                )}
+                <Pressable
+                  onPress={handleAddToPlan}
+                  disabled={addingToPlan || !plan}
+                  style={[S.planAddBtn,
+                    plan ? { backgroundColor: VESSEL_COLOR } : { backgroundColor: colors.border },
+                    addingToPlan && { opacity: 0.5 },
+                  ]}
+                >
+                  {addingToPlan
+                    ? <ActivityIndicator color="#fff" size="small" />
+                    : <Text style={S.planAddBtnText}>+ Plan</Text>}
+                </Pressable>
+              </View>
+            </View>
+
+            {/* Day picker row */}
+            {plan && showDayPicker && (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={S.dayPickerRow}>
+                {plan.days.map((d, i) => (
+                  <Pressable
+                    key={i}
+                    onPress={() => { setPlanDayIdx(i); setShowDayPicker(false); }}
+                    style={[S.dayPickerChip,
+                      { borderColor: colors.border },
+                      planDayIdx === i && { backgroundColor: VESSEL_COLOR, borderColor: VESSEL_COLOR },
+                    ]}
+                  >
+                    <Text style={[S.dayPickerChipIcon]}>{d.template.icon}</Text>
+                    <Text style={[S.dayPickerChipText,
+                      { color: planDayIdx === i ? "#fff" : colors.textMuted },
+                      planDayIdx === i && { fontWeight: "700" },
+                    ]}>
+                      {d.template.label}
+                    </Text>
+                    {d.completed && (
+                      <Text style={[S.dayPickerDone, { color: planDayIdx === i ? "#fff" : "#1D9E75" }]}>✓</Text>
+                    )}
+                  </Pressable>
+                ))}
+              </ScrollView>
+            )}
 
             {/* How-to (collapsible) */}
             {exercise.instructions.length > 0 && (
@@ -734,8 +883,29 @@ const S = StyleSheet.create({
   stripStatValue: { fontSize: 13, fontWeight: "700" },
   stripDiv: { width: 1, height: 28 },
 
-  // ── Equipment filter badge bar ──
-  equipBadgeBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingVertical: 8, borderBottomWidth: 1 },
-  equipBadgeBarLabel: { fontSize: 11, fontWeight: "500" },
-  equipBadgeDot: { width: 8, height: 8, borderRadius: 4 },
+  // ── Equipment filter chips ──
+  equipFilterScroll: { flexGrow: 0, borderBottomWidth: 1 },
+  equipFilterRow: { paddingHorizontal: 12, paddingVertical: 8, gap: 6, alignItems: "center" },
+  equipChip: { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 99, borderWidth: 1.5 },
+  equipChipIcon: { fontSize: 13 },
+  equipChipText: { fontSize: 12 },
+
+  // ── Add to plan box ──
+  planBox: { flexDirection: "row", alignItems: "center", gap: 10, borderWidth: 1, borderRadius: 14, padding: 12 },
+  planBoxLeft: { flex: 1, gap: 3 },
+  planBoxTitle: { fontSize: 14, fontWeight: "700" },
+  planBoxSub: { fontSize: 11, lineHeight: 16 },
+  planBoxRight: { alignItems: "flex-end", gap: 6 },
+  planDayBtn: { flexDirection: "row", alignItems: "center", gap: 4, borderWidth: 1, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5 },
+  planDayBtnText: { fontSize: 12, fontWeight: "600" },
+  planDayChevron: { fontSize: 10 },
+  planAddBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, minWidth: 70, alignItems: "center" },
+  planAddBtnText: { color: "#fff", fontSize: 13, fontWeight: "700" },
+
+  // ── Day picker row ──
+  dayPickerRow: { gap: 8, paddingVertical: 4 },
+  dayPickerChip: { flexDirection: "row", alignItems: "center", gap: 5, borderWidth: 1.5, borderRadius: 99, paddingHorizontal: 12, paddingVertical: 7 },
+  dayPickerChipIcon: { fontSize: 14 },
+  dayPickerChipText: { fontSize: 12 },
+  dayPickerDone: { fontSize: 11, fontWeight: "700" },
 });
