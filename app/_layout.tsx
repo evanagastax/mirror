@@ -9,6 +9,7 @@ import {
   applyNotificationSettings,
   setupAndroidChannels,
 } from "../src/services/notificationService";
+import { clearStaleExerciseCache } from "../src/utils/offlineCache";
 
 const queryClient = new QueryClient();
 
@@ -18,6 +19,9 @@ export default function RootLayout() {
 
   useEffect(() => {
     hydrate();
+
+    // Clear any stale exercise data cached from the old broken API source
+    clearStaleExerciseCache();
 
     // Set up Android notification channels immediately
     setupAndroidChannels();

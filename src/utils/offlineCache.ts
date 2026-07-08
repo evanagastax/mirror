@@ -31,7 +31,7 @@ const NS = "@mirror_cache:";
 export const CACHE_KEYS = {
   exercisePage: (cursor: string, bodyPart: string, name: string) =>
     `${NS}exercises:${bodyPart}:${name}:${cursor}`,
-  exerciseAll: () => `${NS}exercises:all`,
+  exerciseAll: () => `${NS}exercises:all:v2`,
   surahList: () => `${NS}surah_list`,
   surahDetail: (n: number) => `${NS}surah:${n}`,
   surahEN: (n: number) => `${NS}surah_en:${n}`,
@@ -103,6 +103,22 @@ export async function cacheClearAll(): Promise<void> {
     const all = await AsyncStorage.getAllKeys();
     const ours = (all as string[]).filter((k) => k.startsWith(NS));
     if (ours.length) await AsyncStorage.multiRemove(ours);
+  } catch {}
+}
+
+/**
+ * Remove stale exercise cache keys from old API sources.
+ * Call once on app startup to force a clean re-fetch from the new dataset.
+ */
+export async function clearStaleExerciseCache(): Promise<void> {
+  try {
+    const all = await AsyncStorage.getAllKeys();
+    const stale = (all as string[]).filter(
+      (k) =>
+        k.startsWith(`${NS}exercises:`) &&
+        !k.includes(":all:v2") // keep only the current key
+    );
+    if (stale.length) await AsyncStorage.multiRemove(stale);
   } catch {}
 }
 
