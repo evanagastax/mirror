@@ -75,16 +75,28 @@ export function targetCalories(tdee: number, goal: FitnessGoal): number {
  * Formula: kcal = MET × weight_kg × duration_hours
  */
 const MET_BY_BODY_PART: Record<string, number> = {
-  cardio:       8.0,   // general vigorous cardio
-  chest:        5.0,   // weight training — vigorous
-  back:         5.0,
-  shoulders:    4.5,
-  "upper arms": 3.5,
-  "lower arms": 3.0,
-  "upper legs": 6.0,   // squats/leg press
-  "lower legs": 4.0,
-  waist:        3.5,   // core / abs
-  neck:         2.5,
+  // Cardio
+  cardio:         8.0,
+  // Upper body push
+  chest:          5.0,
+  shoulders:      4.5,
+  triceps:        3.5,
+  // Upper body pull
+  lats:           5.0,
+  "middle back":  4.5,
+  "lower back":   4.0,
+  traps:          4.0,
+  biceps:         3.5,
+  forearms:       3.0,
+  // Lower body
+  quadriceps:     6.0,
+  hamstrings:     5.5,
+  glutes:         5.5,
+  adductors:      4.5,
+  calves:         4.0,
+  // Core & neck
+  abdominals:     3.5,
+  neck:           2.5,
 };
 
 const DEFAULT_MET = 4.5;
