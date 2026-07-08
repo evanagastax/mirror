@@ -133,14 +133,12 @@ export async function fetchExerciseById(
 // ─── background full-library prefetch ────────────────────────────────────────
 
 /**
- * Walks every cursor page of the unfiltered exercise list and stores
- * each page individually (so paginated browsing works offline) plus
- * writes a single flat array to CACHE_KEYS.exerciseAll() for quick
- * detail lookups.
+ * Fetches the ENTIRE exercise library in a single request (limit=2000).
+ * Stores a flat deduplicated array to CACHE_KEYS.exerciseAll() for instant
+ * client-side filtering by bodyPart, name, or equipment.
  *
- * Called in the background after the first unfiltered page loads.
- * Safe to call multiple times — exits early if the full-library cache
- * is already fresh.
+ * Called in the background after any exercise-related screen loads.
+ * Safe to call multiple times — exits early if the cache is still fresh.
  */
 export async function prefetchAllExercises(): Promise<void> {
   // Skip if the full-library snapshot is still fresh
@@ -150,31 +148,12 @@ export async function prefetchAllExercises(): Promise<void> {
   );
   if (existing) return;
 
-  const allExercises: Exercise[] = [];
-  let cursor: string | undefined = undefined;
-  let page = 0;
-  const MAX_PAGES = 100; // safety cap — 1500 exercises / 20 per page = 75 pages
+  // Single large request — get everything at once
+  const response = await networkFetchExercises({ limit: 2000 });
 
-  while (page < MAX_PAGES) {
-    const pageKey = CACHE_KEYS.exercisePage(cursor ?? "first", "all", "");
-
-    // Re-use an already-cached page if available
-    let pageData = await cacheGet<ExerciseListResponse>(pageKey, TTL.EXERCISE_LIST);
-    if (!pageData) {
-      pageData = await networkFetchExercises({ limit: 20, cursor });
-      await cacheSet(pageKey, pageData);
-    }
-
-    allExercises.push(...pageData.data);
-
-    if (!pageData.meta.hasNextPage || !pageData.meta.nextCursor) break;
-    cursor = pageData.meta.nextCursor;
-    page++;
-  }
-
-  // Deduplicate (cursor overlap) and store the flat list
+  // Deduplicate and store
   const seen = new Set<string>();
-  const unique = allExercises.filter((e) => {
+  const unique = response.data.filter((e) => {
     if (seen.has(e.exerciseId)) return false;
     seen.add(e.exerciseId);
     return true;
@@ -186,58 +165,37 @@ export async function prefetchAllExercises(): Promise<void> {
 // ─── body-part bulk fetch ──────────────────────────────────────────────────────
 
 /**
- * Fetch ALL exercises for a specific body part in a single request.
- * Uses a large limit so we get everything in one shot.
- * Result is cached per bodyPart for 7 days.
- *
- * Falls back to filtering the full-library cache if it exists.
+ * Returns all exercises for a specific body part.
+ * Priority:
+ *  1. Filter from full-library cache (instant, no network)
+ *  2. Trigger full-library fetch (limit=2000), then filter
+ *  3. Stale cache fallback when offline
  */
 export async function fetchAllByBodyPart(
   bodyPart: string
 ): Promise<{ data: Exercise[]; fromCache: boolean }> {
-  const cacheKey = `${CACHE_KEYS.exercisePage("all", bodyPart, "")}:bulk`;
-
-  // 1. Check bodyPart-specific bulk cache
-  const cached = await cacheGet<Exercise[]>(cacheKey, TTL.EXERCISE_LIST);
-  if (cached) return { data: cached, fromCache: false };
-
-  // 2. Check full-library cache (built by prefetchAllExercises)
-  const allCached = await cacheGet<Exercise[]>(CACHE_KEYS.exerciseAll(), Infinity);
-  if (allCached) {
-    const filtered = allCached.filter((e) =>
+  function filterByPart(all: Exercise[]) {
+    return all.filter((e) =>
       e.bodyParts.some((p) => p.toLowerCase() === bodyPart.toLowerCase())
     );
-    // Save as bodyPart cache too
-    await cacheSet(cacheKey, filtered);
-    return { data: filtered, fromCache: false };
   }
 
-  // 3. Fetch from network with a large limit to get everything in one go
+  // 1. Full library already cached — filter and return immediately
+  const allCached = await cacheGet<Exercise[]>(CACHE_KEYS.exerciseAll(), TTL.EXERCISE_LIST);
+  if (allCached) {
+    return { data: filterByPart(allCached), fromCache: false };
+  }
+
+  // 2. Cache miss — fetch the full library in one shot, then filter
   try {
-    const result = await networkFetchExercises({ bodyPart, limit: 400 });
-    const filtered = result.data.filter((e) =>
-      e.bodyParts.some((p) => p.toLowerCase() === bodyPart.toLowerCase())
-    );
-    await cacheSet(cacheKey, filtered);
-
-    // Also trigger full-library prefetch in the background if not done yet
-    prefetchAllExercises().catch(() => {});
-
-    return { data: filtered, fromCache: false };
+    await prefetchAllExercises();
+    const fresh = await cacheGet<Exercise[]>(CACHE_KEYS.exerciseAll(), TTL.EXERCISE_LIST);
+    if (fresh) return { data: filterByPart(fresh), fromCache: false };
+    throw new Error("Library fetch succeeded but cache write failed.");
   } catch {
-    // Network failed — check stale bodyPart cache
-    const stale = await cacheGet<Exercise[]>(cacheKey, Infinity);
-    if (stale) return { data: stale, fromCache: true };
-
-    // Last resort: stale full library
-    const staleAll = await cacheGet<Exercise[]>(CACHE_KEYS.exerciseAll(), Infinity);
-    if (staleAll) {
-      const filtered = staleAll.filter((e) =>
-        e.bodyParts.some((p) => p.toLowerCase() === bodyPart.toLowerCase())
-      );
-      return { data: filtered, fromCache: true };
-    }
-
+    // 3. Offline fallback — stale full library
+    const stale = await cacheGet<Exercise[]>(CACHE_KEYS.exerciseAll(), Infinity);
+    if (stale) return { data: filterByPart(stale), fromCache: true };
     throw new Error("No internet connection and no cached data available.");
   }
 }

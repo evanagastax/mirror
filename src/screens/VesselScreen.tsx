@@ -13,7 +13,7 @@ import { useExercises, useBodyPartExercises } from "../hooks/useExercises";
 import { usePillars } from "../hooks/usePillars";
 import { useCreateLog } from "../hooks/useCreateLog";
 import { scoreToLevel } from "../utils/pillarLevel";
-import { Exercise, BODY_PARTS } from "../services/exerciseDb";
+import { Exercise, BODY_PARTS, prefetchAllExercises } from "../services/exerciseDb";
 import { OfflineBanner } from "../components/OfflineBanner";
 import { loadProfile, VesselProfile, GOAL_META } from "../services/vesselProfile";
 import { calcBmi, bmiCategory, BMI_META, calcBmr, calcTdee, targetCalories, estimateSetCalories, recommendedVolume } from "../services/vesselCalc";
@@ -70,6 +70,9 @@ export default function VesselScreen() {
 
   useEffect(() => {
     if (userId) loadProfile(userId).then(setProfile);
+    // Kick off full library download in the background so it's ready
+    // before the user taps any muscle group
+    prefetchAllExercises().catch(() => {});
   }, [userId]);
 
   const { level, xp, xpMax } = scoreToLevel(pillars?.vessel ?? 0);
@@ -277,16 +280,28 @@ function ExerciseList({ bodyPart, userId, colors, isDark }: {
     let source: Exercise[];
 
     if (isSearching) {
-      // Paginated search — de-duplicate pages
-      const all = pagedData?.pages.flatMap((p) => p.data) ?? [];
-      const seen = new Set<string>();
-      source = all.filter((e) => {
-        if (seen.has(e.exerciseId)) return false;
-        seen.add(e.exerciseId);
-        return true;
-      });
+      // Search within the already-loaded full library — instant, no extra request
+      const allFromBulk = bulkQuery.data?.data ?? [];
+      if (allFromBulk.length > 0) {
+        // Full library is loaded — search client-side
+        const q = debounced.toLowerCase();
+        source = allFromBulk.filter((e) =>
+          e.name.toLowerCase().includes(q) ||
+          e.targetMuscles.some((m) => m.toLowerCase().includes(q)) ||
+          e.equipments.some((eq) => eq.toLowerCase().includes(q))
+        );
+      } else {
+        // Full library not ready yet — fall back to paginated API results
+        const all = pagedData?.pages.flatMap((p) => p.data) ?? [];
+        const seen = new Set<string>();
+        source = all.filter((e) => {
+          if (seen.has(e.exerciseId)) return false;
+          seen.add(e.exerciseId);
+          return true;
+        });
+      }
     } else {
-      // Bulk load — already all exercises for this bodyPart
+      // No search — show all exercises for this bodyPart from full library
       source = bulkQuery.data?.data ?? [];
     }
 
@@ -296,7 +311,7 @@ function ExerciseList({ bodyPart, userId, colors, isDark }: {
       ex.equipments.length === 0 ||
       ex.equipments.some((eq) => eq.toLowerCase() === activeEquipment.toLowerCase())
     );
-  }, [isSearching, pagedData, bulkQuery.data, activeEquipment]);
+  }, [isSearching, debounced, pagedData, bulkQuery.data, activeEquipment]);
 
   const isOffline = isSearching
     ? (pagedData?.pages.some((p) => p.fromCache) ?? false)
