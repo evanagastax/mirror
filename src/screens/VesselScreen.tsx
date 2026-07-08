@@ -45,14 +45,14 @@ const PART_META: Record<string, { emoji: string; label: string; desc: string }> 
 // Equipment chips shown in the exercise list — "all" + each type that exists in the API data
 const EQUIP_FILTERS: { label: string; icon: string; apiValue: string }[] = [
   { label: "All",        icon: "✦",  apiValue: "" },
-  { label: "Bodyweight", icon: "🤸", apiValue: "body weight" },
+  { label: "Bodyweight", icon: "🤸", apiValue: "body only" },
   { label: "Dumbbell",   icon: "🏋️", apiValue: "dumbbell" },
   { label: "Barbell",    icon: "🏋️", apiValue: "barbell" },
   { label: "Cable",      icon: "🔗", apiValue: "cable" },
   { label: "Machine",    icon: "⚙️",  apiValue: "machine" },
-  { label: "Band",       icon: "🎗️", apiValue: "band" },
-  { label: "Kettlebell", icon: "🔔", apiValue: "kettlebell" },
-  { label: "EZ-Bar",     icon: "〰️", apiValue: "ez barbell" },
+  { label: "Band",       icon: "🎗️", apiValue: "bands" },
+  { label: "Kettlebell", icon: "🔔", apiValue: "kettlebells" },
+  { label: "EZ-Bar",     icon: "〰️", apiValue: "e-z curl bar" },
 ];
 
 // Ordered for the grid — 2 columns

@@ -37,14 +37,14 @@ export type EquipmentKey =
   | "ez_barbell";
 
 export const EQUIPMENT_META: Record<EquipmentKey, { label: string; icon: string; apiValue: string }> = {
-  body_weight:     { label: "Bodyweight",       icon: "🤸", apiValue: "body weight" },
+  body_weight:     { label: "Bodyweight",       icon: "🤸", apiValue: "body only" },
   dumbbell:        { label: "Dumbbell",         icon: "🏋️", apiValue: "dumbbell" },
   barbell:         { label: "Barbell",          icon: "🏋️", apiValue: "barbell" },
   cable:           { label: "Cable Machine",    icon: "🔗", apiValue: "cable" },
   machine:         { label: "Machine",          icon: "⚙️",  apiValue: "machine" },
-  resistance_band: { label: "Resistance Band",  icon: "🎗️", apiValue: "band" },
-  kettlebell:      { label: "Kettlebell",       icon: "🔔", apiValue: "kettlebell" },
-  ez_barbell:      { label: "EZ-Bar",           icon: "〰️", apiValue: "ez barbell" },
+  resistance_band: { label: "Resistance Band",  icon: "🎗️", apiValue: "bands" },
+  kettlebell:      { label: "Kettlebell",       icon: "🔔", apiValue: "kettlebells" },
+  ez_barbell:      { label: "EZ-Bar",           icon: "〰️", apiValue: "e-z curl bar" },
 };
 
 export type VesselProfile = {

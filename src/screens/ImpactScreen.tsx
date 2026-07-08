@@ -177,10 +177,12 @@ function ImpactRow({ log, colors, last }: { log: Log; colors: C; last: boolean }
       </View>
       <View style={S.rowRight}>
         <Text style={[S.rowTime, { color: colors.textDisabled }]}>{formatTime(log.created_at)}</Text>
-        {log.evidence_url ? (
+        {log.evidence_url && !log.evidence_url.startsWith("gh:") ? (
           <Pressable onPress={() => Linking.openURL(log.evidence_url!)}>
             <Text style={[S.rowLink, { color: COLOR }]}>↗</Text>
           </Pressable>
+        ) : log.evidence_url?.startsWith("gh:") ? (
+          <Text style={[S.rowLink, { color: colors.textDisabled }]}>⟳</Text>
         ) : null}
       </View>
     </View>
