@@ -79,7 +79,8 @@ export function useGitHubSync(userId: string) {
   }
 
   async function runSync(userId: string, config: { token: string; username: string }) {
-    const count = await syncGitHubToImpact(userId, config);
+    const result = await syncGitHubToImpact(userId, config);
+    const count  = result.synced;
     queryClient.invalidateQueries({ queryKey: ["pillars", userId] });
     queryClient.invalidateQueries({ queryKey: ["logs", userId] });
 

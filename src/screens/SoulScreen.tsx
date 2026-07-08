@@ -835,8 +835,8 @@ function HafalanTab({ colors, userId }: { colors: C; userId: string }) {
               {plan.totalAyat} ayat · {plan.milestones.length} sesi · {plan.chunkSize} ayat/sesi
             </Text>
           </View>
-          <Pressable onPress={handleReset} style={S.resetBtn}>
-            <Text style={[S.resetBtnText, { color: "#D85A30" }]}>Ganti</Text>
+          <Pressable onPress={handleReset} style={S.hafalanResetBtn}>
+            <Text style={[S.hafalanResetBtnText, { color: "#D85A30" }]}>Ganti</Text>
           </Pressable>
         </View>
         {/* Big progress arc replaced with bar + numbers */}
@@ -1201,8 +1201,8 @@ const S = StyleSheet.create({
   hafalanHeaderTop: { flexDirection: "row", alignItems: "flex-start" },
   hafalanSurahName: { fontSize: 20, fontWeight: "800", letterSpacing: -0.5 },
   hafalanSurahMeta: { fontSize: 12, marginTop: 2 },
-  resetBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, borderWidth: 1, borderColor: "#D85A30" },
-  resetBtnText: { fontSize: 13, fontWeight: "600" },
+  hafalanResetBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, borderWidth: 1, borderColor: "#D85A30" },
+  hafalanResetBtnText: { fontSize: 13, fontWeight: "600" },
   hafalanStats: { flexDirection: "row", justifyContent: "space-around" },
   hafalanStat: { alignItems: "center", gap: 2 },
   hafalanStatNum: { fontSize: 24, fontWeight: "800", letterSpacing: -0.5 },

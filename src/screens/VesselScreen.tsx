@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useRef } from "react";
+import React, { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import {
   View, Text, ScrollView, FlatList, Pressable, TextInput,
   ActivityIndicator, Modal, Alert, StyleSheet, Image,
@@ -15,24 +15,27 @@ import { useCreateLog } from "../hooks/useCreateLog";
 import { scoreToLevel } from "../utils/pillarLevel";
 import { Exercise, BODY_PARTS } from "../services/exerciseDb";
 import { OfflineBanner } from "../components/OfflineBanner";
+import { loadProfile, VesselProfile, EQUIPMENT_META, GOAL_META } from "../services/vesselProfile";
+import { calcBmi, bmiCategory, BMI_META, calcBmr, calcTdee, targetCalories, estimateSetCalories, recommendedVolume } from "../services/vesselCalc";
 
 const VESSEL_COLOR = "#D85A30";
 const VESSEL_BG    = "#FEF3EE";
-const ALL_PARTS    = ["all", ...BODY_PARTS] as const;
 
-const PART_META: Record<string, { emoji: string; label: string }> = {
-  all:          { emoji: "⊕",  label: "All" },
-  back:         { emoji: "🔙", label: "Back" },
-  cardio:       { emoji: "🫀", label: "Cardio" },
-  chest:        { emoji: "💪", label: "Chest" },
-  "lower arms": { emoji: "🦾", label: "Forearms" },
-  "lower legs": { emoji: "🦵", label: "Calves" },
-  neck:         { emoji: "🔝", label: "Neck" },
-  shoulders:    { emoji: "🏋️", label: "Shoulders" },
-  "upper arms": { emoji: "💪", label: "Biceps" },
-  "upper legs": { emoji: "🦿", label: "Quads" },
-  waist:        { emoji: "⭕", label: "Core" },
+const PART_META: Record<string, { emoji: string; label: string; desc: string }> = {
+  back:         { emoji: "🔙", label: "Back",       desc: "Lats, traps, rhomboids" },
+  cardio:       { emoji: "🫀", label: "Cardio",     desc: "Running, cycling, HIIT" },
+  chest:        { emoji: "💪", label: "Chest",      desc: "Pecs, push movements" },
+  "lower arms": { emoji: "🦾", label: "Forearms",   desc: "Wrist & grip strength" },
+  "lower legs": { emoji: "🦵", label: "Calves",     desc: "Calf raises, tibialis" },
+  neck:         { emoji: "🔝", label: "Neck",       desc: "Neck flexion & extension" },
+  shoulders:    { emoji: "🏋️", label: "Shoulders",  desc: "Delts, rotator cuff" },
+  "upper arms": { emoji: "💪", label: "Biceps",     desc: "Curls & tricep work" },
+  "upper legs": { emoji: "🦿", label: "Quads",      desc: "Quads, hamstrings, glutes" },
+  waist:        { emoji: "⭕", label: "Core",       desc: "Abs, obliques, lower back" },
 };
+
+// Ordered for the grid — 2 columns
+const GRID_PARTS = BODY_PARTS as readonly string[];
 
 type SetEntry = { sets: string; reps: string; weight: string };
 type C = ReturnType<typeof useThemeStore.getState>["colors"];
@@ -45,63 +48,54 @@ export default function VesselScreen() {
   const router             = useRouter();
   const userId             = useAuthStore((s) => s.userId);
   const { isDark, colors } = useThemeStore();
+  const { data: pillars }  = usePillars(userId);
 
-  const [search,   setSearch]   = useState("");
-  const [debounced, setDebounced] = useState("");
-  const [bodyPart, setBodyPart] = useState("all");
-  const [selected, setSelected] = useState<Exercise | null>(null);
-  const [modalVisible, setModal] = useState(false);
+  // null = menu, string = drill-down into that body part
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [profile, setProfile] = useState<VesselProfile | null>(null);
 
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const handleSearch = useCallback((t: string) => {
-    setSearch(t);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => setDebounced(t), 400);
-  }, []);
+  useEffect(() => {
+    if (userId) loadProfile(userId).then(setProfile);
+  }, [userId]);
 
-  const filters = useMemo(() => ({
-    ...(debounced.trim() ? { name: debounced.trim() } : {}),
-    ...(bodyPart !== "all" ? { bodyPart } : {}),
-  }), [debounced, bodyPart]);
-
-  const {
-    data, isLoading, isError, fetchNextPage, hasNextPage,
-    isFetchingNextPage, refetch, isRefetching,
-  } = useExercises(filters);
-
-  const { data: pillars } = usePillars(userId);
-
-  const exercises = useMemo(() => {
-    const all  = data?.pages.flatMap((p) => p.data) ?? [];
-    const seen = new Set<string>();
-    return all.filter((e) => {
-      if (seen.has(e.exerciseId)) return false;
-      seen.add(e.exerciseId);
-      return true;
-    });
-  }, [data]);
-
-  const isOffline = useMemo(() => data?.pages.some((p) => p.fromCache) ?? false, [data]);
   const { level, xp, xpMax } = scoreToLevel(pillars?.vessel ?? 0);
   const barPct = xp / xpMax;
 
-  function openModal(ex: Exercise) { setSelected(ex); setModal(true); }
-  function closeModal() { setModal(false); setTimeout(() => setSelected(null), 300); }
+  // Equipment API values from profile for filtering
+  const equipmentApiValues = useMemo(() => {
+    if (!profile) return undefined;
+    const vals = profile.equipment.map((k) => EQUIPMENT_META[k].apiValue);
+    vals.push("body weight");
+    return vals;
+  }, [profile]);
 
   return (
     <SafeAreaView style={[S.root, { backgroundColor: colors.bg }]} edges={["top"]}>
       <StatusBar style={isDark ? "light" : "dark"} />
-      {isOffline && <OfflineBanner />}
 
       {/* Header */}
       <View style={[S.header, { borderBottomColor: colors.border }]}>
         <View style={S.headerLeft}>
-          <Pressable onPress={() => router.back()} hitSlop={12}>
-            <Text style={[S.back, { color: colors.textMuted }]}>←</Text>
-          </Pressable>
+          {activeCategory ? (
+            <Pressable onPress={() => setActiveCategory(null)} hitSlop={12}>
+              <Text style={[S.back, { color: colors.textMuted }]}>←</Text>
+            </Pressable>
+          ) : (
+            <Pressable onPress={() => router.back()} hitSlop={12}>
+              <Text style={[S.back, { color: colors.textMuted }]}>←</Text>
+            </Pressable>
+          )}
           <View>
-            <Text style={[S.headerTitle, { color: colors.textPrimary }]}>Vessel</Text>
-            <Text style={[S.headerSub,   { color: colors.textMuted }]}>Body & Strength</Text>
+            <Text style={[S.headerTitle, { color: colors.textPrimary }]}>
+              {activeCategory
+                ? (PART_META[activeCategory]?.label ?? cap(activeCategory))
+                : "Vessel"}
+            </Text>
+            <Text style={[S.headerSub, { color: colors.textMuted }]}>
+              {activeCategory
+                ? (PART_META[activeCategory]?.desc ?? "Exercises")
+                : "Body & Strength"}
+            </Text>
           </View>
         </View>
         <View style={[S.levelBadge, { backgroundColor: VESSEL_BG }]}>
@@ -113,13 +107,178 @@ export default function VesselScreen() {
         </View>
       </View>
 
-      {/* Search */}
+      {activeCategory
+        ? <ExerciseList
+            bodyPart={activeCategory}
+            userId={userId!}
+            colors={colors}
+            isDark={isDark}
+            equipmentFilter={equipmentApiValues}
+          />
+        : <CategoryMenu
+            colors={colors}
+            onSelect={setActiveCategory}
+            profile={profile}
+            router={router}
+          />
+      }
+    </SafeAreaView>
+  );
+}
+
+// ─── Category menu (default view) ────────────────────────────────────────────
+
+function CategoryMenu({ colors, onSelect, profile, router }: {
+  colors: C;
+  onSelect: (part: string) => void;
+  profile: VesselProfile | null;
+  router: ReturnType<typeof useRouter>;
+}) {
+  const bmi    = profile ? calcBmi(profile.weight, profile.height) : null;
+  const bmiCat = bmi ? bmiCategory(bmi) : null;
+  const bmiM   = bmiCat ? BMI_META[bmiCat] : null;
+  const bmr    = profile ? calcBmr(profile) : null;
+  const tdee   = bmr ? calcTdee(bmr, profile!.daysPerWeek) : null;
+  const target = tdee ? targetCalories(tdee, profile!.goal) : null;
+
+  return (
+    <ScrollView contentContainerStyle={S.menuContent} showsVerticalScrollIndicator={false}>
+
+      {/* ── Profile / Plan cards ── */}
+      <View style={S.actionRow}>
+        <Pressable
+          style={[S.actionCard, { backgroundColor: VESSEL_BG, borderColor: VESSEL_COLOR + "40" }]}
+          onPress={() => router.push("/vessel-profile" as any)}
+          android_ripple={{ color: VESSEL_BG }}
+        >
+          <Text style={S.actionCardIcon}>📋</Text>
+          <Text style={[S.actionCardLabel, { color: VESSEL_COLOR }]}>My Profile</Text>
+          {profile ? (
+            <Text style={[S.actionCardSub, { color: VESSEL_COLOR }]}>
+              {profile.weight}kg · {profile.height}cm · {GOAL_META[profile.goal].icon} {GOAL_META[profile.goal].label}
+            </Text>
+          ) : (
+            <Text style={[S.actionCardSub, { color: VESSEL_COLOR }]}>Tap to set up →</Text>
+          )}
+        </Pressable>
+        <Pressable
+          style={[S.actionCard, { backgroundColor: "#F0FBF7", borderColor: "#1D9E7540" }]}
+          onPress={() => router.push("/vessel-plan" as any)}
+          android_ripple={{ color: "#F0FBF7" }}
+        >
+          <Text style={S.actionCardIcon}>⚡</Text>
+          <Text style={[S.actionCardLabel, { color: "#1D9E75" }]}>My Plan</Text>
+          {profile ? (
+            <Text style={[S.actionCardSub, { color: "#1D9E75" }]}>
+              {profile.daysPerWeek} days/week →
+            </Text>
+          ) : (
+            <Text style={[S.actionCardSub, { color: "#1D9E75" }]}>Set profile first →</Text>
+          )}
+        </Pressable>
+      </View>
+
+      {/* ── Stats strip (shown if profile exists) ── */}
+      {profile && bmiM && target && (
+        <View style={[S.statsStrip, { backgroundColor: bmiM.bg, borderColor: bmiM.color + "40" }]}>
+          <StripStat label="BMI"         value={String(calcBmi(profile.weight, profile.height))} color={bmiM.color} />
+          <View style={[S.stripDiv, { backgroundColor: bmiM.color + "30" }]} />
+          <StripStat label="Target kcal" value={target.toLocaleString()} color={bmiM.color} />
+          <View style={[S.stripDiv, { backgroundColor: bmiM.color + "30" }]} />
+          <StripStat label="Goal"        value={GOAL_META[profile.goal].icon + " " + GOAL_META[profile.goal].label} color={bmiM.color} />
+        </View>
+      )}
+
+      {/* ── Muscle group grid ── */}
+      <Text style={[S.menuSectionLabel, { color: colors.textMuted }]}>MUSCLE GROUPS</Text>
+      <View style={S.menuGrid}>
+        {GRID_PARTS.map((part) => {
+          const meta = PART_META[part] ?? { emoji: "💪", label: cap(part), desc: "" };
+          return (
+            <Pressable
+              key={part}
+              style={[S.menuCard, { backgroundColor: colors.bgCard, borderColor: colors.border }]}
+              onPress={() => onSelect(part)}
+              android_ripple={{ color: VESSEL_BG }}
+            >
+              <View style={[S.menuCardIcon, { backgroundColor: VESSEL_BG }]}>
+                <Text style={S.menuCardEmoji}>{meta.emoji}</Text>
+              </View>
+              <Text style={[S.menuCardLabel, { color: colors.textPrimary }]}>{meta.label}</Text>
+              <Text style={[S.menuCardDesc, { color: colors.textMuted }]} numberOfLines={2}>
+                {meta.desc}
+              </Text>
+              <Text style={[S.menuCardArrow, { color: colors.textDisabled }]}>›</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    </ScrollView>
+  );
+}
+
+// ─── Exercise list (drill-down view) ─────────────────────────────────────────
+
+function ExerciseList({ bodyPart, userId, colors, isDark, equipmentFilter }: {
+  bodyPart: string; userId: string; colors: C; isDark: boolean;
+  equipmentFilter?: string[];
+}) {
+  const [search,    setSearch]    = useState("");
+  const [debounced, setDebounced] = useState("");
+  const [selected,  setSelected]  = useState<Exercise | null>(null);
+  const [modalVisible, setModal]  = useState(false);
+
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const handleSearch = useCallback((t: string) => {
+    setSearch(t);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => setDebounced(t), 400);
+  }, []);
+
+  const filters = useMemo(() => ({
+    bodyPart,
+    ...(debounced.trim() ? { name: debounced.trim() } : {}),
+  }), [bodyPart, debounced]);
+
+  const {
+    data, isLoading, isError,
+    fetchNextPage, hasNextPage, isFetchingNextPage,
+    refetch, isRefetching,
+  } = useExercises(filters);
+
+  const exercises = useMemo(() => {
+    const all  = data?.pages.flatMap((p) => p.data) ?? [];
+    const seen = new Set<string>();
+    const deduped = all.filter((e) => {
+      if (seen.has(e.exerciseId)) return false;
+      seen.add(e.exerciseId);
+      return true;
+    });
+    // Client-side equipment filter if profile has equipment set
+    if (!equipmentFilter || equipmentFilter.length === 0) return deduped;
+    const eqSet = new Set(equipmentFilter.map((e) => e.toLowerCase()));
+    return deduped.filter((ex) =>
+      ex.equipments.length === 0 ||
+      ex.equipments.some((eq) => eqSet.has(eq.toLowerCase()))
+    );
+  }, [data, equipmentFilter]);
+
+  const isOffline = useMemo(() => data?.pages.some((p) => p.fromCache) ?? false, [data]);
+
+  function openModal(ex: Exercise) { setSelected(ex); setModal(true); }
+  function closeModal() { setModal(false); setTimeout(() => setSelected(null), 300); }
+
+  return (
+    <>
+      {isOffline && <OfflineBanner />}
+
+      {/* Search bar */}
       <View style={[S.searchWrap, { borderBottomColor: colors.border }]}>
         <View style={[S.searchBox, { backgroundColor: colors.bgInput, borderColor: colors.border }]}>
           <Text style={[S.searchIcon, { color: colors.textMuted }]}>🔍</Text>
           <TextInput
             style={[S.searchInput, { color: colors.textPrimary }]}
-            placeholder="Search exercises…"
+            placeholder={`Search ${PART_META[bodyPart]?.label ?? bodyPart} exercises…`}
             placeholderTextColor={colors.textMuted}
             value={search}
             onChangeText={handleSearch}
@@ -133,42 +292,21 @@ export default function VesselScreen() {
         </View>
       </View>
 
-      {/* Filter chips */}
-      <ScrollView
-        horizontal showsHorizontalScrollIndicator={false}
-        style={[S.chipsScroll, { borderBottomColor: colors.border }]}
-        contentContainerStyle={S.chips}
-      >
-        {ALL_PARTS.map((part) => {
-          const meta   = PART_META[part] ?? { emoji: "•", label: part };
-          const active = bodyPart === part;
-          return (
-            <Pressable
-              key={part}
-              onPress={() => setBodyPart(part)}
-              style={[S.chip, { borderColor: colors.border },
-                active && { backgroundColor: VESSEL_COLOR, borderColor: VESSEL_COLOR }]}
-              android_ripple={{ color: VESSEL_BG }}
-            >
-              <Text style={S.chipEmoji}>{meta.emoji}</Text>
-              <Text style={[S.chipText, { color: active ? "#fff" : colors.textMuted },
-                active && { fontWeight: "700" }]}>
-                {meta.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
+      {/* Equipment filter badge */}
+      {equipmentFilter && equipmentFilter.length > 0 && (
+        <View style={[S.equipBadgeBar, { borderBottomColor: colors.border }]}>
+          <Text style={[S.equipBadgeBarLabel, { color: colors.textMuted }]}>Filtered by your equipment</Text>
+          <View style={[S.equipBadgeDot, { backgroundColor: VESSEL_COLOR }]} />
+        </View>
+      )}
 
       {/* Result count */}
       {!isLoading && !isError && exercises.length > 0 && (
         <Text style={[S.resultCount, { color: colors.textDisabled }]}>
           {exercises.length}+ exercises
-          {bodyPart !== "all" ? ` · ${PART_META[bodyPart]?.label ?? bodyPart}` : ""}
         </Text>
       )}
 
-      {/* List states */}
       {isLoading ? (
         <View style={S.center}>
           <ActivityIndicator color={VESSEL_COLOR} size="large" />
@@ -186,7 +324,7 @@ export default function VesselScreen() {
         <View style={S.center}>
           <Text style={S.stateEmoji}>🏋️</Text>
           <Text style={[S.stateText, { color: colors.textPrimary }]}>No exercises found</Text>
-          <Text style={[S.stateSub, { color: colors.textMuted }]}>Try a different search or filter</Text>
+          <Text style={[S.stateSub, { color: colors.textMuted }]}>Try a different search</Text>
         </View>
       ) : (
         <FlatList
@@ -209,10 +347,10 @@ export default function VesselScreen() {
       )}
 
       {selected && (
-        <LogModal exercise={selected} visible={modalVisible} userId={userId!}
+        <LogModal exercise={selected} visible={modalVisible} userId={userId}
           onClose={closeModal} colors={colors} isDark={isDark} />
       )}
-    </SafeAreaView>
+    </>
   );
 }
 
@@ -466,6 +604,15 @@ function MetaPill({ label, value, color, bg }: { label: string; value: string; c
   );
 }
 
+function StripStat({ label, value, color }: { label: string; value: string; color: string }) {
+  return (
+    <View style={S.stripStat}>
+      <Text style={[S.stripStatLabel, { color }]}>{label}</Text>
+      <Text style={[S.stripStatValue, { color }]}>{value}</Text>
+    </View>
+  );
+}
+
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const S = StyleSheet.create({
@@ -488,13 +635,23 @@ const S = StyleSheet.create({
   searchInput: { flex: 1, fontSize: 15, padding: 0 },
   clearBtn: { fontSize: 14 },
 
-  chipsScroll: { flexGrow: 0, borderBottomWidth: 1 },
-  chips: { paddingHorizontal: 16, paddingVertical: 10, gap: 8 },
-  chip: { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 99, borderWidth: 1 },
-  chipEmoji: { fontSize: 13 },
-  chipText: { fontSize: 12 },
+  // Removed: chipsScroll, chips, chip, chipEmoji, chipText — replaced by menu grid
 
   resultCount: { fontSize: 11, paddingHorizontal: 16, paddingTop: 8, paddingBottom: 2 },
+
+  // Menu grid
+  menuContent: { padding: 16, paddingBottom: 32, gap: 14 },
+  menuSectionLabel: { fontSize: 10, fontWeight: "700", letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 },
+  menuGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
+  menuCard: {
+    width: "47.5%", borderWidth: 1, borderRadius: 18,
+    padding: 16, gap: 8, overflow: "hidden",
+  },
+  menuCardIcon: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center", marginBottom: 2 },
+  menuCardEmoji: { fontSize: 22 },
+  menuCardLabel: { fontSize: 15, fontWeight: "700" },
+  menuCardDesc: { fontSize: 12, lineHeight: 17 },
+  menuCardArrow: { fontSize: 18, position: "absolute", top: 14, right: 14 },
 
   center: { flex: 1, alignItems: "center", justifyContent: "center", gap: 8, padding: 20 },
   stateEmoji: { fontSize: 40, marginBottom: 8 },
@@ -562,4 +719,23 @@ const S = StyleSheet.create({
   volumeVal: { fontSize: 16, fontWeight: "700" },
 
   cardioRow: { flexDirection: "row", gap: 12, padding: 14 },
+
+  // ── Profile/Plan action cards in menu ──
+  actionRow: { flexDirection: "row", gap: 12 },
+  actionCard: { flex: 1, borderWidth: 1, borderRadius: 18, padding: 14, gap: 4, overflow: "hidden" },
+  actionCardIcon: { fontSize: 24, marginBottom: 2 },
+  actionCardLabel: { fontSize: 14, fontWeight: "800" },
+  actionCardSub: { fontSize: 11, lineHeight: 16 },
+
+  // ── Stats strip ──
+  statsStrip: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderRadius: 14, paddingVertical: 10, paddingHorizontal: 4 },
+  stripStat: { flex: 1, alignItems: "center", gap: 2 },
+  stripStatLabel: { fontSize: 9, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.8 },
+  stripStatValue: { fontSize: 13, fontWeight: "700" },
+  stripDiv: { width: 1, height: 28 },
+
+  // ── Equipment filter badge bar ──
+  equipBadgeBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingVertical: 8, borderBottomWidth: 1 },
+  equipBadgeBarLabel: { fontSize: 11, fontWeight: "500" },
+  equipBadgeDot: { width: 8, height: 8, borderRadius: 4 },
 });

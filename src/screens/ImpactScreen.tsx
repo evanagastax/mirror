@@ -93,7 +93,9 @@ export default function ImpactScreen() {
 
         {/* Quick actions */}
         <View style={S.actionsRow}>
-          <ActionCard icon="◈" label="Roadmap" sub="Track goals" color={COLOR} bg={BG}
+          <ActionCard icon="🗺️" label="Career" sub="Job roadmaps" color={COLOR} bg={BG}
+            onPress={() => router.push("/impact-roadmap" as any)} colors={colors} />
+          <ActionCard icon="◈" label="Goals" sub="Track goals" color={COLOR} bg={BG}
             onPress={() => router.push("/(app)/roadmap")} colors={colors} />
           <ActionCard icon="⟳" label="GitHub" sub="Sync commits" color={COLOR} bg={BG}
             onPress={() => router.push("/github-sync")} colors={colors} />
