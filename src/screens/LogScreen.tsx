@@ -13,6 +13,16 @@ import { useCreateLog, useCreateTransaction } from "../hooks/useCreateLog";
 
 type Pillar = "soul" | "vessel" | "impact" | "stewardship";
 type Category = "investment" | "consumption" | "leak";
+type ImpactCategory = "code" | "design" | "write" | "manage" | "learn" | "other";
+
+const IMPACT_CATEGORIES: { key: ImpactCategory; label: string; icon: string; hint: string }[] = [
+  { key: "code",   label: "Code",    icon: "💻", hint: "PR, commit, bug fix" },
+  { key: "design", label: "Design",  icon: "🎨", hint: "UI, mockup, prototype" },
+  { key: "write",  label: "Write",   icon: "✍️",  hint: "Docs, article, report" },
+  { key: "manage", label: "Manage",  icon: "📋", hint: "Meeting, planning, review" },
+  { key: "learn",  label: "Learn",   icon: "📚", hint: "Course, book, research" },
+  { key: "other",  label: "Other",   icon: "⚡", hint: "Anything else" },
+];
 
 const PILLARS: { key: Pillar; label: string; color: string; bg: string; icon: string; hint: string }[] = [
   { key: "soul",        label: "Soul",        color: "#1D9E75", bg: "#F0FBF7", icon: "✦", hint: "Prayer, meditation, gratitude" },
@@ -42,6 +52,7 @@ export default function LogScreen() {
   const [vesselVolume, setVesselVolume] = useState("");
   const [vesselMinutes, setVesselMinutes] = useState("");
   const [impactDescription, setImpactDescription] = useState("");
+  const [impactCategory, setImpactCategory] = useState<ImpactCategory>("code");
   const [impactEffort, setImpactEffort] = useState("");
   const [impactEvidence, setImpactEvidence] = useState("");
   const [amount, setAmount] = useState("");
@@ -71,10 +82,16 @@ export default function LogScreen() {
           value = parseInt(vesselVolume, 10);
           metadata = { exercise_type: vesselType, duration: vesselMinutes ? parseInt(vesselMinutes, 10) : undefined };
         } else if (pillar === "impact") {
+          if (!impactDescription.trim()) return Alert.alert("Enter a title for what you did.");
           if (!impactEffort) return Alert.alert("Enter effort score.");
-          value = parseInt(impactEffort, 10);
+          value = Math.min(10, Math.max(1, parseInt(impactEffort, 10)));
           evidence_url = impactEvidence || undefined;
-          metadata = { description: impactDescription };
+          metadata = {
+            title:       impactDescription.trim(),
+            description: impactDescription.trim(),
+            category:    impactCategory,
+            category_icon: IMPACT_CATEGORIES.find((c) => c.key === impactCategory)?.icon ?? "⚡",
+          };
         }
 
         await createLog.mutateAsync({ pillar_type: pillar, value, evidence_url, metadata });
@@ -224,30 +241,73 @@ export default function LogScreen() {
               <Field label="What did you ship?" colors={colors}>
                 <TextInput
                   style={inputStyle}
-                  placeholder="PR merged, task closed, feature deployed…"
+                  placeholder="Fixed auth bug, wrote API docs, shipped v2…"
                   placeholderTextColor={colors.textMuted}
                   value={impactDescription}
                   onChangeText={setImpactDescription}
                 />
               </Field>
               <Divider colors={colors} />
+              <Field label="Activity type" colors={colors}>
+                <View style={styles.catGrid}>
+                  {IMPACT_CATEGORIES.map((c) => {
+                    const active = impactCategory === c.key;
+                    return (
+                      <Pressable
+                        key={c.key}
+                        onPress={() => setImpactCategory(c.key)}
+                        style={[
+                          styles.impactCatBtn,
+                          { borderColor: active ? "#378ADD" : colors.border,
+                            backgroundColor: active ? "#F0F7FE" : colors.bgInput },
+                        ]}
+                        android_ripple={{ color: "#F0F7FE" }}
+                      >
+                        <Text style={styles.impactCatIcon}>{c.icon}</Text>
+                        <Text style={[styles.impactCatLabel,
+                          { color: active ? "#378ADD" : colors.textMuted },
+                          active && { fontWeight: "700" }]}>
+                          {c.label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </Field>
+              <Divider colors={colors} />
               <Field label="Effort score (1–10)" colors={colors}>
-                <TextInput
-                  style={inputStyle}
-                  placeholder="7"
-                  placeholderTextColor={colors.textMuted}
-                  keyboardType="number-pad"
-                  value={impactEffort}
-                  onChangeText={setImpactEffort}
-                />
+                <View style={styles.effortRow}>
+                  {["1","2","3","4","5","6","7","8","9","10"].map((n) => {
+                    const active = impactEffort === n;
+                    const high   = parseInt(n) >= 8;
+                    const mid    = parseInt(n) >= 5;
+                    const activeColor = high ? "#1D9E75" : mid ? "#378ADD" : "#BA7517";
+                    return (
+                      <Pressable
+                        key={n}
+                        onPress={() => setImpactEffort(n)}
+                        style={[styles.effortBtn,
+                          { borderColor: active ? activeColor : colors.border,
+                            backgroundColor: active ? activeColor : colors.bgInput }]}
+                      >
+                        <Text style={[styles.effortBtnText,
+                          { color: active ? "#fff" : colors.textMuted },
+                          active && { fontWeight: "800" }]}>
+                          {n}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
               </Field>
               <Divider colors={colors} />
               <Field label="Evidence link (optional)" colors={colors}>
                 <TextInput
                   style={inputStyle}
-                  placeholder="GitHub PR, Jira ticket, Notion…"
+                  placeholder="GitHub PR, Jira, Notion, Figma…"
                   placeholderTextColor={colors.textMuted}
                   autoCapitalize="none"
+                  autoCorrect={false}
                   value={impactEvidence}
                   onChangeText={setImpactEvidence}
                 />
@@ -393,4 +453,22 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   catText: { fontSize: 12 },
+
+  // Impact category grid
+  catGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  impactCatBtn: {
+    flexDirection: "row", alignItems: "center", gap: 6,
+    paddingHorizontal: 12, paddingVertical: 9,
+    borderRadius: 10, borderWidth: 1.5, width: "30.5%",
+  },
+  impactCatIcon: { fontSize: 14 },
+  impactCatLabel: { fontSize: 12 },
+
+  // Effort score row
+  effortRow: { flexDirection: "row", gap: 6, flexWrap: "wrap" },
+  effortBtn: {
+    width: 36, height: 36, borderRadius: 10,
+    borderWidth: 1.5, alignItems: "center", justifyContent: "center",
+  },
+  effortBtnText: { fontSize: 13 },
 });

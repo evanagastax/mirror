@@ -146,17 +146,29 @@ export default function ImpactScreen() {
 
 function ImpactRow({ log, colors, last }: { log: Log; colors: C; last: boolean }) {
   const meta  = log.metadata as any;
-  const title = meta?.description || "Impact activity";
+  // prefer explicit title, fall back to description, then a generic label
+  const title = meta?.title || meta?.description || "Impact activity";
+  const catIcon  = meta?.category_icon as string | undefined;
+  const catLabel = meta?.category as string | undefined;
   const pct   = Math.min(log.value / 10, 1);
   const effortColor = log.value >= 8 ? "#1D9E75" : log.value >= 5 ? COLOR : "#D85A30";
   return (
     <View style={[S.row, !last && { borderBottomColor: colors.border, borderBottomWidth: 1 }]}>
       <View style={[S.rowDot, { backgroundColor: BG }]}>
-        <Text style={{ fontSize: 14, color: COLOR }}>◈</Text>
+        <Text style={{ fontSize: 14, color: COLOR }}>
+          {catIcon ?? "◈"}
+        </Text>
       </View>
       <View style={S.rowInfo}>
-        <Text style={[S.rowTitle, { color: colors.textPrimary }]} numberOfLines={1}>{title}</Text>
-        <View style={S.effortRow}>
+        <Text style={[S.rowTitle, { color: colors.textPrimary }]} numberOfLines={2}>{title}</Text>
+        <View style={S.rowMeta}>
+          {catLabel && (
+            <View style={[S.catBadge, { backgroundColor: BG }]}>
+              <Text style={[S.catBadgeText, { color: COLOR }]}>
+                {catLabel.charAt(0).toUpperCase() + catLabel.slice(1)}
+              </Text>
+            </View>
+          )}
           <View style={[S.effortTrack, { backgroundColor: colors.border }]}>
             <View style={[S.effortFill, { width: `${pct * 100}%` as any, backgroundColor: effortColor }]} />
           </View>
@@ -252,6 +264,9 @@ const S = StyleSheet.create({
   rowDot: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center", flexShrink: 0 },
   rowInfo: { flex: 1, gap: 6 },
   rowTitle: { fontSize: 14, fontWeight: "500" },
+  rowMeta: { flexDirection: "row", alignItems: "center", gap: 6 },
+  catBadge: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 99 },
+  catBadgeText: { fontSize: 10, fontWeight: "700" },
   effortRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   effortTrack: { flex: 1, height: 4, borderRadius: 99, overflow: "hidden" },
   effortFill: { height: 4, borderRadius: 99 },

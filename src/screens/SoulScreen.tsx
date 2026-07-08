@@ -22,6 +22,7 @@ import {
   loadPlan, savePlan, deletePlan, buildPlan, updateMilestone,
   planProgress, HafalanPlan, HafalanMilestone, MilestoneStatus,
 } from "../services/hafalanStore";
+import { SalahTracker } from "../components/Soul/SalahTracker";
 
 type Tab = "daily" | "dua" | "dzikir" | "asmaul" | "quran" | "hafalan";
 type Lang = "id" | "en";
@@ -92,7 +93,7 @@ export default function SoulScreen() {
         })}
       </ScrollView>
 
-      {tab === "daily"   && <DailyTab  colors={colors} />}
+      {tab === "daily"   && <DailyTab  colors={colors} userId={userId} />}
       {tab === "dua"     && <DuaTab    colors={colors} />}
       {tab === "dzikir"  && <DzikirTab colors={colors} />}
       {tab === "asmaul"  && <AsmaulHusnaTab colors={colors} />}
@@ -104,7 +105,7 @@ export default function SoulScreen() {
 
 // ─── Daily Tab ───────────────────────────────────────────────────────────────
 
-function DailyTab({ colors }: { colors: C }) {
+function DailyTab({ colors, userId }: { colors: C; userId: string }) {
   const [lang, setLang] = useState<Lang>("id");
   const [ayah, setAyah] = useState<any>(null);
   const [prayerTimes, setPrayerTimes] = useState<any>(null);
@@ -144,6 +145,7 @@ function DailyTab({ colors }: { colors: C }) {
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={SOUL_COLOR} />}
     >
       {fromCache && <OfflineBanner />}
+      <SalahTracker userId={userId} colors={colors} />
       <LangToggle lang={lang} setLang={setLang} colors={colors} />
 
       {/* Prayer times */}
