@@ -48,9 +48,12 @@ export default function LogScreen() {
   const [soulActivity, setSoulActivity] = useState("");
   const [soulMinutes, setSoulMinutes] = useState("");
   const [soulEvidence, setSoulEvidence] = useState("");
-  const [vesselType, setVesselType] = useState("");
-  const [vesselVolume, setVesselVolume] = useState("");
+  const [vesselType,    setVesselType]    = useState("");
+  const [vesselSets,    setVesselSets]    = useState("");
+  const [vesselReps,    setVesselReps]    = useState("");
+  const [vesselWeight,  setVesselWeight]  = useState("");
   const [vesselMinutes, setVesselMinutes] = useState("");
+  const [vesselMode,    setVesselMode]    = useState<"strength" | "cardio">("strength");
   const [impactDescription, setImpactDescription] = useState("");
   const [impactCategory, setImpactCategory] = useState<ImpactCategory>("code");
   const [impactEffort, setImpactEffort] = useState("");
@@ -78,9 +81,18 @@ export default function LogScreen() {
           evidence_url = soulEvidence || undefined;
           metadata = { activity: soulActivity };
         } else if (pillar === "vessel") {
-          if (!vesselVolume) return Alert.alert("Enter volume.");
-          value = parseInt(vesselVolume, 10);
-          metadata = { exercise_type: vesselType, duration: vesselMinutes ? parseInt(vesselMinutes, 10) : undefined };
+          if (vesselMode === "strength") {
+            const s = parseInt(vesselSets, 10) || 0;
+            const r = parseInt(vesselReps, 10) || 0;
+            const w = parseFloat(vesselWeight) || 0;
+            if (s === 0 || r === 0) return Alert.alert("Enter sets and reps.");
+            value = w > 0 ? Math.round(s * r * w) : s * r;
+            metadata = { exercise_type: vesselType, type: "strength", sets: s, reps: r, weight_kg: w, total_volume: value };
+          } else {
+            if (!vesselMinutes) return Alert.alert("Enter duration.");
+            value = parseInt(vesselMinutes, 10);
+            metadata = { exercise_type: vesselType, type: "cardio", duration_minutes: value };
+          }
         } else if (pillar === "impact") {
           if (!impactDescription.trim()) return Alert.alert("Enter a title for what you did.");
           if (!impactEffort) return Alert.alert("Enter effort score.");
@@ -204,37 +216,91 @@ export default function LogScreen() {
             </>}
 
             {pillar === "vessel" && <>
-              <Field label="Exercise type" colors={colors}>
+              <Field label="Exercise / session name" colors={colors}>
                 <TextInput
                   style={inputStyle}
-                  placeholder="Chest + triceps, Run, Yoga…"
+                  placeholder="Bench press, Morning run, Yoga…"
                   placeholderTextColor={colors.textMuted}
                   value={vesselType}
                   onChangeText={setVesselType}
                 />
               </Field>
               <Divider colors={colors} />
-              <Field label="Volume (sets × reps × kg)" colors={colors}>
-                <TextInput
-                  style={inputStyle}
-                  placeholder="4500"
-                  placeholderTextColor={colors.textMuted}
-                  keyboardType="number-pad"
-                  value={vesselVolume}
-                  onChangeText={setVesselVolume}
-                />
+              <Field label="Type" colors={colors}>
+                <View style={styles.catRow}>
+                  {(["strength", "cardio"] as const).map((m) => {
+                    const active = vesselMode === m;
+                    return (
+                      <Pressable
+                        key={m}
+                        onPress={() => setVesselMode(m)}
+                        style={[styles.catBtn,
+                          { borderColor: active ? "#D85A30" : colors.border,
+                            backgroundColor: active ? "#FEF3EE" : colors.bgInput }]}
+                      >
+                        <Text style={{ fontSize: 16 }}>{m === "strength" ? "🏋️" : "🫀"}</Text>
+                        <Text style={[styles.catText, { color: active ? "#D85A30" : colors.textMuted },
+                          active && { fontWeight: "700" }]}>
+                          {m === "strength" ? "Strength" : "Cardio"}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
               </Field>
               <Divider colors={colors} />
-              <Field label="Duration (minutes)" colors={colors}>
-                <TextInput
-                  style={inputStyle}
-                  placeholder="60"
-                  placeholderTextColor={colors.textMuted}
-                  keyboardType="number-pad"
-                  value={vesselMinutes}
-                  onChangeText={setVesselMinutes}
-                />
-              </Field>
+              {vesselMode === "strength" ? <>
+                <Field label="Sets · Reps · Weight (kg)" colors={colors}>
+                  <View style={styles.triRow}>
+                    <TextInput
+                      style={[inputStyle, styles.triInput]}
+                      placeholder="Sets"
+                      placeholderTextColor={colors.textMuted}
+                      keyboardType="number-pad"
+                      value={vesselSets}
+                      onChangeText={setVesselSets}
+                    />
+                    <Text style={[styles.triSep, { color: colors.textMuted }]}>×</Text>
+                    <TextInput
+                      style={[inputStyle, styles.triInput]}
+                      placeholder="Reps"
+                      placeholderTextColor={colors.textMuted}
+                      keyboardType="number-pad"
+                      value={vesselReps}
+                      onChangeText={setVesselReps}
+                    />
+                    <Text style={[styles.triSep, { color: colors.textMuted }]}>×</Text>
+                    <TextInput
+                      style={[inputStyle, styles.triInput]}
+                      placeholder="kg"
+                      placeholderTextColor={colors.textMuted}
+                      keyboardType="decimal-pad"
+                      value={vesselWeight}
+                      onChangeText={setVesselWeight}
+                    />
+                  </View>
+                  {vesselSets && vesselReps && (
+                    <Text style={[styles.volumePreview, { color: "#D85A30" }]}>
+                      Volume: {
+                        parseFloat(vesselWeight) > 0
+                          ? `${((parseInt(vesselSets)||0) * (parseInt(vesselReps)||0) * (parseFloat(vesselWeight)||0)).toLocaleString()} kg·reps`
+                          : `${((parseInt(vesselSets)||0) * (parseInt(vesselReps)||0))} reps`
+                      }
+                    </Text>
+                  )}
+                </Field>
+              </> : <>
+                <Field label="Duration (minutes)" colors={colors}>
+                  <TextInput
+                    style={inputStyle}
+                    placeholder="30"
+                    placeholderTextColor={colors.textMuted}
+                    keyboardType="number-pad"
+                    value={vesselMinutes}
+                    onChangeText={setVesselMinutes}
+                  />
+                </Field>
+              </>}
             </>}
 
             {pillar === "impact" && <>
@@ -453,6 +519,12 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   catText: { fontSize: 12 },
+
+  // Vessel sets/reps/weight row
+  triRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  triInput: { flex: 1, textAlign: "center" },
+  triSep: { fontSize: 18, fontWeight: "300" },
+  volumePreview: { fontSize: 12, fontWeight: "700", marginTop: 4 },
 
   // Impact category grid
   catGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
