@@ -67,15 +67,28 @@ export default function FellowshipScreen() {
     if (error) return Alert.alert("Couldn't save.", error.message);
     setUsername(newUsername.toLowerCase().trim());
     setEditingUsername(false);
+    Alert.alert("Username saved ✓", `Your username is now @${newUsername.toLowerCase().trim()}.`);
   }
 
   async function togglePrivacy(key: keyof Privacy) {
     const updated = { ...privacy, [key]: !privacy[key] };
     setPrivacy(updated);
-    await supabase
+    const { error } = await supabase
       .from("profiles")
       .update({ privacy_settings: updated })
       .eq("id", userId);
+    if (error) {
+      // Roll back optimistic update
+      setPrivacy(privacy);
+      Alert.alert("Couldn't update privacy setting.", error.message);
+    }
+  }
+
+  function handleSignOut() {
+    Alert.alert("Sign out?", "You'll need to sign in again to access your data.", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Sign out", style: "destructive", onPress: () => supabase.auth.signOut() },
+    ]);
   }
 
   const totalGoals   = (goals ?? []).length;
@@ -244,14 +257,14 @@ export default function FellowshipScreen() {
 
         {/* ── Sign out ── */}
         <Pressable
-          onPress={() => supabase.auth.signOut()}
+          onPress={handleSignOut}
           style={[styles.signOutBtn, { borderColor: "#D85A30" }]}
           android_ripple={{ color: "#FEF3EE" }}
         >
           <Text style={[styles.signOutText, { color: "#D85A30" }]}>Sign out</Text>
         </Pressable>
 
-        <Text style={[styles.versionText, { color: colors.textDisabled }]}>The Mirror v0.1</Text>
+        <Text style={[styles.versionText, { color: colors.textDisabled }]}>The Mirror v1.0</Text>
       </ScrollView>
     </SafeAreaView>
   );
