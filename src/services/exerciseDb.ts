@@ -52,44 +52,31 @@ export type ExerciseFilters = {
 };
 
 // ─── Body part constants ──────────────────────────────────────────────────────
+// These are the actual filter keys used in the menu.
+// Muscle-based keys match primaryMuscles values directly.
+// "cardio" is special — filters by category === "cardio".
 
 export const BODY_PARTS = [
-  "back",
-  "cardio",
   "chest",
-  "lower arms",
-  "lower legs",
-  "neck",
   "shoulders",
-  "upper arms",
-  "upper legs",
-  "waist",
+  "triceps",
+  "biceps",
+  "forearms",
+  "lats",
+  "middle back",
+  "lower back",
+  "traps",
+  "abdominals",
+  "quadriceps",
+  "hamstrings",
+  "glutes",
+  "adductors",
+  "calves",
+  "neck",
+  "cardio",
 ] as const;
 
 export type BodyPart = (typeof BODY_PARTS)[number];
-
-// ─── Muscle → BodyPart mapping ────────────────────────────────────────────────
-
-const MUSCLE_TO_BODY_PART: Record<string, string> = {
-  chest:         "chest",
-  lats:          "back",
-  "middle back": "back",
-  "lower back":  "back",
-  traps:         "back",
-  abdominals:    "waist",
-  obliques:      "waist",
-  shoulders:     "shoulders",
-  biceps:        "upper arms",
-  triceps:       "upper arms",
-  forearms:      "lower arms",
-  quadriceps:    "upper legs",
-  hamstrings:    "upper legs",
-  glutes:        "upper legs",
-  adductors:     "upper legs",
-  abductors:     "upper legs",
-  calves:        "lower legs",
-  neck:          "neck",
-};
 
 const IMG_BASE =
   "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/";
@@ -100,18 +87,10 @@ const DB_URL =
 // ─── Normalise raw → Exercise ─────────────────────────────────────────────────
 
 function normalise(raw: RawExercise): Exercise {
-  const bodyParts = [
-    ...new Set(
-      raw.primaryMuscles
-        .map((m) => MUSCLE_TO_BODY_PART[m.toLowerCase()])
-        .filter(Boolean)
-    ),
-  ];
-
-  // If no primary muscle maps (e.g. "cardio" category), use category itself
-  if (bodyParts.length === 0 && raw.category === "cardio") {
-    bodyParts.push("cardio");
-  }
+  // bodyParts = primaryMuscles as-is, plus "cardio" for cardio category exercises
+  const bodyParts = raw.category === "cardio"
+    ? [...new Set([...raw.primaryMuscles, "cardio"])]
+    : raw.primaryMuscles;
 
   const imageUrls = raw.images.map((p) => IMG_BASE + p);
 

@@ -23,16 +23,23 @@ const VESSEL_COLOR = "#D85A30";
 const VESSEL_BG    = "#FEF3EE";
 
 const PART_META: Record<string, { emoji: string; label: string; desc: string }> = {
-  back:         { emoji: "🔙", label: "Back",       desc: "Lats, traps, rhomboids" },
-  cardio:       { emoji: "🫀", label: "Cardio",     desc: "Running, cycling, HIIT" },
-  chest:        { emoji: "💪", label: "Chest",      desc: "Pecs, push movements" },
-  "lower arms": { emoji: "🦾", label: "Forearms",   desc: "Wrist & grip strength" },
-  "lower legs": { emoji: "🦵", label: "Calves",     desc: "Calf raises, tibialis" },
-  neck:         { emoji: "🔝", label: "Neck",       desc: "Neck flexion & extension" },
-  shoulders:    { emoji: "🏋️", label: "Shoulders",  desc: "Delts, rotator cuff" },
-  "upper arms": { emoji: "💪", label: "Biceps",     desc: "Curls & tricep work" },
-  "upper legs": { emoji: "🦿", label: "Quads",      desc: "Quads, hamstrings, glutes" },
-  waist:        { emoji: "⭕", label: "Core",       desc: "Abs, obliques, lower back" },
+  chest:          { emoji: "💪", label: "Chest",       desc: "Pecs, push movements" },
+  shoulders:      { emoji: "🏋️", label: "Shoulders",   desc: "Delts, rotator cuff" },
+  triceps:        { emoji: "💥", label: "Triceps",     desc: "Pushdowns, extensions" },
+  biceps:         { emoji: "🦾", label: "Biceps",      desc: "Curls & chin-ups" },
+  forearms:       { emoji: "✊", label: "Forearms",    desc: "Wrist & grip strength" },
+  lats:           { emoji: "🔙", label: "Lats",        desc: "Pull-ups, rows" },
+  "middle back":  { emoji: "🗂️", label: "Mid Back",    desc: "Rhomboids, mid traps" },
+  "lower back":   { emoji: "⬇️", label: "Lower Back",  desc: "Erectors, deadlifts" },
+  traps:          { emoji: "🔺", label: "Traps",       desc: "Shrugs, upright rows" },
+  abdominals:     { emoji: "⭕", label: "Abs",         desc: "Core & obliques" },
+  quadriceps:     { emoji: "🦵", label: "Quads",       desc: "Squats, leg press" },
+  hamstrings:     { emoji: "🦿", label: "Hamstrings",  desc: "RDL, leg curls" },
+  glutes:         { emoji: "🍑", label: "Glutes",      desc: "Hip thrusts, bridges" },
+  adductors:      { emoji: "🤸", label: "Adductors",   desc: "Inner thigh" },
+  calves:         { emoji: "🦶", label: "Calves",      desc: "Calf raises, tibialis" },
+  neck:           { emoji: "🔝", label: "Neck",        desc: "Neck flexion & extension" },
+  cardio:         { emoji: "🫀", label: "Cardio",      desc: "Running, cycling, HIIT" },
 };
 
 // Equipment chips shown in the exercise list — "all" + each type that exists in the API data
