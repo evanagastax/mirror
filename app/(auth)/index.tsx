@@ -1,278 +1,226 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
-  View,
-  Text,
-  TextInput,
-  Pressable,
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
+  View, Text, TextInput, Pressable, ActivityIndicator,
+  KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Alert,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { StatusBar } from "expo-status-bar";
 import { supabase } from "../../src/api/supabase";
+import { useThemeStore } from "../../src/store/themeStore";
 
-type Tab = "signin" | "signup";
+type Tab = "signin" | "signup" | "forgot";
 
 export default function AuthScreen() {
-  const router = useRouter();
-  const [tab, setTab] = useState<Tab>("signin");
-  const [email, setEmail] = useState("");
+  const { isDark, colors, hydrate } = useThemeStore();
+  const [tab,      setTab]      = useState<Tab>("signin");
+  const [email,    setEmail]    = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading,  setLoading]  = useState(false);
+  const [sent,     setSent]     = useState(false);
 
-  function resetFields() {
-    setEmail("");
-    setPassword("");
-    setUsername("");
-  }
+  useEffect(() => { hydrate(); }, []);
+
+  function reset() { setEmail(""); setPassword(""); setUsername(""); setSent(false); }
+  function goTab(t: Tab) { setTab(t); reset(); }
 
   async function handleSignIn() {
-    if (!email || !password) return Alert.alert("Enter your email and password.");
+    if (!email || !password) { Alert.alert("Fill in email and password."); return; }
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     setLoading(false);
-    if (error) return Alert.alert("Couldn't sign in.", error.message);
+    if (error) Alert.alert("Sign in failed", error.message);
   }
 
   async function handleSignUp() {
-    if (!email || !password) return Alert.alert("Enter your email and password.");
-    if (password.length < 8) return Alert.alert("Password must be at least 8 characters.");
+    if (!email || !password) { Alert.alert("Fill in email and password."); return; }
+    if (password.length < 8) { Alert.alert("Password must be at least 8 characters."); return; }
     setLoading(true);
-    const { data, error } = await supabase.auth.signUp({ email, password });
-    if (error) {
-      setLoading(false);
-      return Alert.alert("Couldn't create account.", error.message);
-    }
-    if (username && data.user) {
-      await supabase
-        .from("profiles")
+    const { data, error } = await supabase.auth.signUp({ email: email.trim(), password });
+    if (error) { setLoading(false); Alert.alert("Sign up failed", error.message); return; }
+    if (username.trim() && data.user) {
+      await supabase.from("profiles")
         .update({ username: username.toLowerCase().trim() })
         .eq("id", data.user.id);
     }
     setLoading(false);
-    if (!data.session) {
-      Alert.alert("Check your email", "We sent a confirmation link.");
-    }
+    if (!data.session) Alert.alert("Check your email", "We sent a confirmation link to activate your account.");
   }
 
+  async function handleForgot() {
+    if (!email) { Alert.alert("Enter your email first."); return; }
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim());
+    setLoading(false);
+    if (error) { Alert.alert("Failed", error.message); return; }
+    setSent(true);
+  }
+
+  const inp = [S.input, { borderColor: colors.border, color: colors.textPrimary, backgroundColor: colors.bgInput }];
+
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        keyboardShouldPersistTaps="handled"
-      >
-        {/* Logo */}
-        <View style={styles.logoArea}>
-          <View style={styles.logoCircle}>
-            <Text style={styles.logoSymbol}>◎</Text>
+    <SafeAreaView style={[S.root, { backgroundColor: colors.bg }]} edges={["top", "bottom"]}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <ScrollView contentContainerStyle={S.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+
+          {/* ── Logo ── */}
+          <View style={S.logoArea}>
+            <View style={[S.logoRing, { borderColor: colors.border }]}>
+              <Text style={[S.logoSymbol, { color: colors.textPrimary }]}>◎</Text>
+            </View>
+            <Text style={[S.appName, { color: colors.textPrimary }]}>The Mirror</Text>
+            <Text style={[S.tagline, { color: colors.textMuted }]}>Know thyself.</Text>
           </View>
-          <Text style={styles.appName}>The Mirror</Text>
-          <Text style={styles.tagline}>Know thyself.</Text>
-        </View>
 
-        {/* Tabs */}
-        <View style={styles.tabRow}>
-          {(["signin", "signup"] as Tab[]).map((t) => (
-            <Pressable
-              key={t}
-              onPress={() => { setTab(t); resetFields(); }}
-              style={[styles.tab, tab === t && styles.tabActive]}
-            >
-              <Text style={[styles.tabText, tab === t && styles.tabTextActive]}>
-                {t === "signin" ? "Sign in" : "Create account"}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-
-        {/* Fields */}
-        <View style={styles.fields}>
-          <Field label="Email">
-            <TextInput
-              style={styles.input}
-              placeholder="you@email.com"
-              placeholderTextColor="#aaa"
-              autoCapitalize="none"
-              keyboardType="email-address"
-              value={email}
-              onChangeText={setEmail}
-            />
-          </Field>
-
-          <Field label="Password">
-            <TextInput
-              style={styles.input}
-              placeholder={tab === "signup" ? "At least 8 characters" : "••••••••"}
-              placeholderTextColor="#aaa"
-              secureTextEntry
-              value={password}
-              onChangeText={setPassword}
-            />
-          </Field>
-
-          {tab === "signup" && (
-            <Field label="Username (optional)">
-              <TextInput
-                style={styles.input}
-                placeholder="made_agastya"
-                placeholderTextColor="#aaa"
-                autoCapitalize="none"
-                value={username}
-                onChangeText={setUsername}
-              />
-            </Field>
+          {/* ── Tab row ── */}
+          {tab !== "forgot" && (
+            <View style={[S.tabRow, { borderBottomColor: colors.border }]}>
+              {(["signin", "signup"] as Tab[]).map((t) => (
+                <Pressable key={t} onPress={() => goTab(t)}
+                  style={[S.tab, tab === t && { borderBottomColor: colors.textPrimary }]}>
+                  <Text style={[S.tabText, { color: tab === t ? colors.textPrimary : colors.textMuted },
+                    tab === t && { fontWeight: "700" }]}>
+                    {t === "signin" ? "Sign in" : "Create account"}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
           )}
-        </View>
 
-        {/* CTA */}
-        <Pressable
-          onPress={tab === "signin" ? handleSignIn : handleSignUp}
-          disabled={loading}
-          style={[styles.button, loading && styles.buttonDisabled]}
-        >
-          {loading
-            ? <ActivityIndicator color="#fff" />
-            : <Text style={styles.buttonText}>
-                {tab === "signin" ? "Sign in" : "Create account"}
+          {/* ── Forgot password ── */}
+          {tab === "forgot" && (
+            <View style={S.forgotHeader}>
+              <Pressable onPress={() => goTab("signin")} hitSlop={12}>
+                <Text style={[S.forgotBack, { color: colors.textMuted }]}>←</Text>
+              </Pressable>
+              <Text style={[S.forgotTitle, { color: colors.textPrimary }]}>Reset password</Text>
+            </View>
+          )}
+
+          {/* ── Fields ── */}
+          <View style={S.fields}>
+            <FieldWrap label="Email" colors={colors}>
+              <TextInput style={inp} placeholder="you@email.com" placeholderTextColor={colors.textMuted}
+                autoCapitalize="none" keyboardType="email-address" value={email} onChangeText={setEmail} />
+            </FieldWrap>
+
+            {tab !== "forgot" && (
+              <FieldWrap label="Password" colors={colors}>
+                <TextInput style={inp}
+                  placeholder={tab === "signup" ? "At least 8 characters" : "••••••••"}
+                  placeholderTextColor={colors.textMuted}
+                  secureTextEntry value={password} onChangeText={setPassword} />
+              </FieldWrap>
+            )}
+
+            {tab === "signup" && (
+              <FieldWrap label="Username (optional)" colors={colors}>
+                <TextInput style={inp} placeholder="made_agastya" placeholderTextColor={colors.textMuted}
+                  autoCapitalize="none" value={username} onChangeText={setUsername} />
+              </FieldWrap>
+            )}
+          </View>
+
+          {/* ── Forgot sent state ── */}
+          {tab === "forgot" && sent && (
+            <View style={[S.sentCard, { backgroundColor: "#F0FBF7", borderColor: "#1D9E75" }]}>
+              <Text style={[S.sentTitle, { color: "#1D9E75" }]}>✓ Check your inbox</Text>
+              <Text style={[S.sentSub, { color: "#1D9E75" }]}>
+                We sent a password reset link to {email}.
               </Text>
-          }
-        </Pressable>
+            </View>
+          )}
 
-        {tab === "signin" && (
-          <Pressable style={styles.forgotWrap}>
-            <Text style={styles.forgotText}>Forgot password?</Text>
-          </Pressable>
-        )}
-      </ScrollView>
-    </KeyboardAvoidingView>
+          {/* ── CTA ── */}
+          {!sent && (
+            <Pressable
+              onPress={tab === "signin" ? handleSignIn : tab === "signup" ? handleSignUp : handleForgot}
+              disabled={loading}
+              style={[S.cta, { backgroundColor: colors.textPrimary }, loading && { opacity: 0.5 }]}
+            >
+              {loading
+                ? <ActivityIndicator color={colors.bg} />
+                : <Text style={[S.ctaText, { color: colors.bg }]}>
+                    {tab === "signin" ? "Sign in" : tab === "signup" ? "Create account" : "Send reset link"}
+                  </Text>
+              }
+            </Pressable>
+          )}
+
+          {/* ── Footer links ── */}
+          {tab === "signin" && (
+            <Pressable onPress={() => goTab("forgot")} style={S.footerLink}>
+              <Text style={[S.footerLinkText, { color: colors.textMuted }]}>Forgot password?</Text>
+            </Pressable>
+          )}
+
+          {/* ── Feature pills ── */}
+          {tab === "signup" && (
+            <View style={S.pills}>
+              {["🧘 Soul tracking", "💪 Vessel roadmap", "◈ Impact log", "◎ Stewardship"].map((p) => (
+                <View key={p} style={[S.pill, { backgroundColor: colors.bgSubtle }]}>
+                  <Text style={[S.pillText, { color: colors.textMuted }]}>{p}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          <Text style={[S.versionText, { color: colors.textDisabled }]}>The Mirror v0.1</Text>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function FieldWrap({ label, children, colors }: {
+  label: string; children: React.ReactNode;
+  colors: ReturnType<typeof useThemeStore.getState>["colors"];
+}) {
   return (
-    <View style={styles.fieldWrap}>
-      <Text style={styles.fieldLabel}>{label}</Text>
+    <View style={S.fieldWrap}>
+      <Text style={[S.fieldLabel, { color: colors.textMuted }]}>{label}</Text>
       {children}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  scroll: {
-    flexGrow: 1,
-    justifyContent: "center",
-    padding: 28,
-  },
-  logoArea: {
-    alignItems: "center",
-    marginBottom: 36,
-  },
-  logoCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    borderWidth: 1,
-    borderColor: "#e5e5e5",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 12,
-  },
-  logoSymbol: {
-    fontSize: 24,
-    color: "#111",
-  },
-  appName: {
-    fontSize: 22,
-    fontWeight: "600",
-    color: "#111",
-    letterSpacing: -0.5,
-  },
-  tagline: {
-    fontSize: 14,
-    color: "#aaa",
-    marginTop: 4,
-  },
-  tabRow: {
-    flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e5e5e5",
-    marginBottom: 24,
-  },
-  tab: {
-    flex: 1,
-    paddingBottom: 12,
-    alignItems: "center",
-    borderBottomWidth: 2,
-    borderBottomColor: "transparent",
-    marginBottom: -1,
-  },
-  tabActive: {
-    borderBottomColor: "#111",
-  },
-  tabText: {
-    fontSize: 14,
-    color: "#aaa",
-  },
-  tabTextActive: {
-    color: "#111",
-    fontWeight: "500",
-  },
-  fields: {
-    gap: 16,
-    marginBottom: 8,
-  },
-  fieldWrap: {
-    gap: 6,
-  },
-  fieldLabel: {
-    fontSize: 12,
-    color: "#888",
-    fontWeight: "500",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#e5e5e5",
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 15,
-    color: "#111",
-    backgroundColor: "#fafafa",
-  },
-  button: {
-    backgroundColor: "#111",
-    borderRadius: 10,
-    paddingVertical: 14,
-    alignItems: "center",
-    marginTop: 24,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  forgotWrap: {
-    alignItems: "center",
-    marginTop: 16,
-  },
-  forgotText: {
-    fontSize: 13,
-    color: "#aaa",
-  },
+const S = StyleSheet.create({
+  root: { flex: 1 },
+  scroll: { flexGrow: 1, justifyContent: "center", padding: 28, gap: 0 },
+
+  logoArea: { alignItems: "center", marginBottom: 36 },
+  logoRing: { width: 60, height: 60, borderRadius: 30, borderWidth: 1.5, alignItems: "center", justifyContent: "center", marginBottom: 14 },
+  logoSymbol: { fontSize: 26 },
+  appName: { fontSize: 24, fontWeight: "800", letterSpacing: -0.5 },
+  tagline: { fontSize: 13, marginTop: 4, letterSpacing: 0.5 },
+
+  tabRow: { flexDirection: "row", borderBottomWidth: 1, marginBottom: 28 },
+  tab: { flex: 1, paddingBottom: 12, alignItems: "center", borderBottomWidth: 2.5, borderBottomColor: "transparent", marginBottom: -1 },
+  tabText: { fontSize: 14 },
+
+  forgotHeader: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 28 },
+  forgotBack: { fontSize: 22, fontWeight: "300" },
+  forgotTitle: { fontSize: 18, fontWeight: "800", letterSpacing: -0.5 },
+
+  fields: { gap: 16, marginBottom: 24 },
+  fieldWrap: { gap: 7 },
+  fieldLabel: { fontSize: 10, fontWeight: "700", textTransform: "uppercase", letterSpacing: 1 },
+  input: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 13, fontSize: 15 },
+
+  sentCard: { borderWidth: 1, borderRadius: 14, padding: 16, marginBottom: 16, gap: 4 },
+  sentTitle: { fontSize: 15, fontWeight: "700" },
+  sentSub: { fontSize: 13, lineHeight: 20 },
+
+  cta: { borderRadius: 14, paddingVertical: 15, alignItems: "center", marginBottom: 12 },
+  ctaText: { fontSize: 15, fontWeight: "700" },
+
+  footerLink: { alignItems: "center", paddingVertical: 8 },
+  footerLinkText: { fontSize: 13 },
+
+  pills: { flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "center", marginTop: 24, marginBottom: 8 },
+  pill: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 99 },
+  pillText: { fontSize: 12 },
+
+  versionText: { textAlign: "center", fontSize: 11, marginTop: 24 },
 });

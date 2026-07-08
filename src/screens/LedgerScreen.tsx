@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import {
   View, Text, ScrollView, Pressable,
   ActivityIndicator, StyleSheet, RefreshControl,
@@ -11,8 +11,14 @@ import { useThemeStore } from "../store/themeStore";
 import { useLedger, summarizeLedger, Transaction } from "../hooks/useLedger";
 import { usePillars } from "../hooks/usePillars";
 import { scoreToLevel } from "../utils/pillarLevel";
+import { loadBudget, BudgetGoals } from "../services/stewardshipBudget";
+import { buildMonthlyTrend } from "../services/stewardshipStats";
+import { FinancialHealthScore } from "../components/Stewardship/FinancialHealthScore";
+import { BudgetGoalsSection } from "../components/Stewardship/BudgetGoalsSection";
+import { MonthlyTrendChart } from "../components/Stewardship/MonthlyTrendChart";
+import { ZakatCalculator } from "../components/Stewardship/ZakatCalculator";
 
-const GOLD = "#BA7517";
+const GOLD    = "#BA7517";
 const GOLD_BG = "#FEF9EE";
 
 type Filter = "all" | "investment" | "consumption" | "leak";
@@ -57,9 +63,20 @@ export default function LedgerScreen() {
   const { data: txs, isLoading, isError, refetch, isRefetching } = useLedger(userId);
   const { data: pillars } = usePillars(userId);
   const [filter, setFilter] = useState<Filter>("all");
+  const [budget, setBudget] = useState<BudgetGoals | null>(null);
 
   const { level, xp, xpMax } = scoreToLevel(pillars?.stewardship ?? 0);
   const barPct = xp / xpMax;
+
+  // Load budget goals
+  const loadBudgetData = useCallback(() => {
+    if (userId) loadBudget(userId).then(setBudget);
+  }, [userId]);
+
+  useEffect(() => { loadBudgetData(); }, [loadBudgetData]);
+
+  // Derived — must be before early returns (rules of hooks)
+  const trendData = useMemo(() => buildMonthlyTrend(txs ?? [], 6), [txs]);
 
   if (isLoading) {
     return (
@@ -84,16 +101,13 @@ export default function LedgerScreen() {
     );
   }
 
-  const summary  = summarizeLedger(txs);
-  const filtered = filter === "all" ? txs : txs.filter((t) => t.category === filter);
-  const grouped  = groupByDate(filtered);
-
-  const netPositive = summary.netScore >= 0;
-  const totalIn  = summary.totalInvestment;
-  const totalOut = summary.totalConsumption + summary.totalLeak;
-  const healthPct = totalIn + totalOut > 0
-    ? Math.min(totalIn / (totalIn + totalOut), 1)
-    : 0;
+  const summary      = summarizeLedger(txs);
+  const filtered     = filter === "all" ? txs : txs.filter((t) => t.category === filter);
+  const grouped      = groupByDate(filtered);
+  const netPositive  = summary.netScore >= 0;
+  const totalIn      = summary.totalInvestment;
+  const totalOut     = summary.totalConsumption + summary.totalLeak;
+  const healthPct    = totalIn + totalOut > 0 ? Math.min(totalIn / (totalIn + totalOut), 1) : 0;
 
   return (
     <SafeAreaView style={[S.root, { backgroundColor: colors.bg }]} edges={["top"]}>
@@ -125,6 +139,14 @@ export default function LedgerScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={GOLD} />}
       >
+        {/* ── Financial Health Score ── */}
+        <FinancialHealthScore
+          investment={summary.totalInvestment}
+          consumption={summary.totalConsumption}
+          leak={summary.totalLeak}
+          colors={colors}
+        />
+
         {/* ── Net balance card ── */}
         <View style={[S.netCard, { backgroundColor: netPositive ? "#F0FBF7" : "#FEF3EE", borderColor: netPositive ? "#1D9E75" : "#D85A30" }]}>
           <View style={S.netTop}>
@@ -135,13 +157,12 @@ export default function LedgerScreen() {
               </Text>
             </View>
             <View style={S.netRight}>
-              <Text style={[S.netEmoji]}>{netPositive ? "📈" : "📉"}</Text>
+              <Text style={S.netEmoji}>{netPositive ? "📈" : "📉"}</Text>
               <Text style={[S.netHint, { color: netPositive ? "#1D9E75" : "#D85A30" }]}>
                 {netPositive ? "Positive flow" : "Drain exceeds growth"}
               </Text>
             </View>
           </View>
-          {/* Health bar */}
           <View style={S.healthRow}>
             <Text style={[S.healthLabel, { color: "#1D9E75" }]}>Invest</Text>
             <View style={[S.healthTrack, { backgroundColor: "#FEF3EE" }]}>
@@ -157,6 +178,21 @@ export default function LedgerScreen() {
           <StatChip label="Spent"    value={formatRp(summary.totalConsumption)} color="#378ADD" bg="#F0F7FE" />
           <StatChip label="Leaked"   value={formatRp(summary.totalLeak)}        color="#D85A30" bg="#FEF3EE" />
         </View>
+
+        {/* ── Budget Goals ── */}
+        {budget && (
+          <BudgetGoalsSection
+            budget={budget}
+            transactions={txs}
+            colors={colors}
+            onEdit={() => {
+              router.push("/stewardship-budget" as any);
+            }}
+          />
+        )}
+
+        {/* ── Monthly Trend Chart ── */}
+        <MonthlyTrendChart data={trendData} colors={colors} />
 
         {/* ── Log CTA ── */}
         <Pressable
@@ -204,7 +240,7 @@ export default function LedgerScreen() {
                 <Text style={[S.groupSum, {
                   color: dayTxs.reduce((s, t) =>
                     s + (t.category === "investment" ? t.amount : -t.amount), 0) >= 0
-                    ? "#1D9E75" : "#D85A30"
+                    ? "#1D9E75" : "#D85A30",
                 }]}>
                   {dayTxs.reduce((s, t) =>
                     s + (t.category === "investment" ? t.amount : -t.amount), 0) >= 0 ? "+" : ""}
@@ -220,10 +256,20 @@ export default function LedgerScreen() {
             </View>
           ))
         )}
+
+        {/* ── Zakat Calculator ── */}
+        <View style={S.sectionGap}>
+          <Text style={[S.sectionLabel, { color: colors.textMuted }]}>ISLAMIC FINANCE</Text>
+          <ZakatCalculator colors={colors} />
+        </View>
+
+        <View style={{ height: 24 }} />
       </ScrollView>
     </SafeAreaView>
   );
 }
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
 
 function TxRow({ tx, colors, last }: { tx: Transaction; colors: C; last: boolean }) {
   const meta = CAT_META[tx.category];
@@ -259,10 +305,12 @@ function StatChip({ label, value, color, bg }: {
   );
 }
 
+// ─── Styles ───────────────────────────────────────────────────────────────────
+
 const S = StyleSheet.create({
   root:  { flex: 1 },
   flex:  { flex: 1 },
-  content: { padding: 16, paddingBottom: 40 },
+  content: { padding: 16, paddingBottom: 40, gap: 14 },
   center: { flex: 1, alignItems: "center", justifyContent: "center", gap: 10 },
   stateText: { fontSize: 15 },
   retryBtn: { paddingHorizontal: 16, paddingVertical: 8, borderWidth: 1, borderRadius: 8 },
@@ -279,7 +327,7 @@ const S = StyleSheet.create({
   levelFill: { height: 4, borderRadius: 99, backgroundColor: GOLD },
   levelXp: { fontSize: 10, fontWeight: "600" },
 
-  netCard: { borderWidth: 1.5, borderRadius: 20, padding: 18, marginBottom: 14 },
+  netCard: { borderWidth: 1.5, borderRadius: 20, padding: 18 },
   netTop: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 14 },
   netLabel: { fontSize: 10, fontWeight: "700", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 4 },
   netValue: { fontSize: 28, fontWeight: "800", letterSpacing: -1 },
@@ -291,17 +339,17 @@ const S = StyleSheet.create({
   healthTrack: { flex: 1, height: 6, borderRadius: 99, overflow: "hidden" },
   healthFill: { height: 6, borderRadius: 99, backgroundColor: "#1D9E75" },
 
-  statsRow: { flexDirection: "row", gap: 8, marginBottom: 14 },
+  statsRow: { flexDirection: "row", gap: 8 },
   statChip: { flex: 1, borderRadius: 14, padding: 12, gap: 3 },
   statLabel: { fontSize: 9, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.8 },
   statValue: { fontSize: 13, fontWeight: "700" },
 
-  logCta: { flexDirection: "row", alignItems: "center", gap: 10, borderWidth: 1, borderRadius: 14, padding: 14, marginBottom: 16, overflow: "hidden" },
+  logCta: { flexDirection: "row", alignItems: "center", gap: 10, borderWidth: 1, borderRadius: 14, padding: 14, overflow: "hidden" },
   logCtaIcon: { fontSize: 18 },
   logCtaText: { flex: 1, fontSize: 14, fontWeight: "600" },
   logCtaArrow: { fontSize: 20 },
 
-  filterRow: { gap: 8, paddingBottom: 16 },
+  filterRow: { gap: 8, paddingBottom: 4 },
   filterPill: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 99, borderWidth: 1 },
   filterText: { fontSize: 13 },
 
@@ -310,8 +358,8 @@ const S = StyleSheet.create({
   emptyTitle: { fontSize: 16, fontWeight: "600" },
   emptySub: { fontSize: 13, textAlign: "center" },
 
-  group: { marginBottom: 20 },
-  groupDateRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 },
+  group: { gap: 8 },
+  groupDateRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   groupDate: { fontSize: 11, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.8 },
   groupSum: { fontSize: 12, fontWeight: "700" },
   groupCard: { borderWidth: 1, borderRadius: 16, overflow: "hidden" },
@@ -326,4 +374,7 @@ const S = StyleSheet.create({
   rowCatText: { fontSize: 10, fontWeight: "600" },
   rowTime: { fontSize: 11 },
   rowAmount: { fontSize: 14, fontWeight: "700", flexShrink: 0 },
+
+  sectionGap: { gap: 8 },
+  sectionLabel: { fontSize: 10, fontWeight: "700", letterSpacing: 2, textTransform: "uppercase" },
 });

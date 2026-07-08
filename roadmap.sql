@@ -10,3 +10,19 @@ create table if not exists goals (
 
 alter table goals enable row level security;
 create policy "Own goals only" on goals for all using (auth.uid() = user_id);
+
+-- =============================================================
+-- Migration v2 — goals status column
+-- Run in Supabase SQL editor
+-- =============================================================
+
+-- Add status column (todo / in_progress / done)
+alter table goals
+  add column if not exists status text not null default 'todo'
+  check (status in ('todo', 'in_progress', 'done'));
+
+-- Back-fill from is_done
+update goals set status = 'done' where is_done = true;
+
+-- Index for filtered queries by status
+create index if not exists goals_status_idx on goals (user_id, status);

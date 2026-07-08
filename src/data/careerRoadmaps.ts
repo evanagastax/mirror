@@ -471,9 +471,601 @@ const productManagerRoadmap: CareerRoadmap = {
   ],
 };
 
+// ─── Cloud Architect ─────────────────────────────────────────────────────────
+
+const cloudArchitectRoadmap: CareerRoadmap = {
+  id: "cloud-architect",
+  title: "Cloud Architect",
+  icon: "☁️",
+  color: "#0891B2",
+  bg: "#ECFEFF",
+  description: "Design and manage cloud infrastructure at scale. Multi-cloud expertise (AWS, Azure, GCP), architecture patterns, and cost optimization.",
+  jobTitles: ["Cloud Architect", "Solutions Architect", "Cloud Engineer", "Infrastructure Architect"],
+  avgSalary: "Rp 20–50 jt/bulan",
+  timeToJob: "18–36 months",
+  sections: [
+    { id: "ca-foundation", title: "Cloud Fundamentals", icon: "📐", topics: [
+      { id: "ca-iaas-paas", title: "IaaS vs PaaS vs SaaS", description: "Service models, shared responsibility model, use cases for each.", level: "foundation", resources: [{ label: "AWS Cloud Concepts", url: "https://aws.amazon.com/what-is-cloud-computing/", type: "article" }] },
+      { id: "ca-regions", title: "Regions & Availability Zones", description: "Global infrastructure, latency, disaster recovery, multi-region design.", level: "foundation", resources: [{ label: "AWS Global Infrastructure", url: "https://aws.amazon.com/about-aws/global-infrastructure/", type: "docs" }] },
+    ]},
+    { id: "ca-aws", title: "AWS Core Services", icon: "🟧", topics: [
+      { id: "ca-ec2", title: "EC2 & Auto Scaling", description: "Instance types, AMIs, Launch Templates, Auto Scaling Groups, spot instances.", level: "core", resources: [{ label: "AWS EC2 Docs", url: "https://docs.aws.amazon.com/ec2/", type: "docs" }] },
+      { id: "ca-vpc", title: "VPC Networking", description: "Subnets, route tables, Internet Gateway, NAT Gateway, Security Groups, NACLs.", level: "core", resources: [{ label: "AWS VPC Guide", url: "https://docs.aws.amazon.com/vpc/latest/userguide/what-is-amazon-vpc.html", type: "docs" }] },
+      { id: "ca-s3", title: "S3 & Storage", description: "Buckets, lifecycle policies, versioning, encryption, CloudFront CDN.", level: "core", resources: [{ label: "AWS S3 Docs", url: "https://docs.aws.amazon.com/s3/", type: "docs" }] },
+      { id: "ca-rds", title: "RDS & Databases", description: "Multi-AZ, read replicas, Aurora, backup strategies, parameter groups.", level: "core", resources: [{ label: "AWS RDS Docs", url: "https://docs.aws.amazon.com/rds/", type: "docs" }] },
+      { id: "ca-lambda", title: "Lambda & Serverless", description: "Function triggers, layers, VPC access, cold starts, Step Functions.", level: "advanced", resources: [{ label: "AWS Lambda Docs", url: "https://docs.aws.amazon.com/lambda/", type: "docs" }] },
+    ]},
+    { id: "ca-patterns", title: "Architecture Patterns", icon: "🏗️", topics: [
+      { id: "ca-well-architected", title: "AWS Well-Architected", description: "5 pillars: operational excellence, security, reliability, performance, cost.", level: "core", resources: [{ label: "AWS Well-Architected Framework", url: "https://aws.amazon.com/architecture/well-architected/", type: "docs" }] },
+      { id: "ca-microservices", title: "Microservices on Cloud", description: "Service mesh, API Gateway, ECS/EKS, observability.", level: "advanced", resources: [{ label: "Microservices on AWS", url: "https://aws.amazon.com/microservices/", type: "article" }] },
+      { id: "ca-ha", title: "High Availability & DR", description: "RTO/RPO, backup strategies, multi-region failover, health checks.", level: "advanced", resources: [{ label: "AWS Disaster Recovery", url: "https://aws.amazon.com/disaster-recovery/", type: "article" }] },
+    ]},
+    { id: "ca-security", title: "Security & Compliance", icon: "🔒", topics: [
+      { id: "ca-iam", title: "IAM Best Practices", description: "Least privilege, roles, policies, MFA, SCPs, ABAC.", level: "core", resources: [{ label: "AWS IAM Best Practices", url: "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html", type: "docs" }] },
+      { id: "ca-compliance", title: "Compliance Frameworks", description: "GDPR, HIPAA, SOC 2, ISO 27001 — cloud controls and audit trails.", level: "advanced", resources: [{ label: "AWS Compliance Programs", url: "https://aws.amazon.com/compliance/programs/", type: "docs" }] },
+    ]},
+    { id: "ca-cost", title: "Cost Optimization", icon: "💰", topics: [
+      { id: "ca-cost-mgmt", title: "Cost Management", description: "Cost Explorer, budgets, Reserved Instances, Savings Plans, tagging strategy.", level: "core", resources: [{ label: "AWS Cost Optimization", url: "https://aws.amazon.com/aws-cost-management/", type: "docs" }] },
+    ]},
+  ],
+};
+
+// ─── iOS Developer ───────────────────────────────────────────────────────────
+
+const iosRoadmap: CareerRoadmap = {
+  id: "ios",
+  title: "iOS Developer",
+  icon: "🍎",
+  color: "#3B82F6",
+  bg: "#EFF6FF",
+  description: "Build native iOS apps with Swift and SwiftUI. Apple's modern development stack for iPhone and iPad.",
+  jobTitles: ["iOS Developer", "Swift Developer", "Mobile Engineer"],
+  avgSalary: "Rp 12–35 jt/bulan",
+  timeToJob: "10–18 months",
+  sections: [
+    { id: "ios-swift", title: "Swift Language", icon: "🦅", topics: [
+      { id: "ios-swift-basics", title: "Swift Fundamentals", description: "Optionals, closures, protocols, generics, error handling, ARC.", level: "foundation", resources: [{ label: "Swift.org Tour", url: "https://docs.swift.org/swift-book/GuidedTour/GuidedTour.html", type: "docs" }, { label: "100 Days of Swift", url: "https://www.hackingwithswift.com/100", type: "course" }] },
+      { id: "ios-async", title: "Async/Await & Concurrency", description: "Tasks, async let, actors, MainActor, structured concurrency.", level: "core", resources: [{ label: "Swift Concurrency", url: "https://docs.swift.org/swift-book/LanguageGuide/Concurrency.html", type: "docs" }] },
+    ]},
+    { id: "ios-ui", title: "UI Development", icon: "🎨", topics: [
+      { id: "ios-swiftui", title: "SwiftUI", description: "Views, state, bindings, @State/@Binding/@ObservedObject, List, NavigationStack.", level: "core", resources: [{ label: "Apple SwiftUI Tutorials", url: "https://developer.apple.com/tutorials/swiftui", type: "course" }] },
+      { id: "ios-animations", title: "Animations & Gestures", description: "withAnimation, transitions, matched geometry effect, DragGesture.", level: "core", resources: [{ label: "Hacking with Swift Animations", url: "https://www.hackingwithswift.com/books/ios-swiftui/animations", type: "article" }] },
+    ]},
+    { id: "ios-arch", title: "Architecture", icon: "🏗️", topics: [
+      { id: "ios-mvvm", title: "MVVM Pattern", description: "ObservableObject, ViewModel lifecycle, Combine publishers.", level: "core", resources: [{ label: "iOS Architecture Patterns", url: "https://medium.com/ios-os-x-development/ios-architecture-patterns-ecba4c38de52", type: "article" }] },
+      { id: "ios-swiftdata", title: "SwiftData", description: "Model persistence, queries, relationships, CloudKit sync.", level: "core", resources: [{ label: "SwiftData Docs", url: "https://developer.apple.com/documentation/swiftdata", type: "docs" }] },
+      { id: "ios-networking", title: "Networking", description: "URLSession, Codable, async APIs, error handling, Alamofire.", level: "core", resources: [{ label: "URLSession Tutorial", url: "https://www.kodeco.com/3244963-urlsession-tutorial-getting-started", type: "article" }] },
+    ]},
+    { id: "ios-publish", title: "Publishing", icon: "🚀", topics: [
+      { id: "ios-xcode", title: "Xcode & Instruments", description: "Debugging, profiling, memory leaks, Instruments, TestFlight.", level: "advanced", resources: [{ label: "Xcode Help", url: "https://developer.apple.com/documentation/xcode", type: "docs" }] },
+      { id: "ios-appstore", title: "App Store Submission", description: "App Store Connect, provisioning profiles, screenshots, ASO.", level: "advanced", resources: [{ label: "App Distribution Guide", url: "https://developer.apple.com/distribute/", type: "docs" }] },
+    ]},
+  ],
+};
+
+// ─── ML Engineer ─────────────────────────────────────────────────────────────
+
+const mlEngineerRoadmap: CareerRoadmap = {
+  id: "ml-engineer",
+  title: "ML Engineer",
+  icon: "🤖",
+  color: "#7C3AED",
+  bg: "#F5F3FF",
+  description: "Build production-grade machine learning systems. Bridge data science and software engineering to ship models at scale.",
+  jobTitles: ["ML Engineer", "AI Engineer", "Applied Scientist", "MLOps Engineer"],
+  avgSalary: "Rp 18–45 jt/bulan",
+  timeToJob: "18–30 months",
+  sections: [
+    { id: "mle-foundations", title: "Foundations", icon: "📐", topics: [
+      { id: "mle-python", title: "Python for ML", description: "NumPy, Pandas, virtual environments, type hints, profiling.", level: "foundation", resources: [{ label: "Python Data Science Handbook", url: "https://jakevdp.github.io/PythonDataScienceHandbook/", type: "book" }] },
+      { id: "mle-math", title: "Math for ML", description: "Linear algebra, calculus, probability, statistics, information theory.", level: "foundation", resources: [{ label: "Mathematics for ML (book)", url: "https://mml-book.github.io/", type: "book" }] },
+    ]},
+    { id: "mle-modeling", title: "Modeling", icon: "🧠", topics: [
+      { id: "mle-classical", title: "Classical ML", description: "Linear/logistic regression, trees, ensembles, SVMs, clustering, scikit-learn.", level: "core", resources: [{ label: "scikit-learn User Guide", url: "https://scikit-learn.org/stable/user_guide.html", type: "docs" }] },
+      { id: "mle-deep", title: "Deep Learning", description: "Neural nets, CNNs, RNNs, transformers — PyTorch or TensorFlow.", level: "core", resources: [{ label: "fast.ai Practical DL", url: "https://course.fast.ai", type: "course" }, { label: "PyTorch Tutorials", url: "https://pytorch.org/tutorials/", type: "docs" }] },
+      { id: "mle-llm", title: "LLMs & Foundation Models", description: "Fine-tuning, PEFT/LoRA, RAG, prompt engineering, LangChain.", level: "advanced", resources: [{ label: "HuggingFace NLP Course", url: "https://huggingface.co/learn/nlp-course", type: "course" }] },
+    ]},
+    { id: "mle-engineering", title: "ML Engineering", icon: "⚙️", topics: [
+      { id: "mle-features", title: "Feature Engineering & Stores", description: "Feature pipelines, Feast, online vs offline stores, data drift.", level: "core", resources: [{ label: "Feast Feature Store Docs", url: "https://docs.feast.dev", type: "docs" }] },
+      { id: "mle-training", title: "Distributed Training", description: "Data parallelism, model parallelism, PyTorch DDP, Ray Train.", level: "advanced", resources: [{ label: "PyTorch Distributed", url: "https://pytorch.org/tutorials/beginner/dist_overview.html", type: "docs" }] },
+      { id: "mle-serving", title: "Model Serving", description: "TorchServe, Triton, FastAPI, latency vs throughput, batching.", level: "core", resources: [{ label: "BentoML Docs", url: "https://docs.bentoml.com", type: "docs" }] },
+    ]},
+    { id: "mle-mlops", title: "MLOps", icon: "🔁", topics: [
+      { id: "mle-tracking", title: "Experiment Tracking", description: "MLflow, Weights & Biases, DVC, model registry.", level: "core", resources: [{ label: "MLflow Docs", url: "https://mlflow.org/docs/latest/", type: "docs" }] },
+      { id: "mle-pipelines", title: "ML Pipelines", description: "Kubeflow, ZenML, Metaflow, Airflow for orchestrating training.", level: "advanced", resources: [{ label: "ZenML Docs", url: "https://docs.zenml.io", type: "docs" }] },
+      { id: "mle-monitoring", title: "Model Monitoring", description: "Data drift, concept drift, Evidently AI, Grafana dashboards.", level: "advanced", resources: [{ label: "Evidently AI Docs", url: "https://docs.evidentlyai.com", type: "docs" }] },
+    ]},
+  ],
+};
+
+// ─── Blockchain Developer ────────────────────────────────────────────────────
+
+const blockchainRoadmap: CareerRoadmap = {
+  id: "blockchain",
+  title: "Blockchain Developer",
+  icon: "⛓️",
+  color: "#F59E0B",
+  bg: "#FFFBEB",
+  description: "Build decentralised applications, smart contracts, and Web3 protocols on Ethereum and other blockchains.",
+  jobTitles: ["Blockchain Developer", "Smart Contract Engineer", "Web3 Developer", "DeFi Engineer"],
+  avgSalary: "Rp 20–60 jt/bulan",
+  timeToJob: "12–24 months",
+  sections: [
+    { id: "bc-fundamentals", title: "Blockchain Fundamentals", icon: "📐", topics: [
+      { id: "bc-how", title: "How Blockchains Work", description: "Distributed ledgers, consensus mechanisms (PoW, PoS), nodes, wallets.", level: "foundation", resources: [{ label: "Bitcoin Whitepaper", url: "https://bitcoin.org/bitcoin.pdf", type: "article" }, { label: "Ethereum.org Learn", url: "https://ethereum.org/en/learn/", type: "article" }] },
+      { id: "bc-crypto", title: "Cryptography Basics", description: "Public/private keys, hashing, digital signatures, Merkle trees.", level: "foundation", resources: [{ label: "Crypto101", url: "https://www.crypto101.io/", type: "book" }] },
+    ]},
+    { id: "bc-solidity", title: "Smart Contracts", icon: "📜", topics: [
+      { id: "bc-solidity", title: "Solidity", description: "Data types, functions, modifiers, events, inheritance, gas optimisation.", level: "core", resources: [{ label: "Solidity Docs", url: "https://docs.soliditylang.org", type: "docs" }, { label: "CryptoZombies", url: "https://cryptozombies.io", type: "course" }] },
+      { id: "bc-patterns", title: "Contract Patterns", description: "Upgradeable contracts (proxy pattern), factory pattern, re-entrancy guard.", level: "advanced", resources: [{ label: "OpenZeppelin Contracts", url: "https://docs.openzeppelin.com/contracts", type: "docs" }] },
+      { id: "bc-security", title: "Smart Contract Security", description: "Re-entrancy, overflow, oracle manipulation, auditing with Slither.", level: "advanced", resources: [{ label: "SWC Registry", url: "https://swcregistry.io", type: "article" }] },
+    ]},
+    { id: "bc-tooling", title: "Dev Tooling", icon: "🔧", topics: [
+      { id: "bc-hardhat", title: "Hardhat / Foundry", description: "Compile, test, deploy, fork mainnet, scripts, tasks.", level: "core", resources: [{ label: "Hardhat Docs", url: "https://hardhat.org/docs", type: "docs" }, { label: "Foundry Book", url: "https://book.getfoundry.sh", type: "docs" }] },
+      { id: "bc-ethers", title: "Ethers.js / Viem", description: "Connect wallets, read/write contracts, event listeners, ENS.", level: "core", resources: [{ label: "Ethers.js Docs", url: "https://docs.ethers.org/v6/", type: "docs" }] },
+    ]},
+    { id: "bc-web3", title: "Web3 Frontend & DeFi", icon: "🌐", topics: [
+      { id: "bc-wagmi", title: "React + Wagmi", description: "Wallet connection, hooks for contracts, RainbowKit UI.", level: "core", resources: [{ label: "Wagmi Docs", url: "https://wagmi.sh", type: "docs" }] },
+      { id: "bc-defi", title: "DeFi Protocols", description: "AMMs, lending protocols (Aave, Compound), yield farming, flash loans.", level: "advanced", resources: [{ label: "DeFi Developer Road Map", url: "https://github.com/OffcierCia/DeFi-Developer-Road-Map", type: "article" }] },
+    ]},
+  ],
+};
+
+// ─── Game Developer ──────────────────────────────────────────────────────────
+
+const gameDevRoadmap: CareerRoadmap = {
+  id: "game-dev",
+  title: "Game Developer",
+  icon: "🎮",
+  color: "#8B5CF6",
+  bg: "#F5F3FF",
+  description: "Build games for PC, mobile, and console. Master Unity or Unreal Engine, game physics, and design patterns.",
+  jobTitles: ["Game Developer", "Unity Developer", "Gameplay Programmer", "Game Designer"],
+  avgSalary: "Rp 8–30 jt/bulan",
+  timeToJob: "12–24 months",
+  sections: [
+    { id: "gd-foundations", title: "Foundations", icon: "📐", topics: [
+      { id: "gd-csharp", title: "C# Fundamentals", description: "OOP, inheritance, interfaces, delegates, events, async/await.", level: "foundation", resources: [{ label: "C# Docs", url: "https://learn.microsoft.com/en-us/dotnet/csharp/", type: "docs" }] },
+      { id: "gd-math", title: "Game Math", description: "Vectors, matrices, quaternions, lerp, dot/cross product, trigonometry.", level: "foundation", resources: [{ label: "Essential Mathematics for Games", url: "https://essentialmath.com", type: "book" }] },
+    ]},
+    { id: "gd-unity", title: "Unity Engine", icon: "🔷", topics: [
+      { id: "gd-unity-basics", title: "Unity Basics", description: "GameObjects, Components, Prefabs, Scenes, Physics2D/3D, Input System.", level: "core", resources: [{ label: "Unity Learn", url: "https://learn.unity.com", type: "course" }, { label: "Brackeys YouTube", url: "https://www.youtube.com/@Brackeys", type: "video" }] },
+      { id: "gd-scripting", title: "Unity Scripting", description: "MonoBehaviour lifecycle, coroutines, ScriptableObjects, serialization.", level: "core", resources: [{ label: "Unity Scripting API", url: "https://docs.unity3d.com/ScriptReference/", type: "docs" }] },
+      { id: "gd-animation", title: "Animation & UI", description: "Animator Controller, blend trees, UI Toolkit, TextMeshPro.", level: "core", resources: [{ label: "Unity Animation Docs", url: "https://docs.unity3d.com/Manual/AnimationOverview.html", type: "docs" }] },
+    ]},
+    { id: "gd-patterns", title: "Game Patterns", icon: "🧩", topics: [
+      { id: "gd-design-patterns", title: "Design Patterns", description: "Singleton, Observer, Command, State Machine, Object Pooling.", level: "core", resources: [{ label: "Game Programming Patterns", url: "https://gameprogrammingpatterns.com", type: "book" }] },
+      { id: "gd-ecs", title: "ECS Architecture", description: "Entity-Component-System, Unity DOTS, performance for large worlds.", level: "advanced", resources: [{ label: "Unity DOTS Guide", url: "https://docs.unity3d.com/Packages/com.unity.entities@latest", type: "docs" }] },
+    ]},
+    { id: "gd-advanced", title: "Advanced Topics", icon: "🚀", topics: [
+      { id: "gd-multiplayer", title: "Multiplayer & Netcode", description: "Client-server, prediction, lag compensation, Mirror/Netcode for GameObjects.", level: "advanced", resources: [{ label: "Mirror Networking Docs", url: "https://mirror-networking.gitbook.io/docs/", type: "docs" }] },
+      { id: "gd-shaders", title: "Shaders & VFX", description: "Shader Graph, HLSL, post-processing, particle systems.", level: "advanced", resources: [{ label: "Unity Shader Graph Tutorial", url: "https://learn.unity.com/tutorial/introduction-to-shader-graph", type: "course" }] },
+      { id: "gd-publish", title: "Build & Publish", description: "Build settings, app stores (Steam, Google Play, App Store), IAP, ads.", level: "advanced", resources: [{ label: "Unity Publishing", url: "https://unity.com/solutions/release-and-publish", type: "article" }] },
+    ]},
+  ],
+};
+
+// ─── Data Engineer ───────────────────────────────────────────────────────────
+
+const dataEngineerRoadmap: CareerRoadmap = {
+  id: "data-engineer",
+  title: "Data Engineer",
+  icon: "🗂️",
+  color: "#0891B2",
+  bg: "#ECFEFF",
+  description: "Build pipelines and infrastructure for data processing. Enable data scientists and analysts with clean, reliable data.",
+  jobTitles: ["Data Engineer", "Analytics Engineer", "ETL Developer", "Big Data Engineer"],
+  avgSalary: "Rp 15–35 jt/bulan",
+  timeToJob: "10–18 months",
+  sections: [
+    { id: "de-foundations", title: "Foundations", icon: "📐", topics: [
+      { id: "de-sql", title: "SQL Mastery", description: "Joins, CTEs, window functions, indexes, query optimization, performance.", level: "foundation", resources: [{ label: "Mode SQL Tutorial", url: "https://mode.com/sql-tutorial/", type: "course" }, { label: "PostgreSQL Exercises", url: "https://pgexercises.com", type: "article" }] },
+      { id: "de-python", title: "Python for Data", description: "Pandas, data wrangling, file I/O (CSV, JSON, Parquet), API requests.", level: "foundation", resources: [{ label: "Python Data Science Handbook", url: "https://jakevdp.github.io/PythonDataScienceHandbook/", type: "book" }] },
+    ]},
+    { id: "de-databases", title: "Databases", icon: "🗄️", topics: [
+      { id: "de-rdbms", title: "Relational Databases", description: "PostgreSQL, normalization, transactions, partitioning, replication.", level: "core", resources: [{ label: "PostgreSQL Tutorial", url: "https://www.postgresqltutorial.com", type: "article" }] },
+      { id: "de-warehouses", title: "Data Warehouses", description: "Snowflake, BigQuery, Redshift — columnar storage, compute vs storage.", level: "core", resources: [{ label: "Snowflake University", url: "https://learn.snowflake.com", type: "course" }] },
+      { id: "de-lakes", title: "Data Lakes", description: "S3, Delta Lake, Iceberg, Hudi — schema evolution, ACID on object stores.", level: "advanced", resources: [{ label: "Delta Lake Docs", url: "https://docs.delta.io", type: "docs" }] },
+    ]},
+    { id: "de-etl", title: "ETL / ELT Pipelines", icon: "🔀", topics: [
+      { id: "de-airflow", title: "Apache Airflow", description: "DAGs, operators, sensors, task dependencies, retries, XComs.", level: "core", resources: [{ label: "Airflow Docs", url: "https://airflow.apache.org/docs/", type: "docs" }] },
+      { id: "de-dbt", title: "dbt (Data Build Tool)", description: "SQL transformations, models, tests, docs, incremental models.", level: "core", resources: [{ label: "dbt Learn", url: "https://learn.getdbt.com", type: "course" }] },
+      { id: "de-spark", title: "Apache Spark", description: "RDDs, DataFrames, PySpark, Spark SQL, partitioning, joins.", level: "advanced", resources: [{ label: "Databricks Spark Tutorial", url: "https://databricks.com/spark/about", type: "article" }] },
+    ]},
+    { id: "de-streaming", title: "Streaming Data", icon: "📡", topics: [
+      { id: "de-kafka", title: "Apache Kafka", description: "Topics, partitions, producers, consumers, Kafka Connect, Streams API.", level: "advanced", resources: [{ label: "Kafka Docs", url: "https://kafka.apache.org/documentation/", type: "docs" }] },
+    ]},
+    { id: "de-ops", title: "DataOps", icon: "🔧", topics: [
+      { id: "de-monitoring", title: "Data Observability", description: "Data quality checks, schema validation, Monte Carlo, Great Expectations.", level: "advanced", resources: [{ label: "Great Expectations Docs", url: "https://docs.greatexpectations.io", type: "docs" }] },
+    ]},
+  ],
+};
+
+// ─── QA / Test Engineer ──────────────────────────────────────────────────────
+
+const qaEngineerRoadmap: CareerRoadmap = {
+  id: "qa-engineer",
+  title: "QA / Test Engineer",
+  icon: "🧪",
+  color: "#16A34A",
+  bg: "#F0FDF4",
+  description: "Ensure software quality through manual and automated testing. Build test frameworks, catch bugs early, and own quality culture.",
+  jobTitles: ["QA Engineer", "Test Automation Engineer", "SDET", "Quality Engineer"],
+  avgSalary: "Rp 8–25 jt/bulan",
+  timeToJob: "6–12 months",
+  sections: [
+    { id: "qa-foundations", title: "Testing Fundamentals", icon: "📐", topics: [
+      { id: "qa-types", title: "Types of Testing", description: "Unit, integration, E2E, regression, smoke, UAT, exploratory testing.", level: "foundation", resources: [{ label: "Testing Types (Atlassian)", url: "https://www.atlassian.com/continuous-delivery/software-testing/types-of-software-testing", type: "article" }] },
+      { id: "qa-sdlc", title: "SDLC & STLC", description: "Where QA fits in agile, test planning, entry/exit criteria, defect lifecycle.", level: "foundation", resources: [{ label: "ISTQB Foundation Syllabus", url: "https://www.istqb.org/downloads/syllabi/foundation-level.html", type: "docs" }] },
+      { id: "qa-test-design", title: "Test Design Techniques", description: "Equivalence partitioning, boundary value, decision tables, pairwise testing.", level: "core", resources: [{ label: "Test Design Techniques Guide", url: "https://www.softwaretestinghelp.com/software-testing-techniques/", type: "article" }] },
+    ]},
+    { id: "qa-automation", title: "Test Automation", icon: "🤖", topics: [
+      { id: "qa-selenium", title: "Selenium / Playwright", description: "Browser automation, page object model, selectors, waits, CI integration.", level: "core", resources: [{ label: "Playwright Docs", url: "https://playwright.dev/docs/intro", type: "docs" }, { label: "Selenium Docs", url: "https://www.selenium.dev/documentation/", type: "docs" }] },
+      { id: "qa-api-testing", title: "API Testing", description: "Postman, REST Assured, Newman, contract testing, Pact.", level: "core", resources: [{ label: "Postman Learning Center", url: "https://learning.postman.com", type: "course" }] },
+      { id: "qa-unit", title: "Unit & Integration Testing", description: "Jest, pytest, JUnit, mocking, test doubles, code coverage.", level: "core", resources: [{ label: "Jest Docs", url: "https://jestjs.io/docs/getting-started", type: "docs" }] },
+    ]},
+    { id: "qa-perf", title: "Performance & Security", icon: "⚡", topics: [
+      { id: "qa-load", title: "Load & Performance Testing", description: "k6, JMeter, Locust — virtual users, ramp-up, assertions, reports.", level: "advanced", resources: [{ label: "k6 Docs", url: "https://k6.io/docs/", type: "docs" }] },
+      { id: "qa-security", title: "Security Testing Basics", description: "OWASP ZAP, DAST, SQL injection checks, auth testing.", level: "advanced", resources: [{ label: "OWASP Testing Guide", url: "https://owasp.org/www-project-web-security-testing-guide/", type: "docs" }] },
+    ]},
+    { id: "qa-cicd", title: "CI/CD & Tooling", icon: "🔧", topics: [
+      { id: "qa-pipeline", title: "Testing in CI/CD", description: "GitHub Actions, test parallelisation, flaky test detection, reporting.", level: "core", resources: [{ label: "GitHub Actions Docs", url: "https://docs.github.com/en/actions", type: "docs" }] },
+      { id: "qa-bdd", title: "BDD with Cucumber", description: "Gherkin syntax, step definitions, living documentation, team collaboration.", level: "optional", resources: [{ label: "Cucumber Docs", url: "https://cucumber.io/docs/cucumber/", type: "docs" }] },
+    ]},
+  ],
+};
+
+// ─── Site Reliability Engineer ───────────────────────────────────────────────
+
+const sreRoadmap: CareerRoadmap = {
+  id: "sre",
+  title: "Site Reliability Engineer",
+  icon: "📡",
+  color: "#DC2626",
+  bg: "#FEF2F2",
+  description: "Keep production systems reliable, scalable, and fast. Apply software engineering to operations — SLOs, incident response, and chaos engineering.",
+  jobTitles: ["Site Reliability Engineer", "Platform Engineer", "Infrastructure Engineer", "Production Engineer"],
+  avgSalary: "Rp 18–45 jt/bulan",
+  timeToJob: "18–36 months",
+  sections: [
+    { id: "sre-foundations", title: "SRE Fundamentals", icon: "📐", topics: [
+      { id: "sre-slo", title: "SLIs, SLOs & SLAs", description: "Error budgets, reliability targets, toil reduction, service-level objectives.", level: "foundation", resources: [{ label: "Google SRE Book", url: "https://sre.google/sre-book/table-of-contents/", type: "book" }] },
+      { id: "sre-linux", title: "Linux Deep Dive", description: "Kernel, syscalls, namespaces, cgroups, networking stack, perf tools.", level: "foundation", resources: [{ label: "Linux Performance (Brendan Gregg)", url: "https://www.brendangregg.com/linuxperf.html", type: "article" }] },
+    ]},
+    { id: "sre-observability", title: "Observability", icon: "🔭", topics: [
+      { id: "sre-metrics", title: "Metrics (Prometheus + Grafana)", description: "PromQL, recording rules, alerting rules, dashboards, RED method.", level: "core", resources: [{ label: "Prometheus Docs", url: "https://prometheus.io/docs/", type: "docs" }, { label: "Grafana Docs", url: "https://grafana.com/docs/grafana/latest/", type: "docs" }] },
+      { id: "sre-logging", title: "Structured Logging (ELK/Loki)", description: "Log aggregation, Logstash, Kibana, Grafana Loki, log-based alerts.", level: "core", resources: [{ label: "Elastic Stack Docs", url: "https://www.elastic.co/guide/index.html", type: "docs" }] },
+      { id: "sre-tracing", title: "Distributed Tracing", description: "OpenTelemetry, Jaeger, Tempo — trace context propagation, span analysis.", level: "advanced", resources: [{ label: "OpenTelemetry Docs", url: "https://opentelemetry.io/docs/", type: "docs" }] },
+    ]},
+    { id: "sre-reliability", title: "Reliability Engineering", icon: "🛡️", topics: [
+      { id: "sre-incident", title: "Incident Management", description: "On-call rotation, runbooks, post-mortems (blameless), PagerDuty.", level: "core", resources: [{ label: "PagerDuty Incident Response", url: "https://response.pagerduty.com", type: "article" }] },
+      { id: "sre-chaos", title: "Chaos Engineering", description: "Chaos Monkey, Litmus, fault injection, game days, blast radius.", level: "advanced", resources: [{ label: "Principles of Chaos Engineering", url: "https://principlesofchaos.org", type: "article" }] },
+      { id: "sre-capacity", title: "Capacity Planning", description: "Traffic forecasting, auto-scaling policies, resource right-sizing.", level: "advanced", resources: [{ label: "Google SRE Workbook — Capacity", url: "https://sre.google/workbook/table-of-contents/", type: "book" }] },
+    ]},
+    { id: "sre-infra", title: "Infrastructure", icon: "☁️", topics: [
+      { id: "sre-k8s", title: "Kubernetes Operations", description: "Cluster upgrades, node autoscaler, PodDisruptionBudgets, resource limits.", level: "core", resources: [{ label: "Kubernetes Docs", url: "https://kubernetes.io/docs/home/", type: "docs" }] },
+      { id: "sre-terraform", title: "IaC (Terraform)", description: "State management, modules, drift detection, Atlantis for GitOps.", level: "core", resources: [{ label: "Terraform Docs", url: "https://developer.hashicorp.com/terraform/docs", type: "docs" }] },
+    ]},
+  ],
+};
+
+// ─── Database Administrator ──────────────────────────────────────────────────
+
+const dbaRoadmap: CareerRoadmap = {
+  id: "dba",
+  title: "Database Administrator",
+  icon: "🗄️",
+  color: "#B45309",
+  bg: "#FFFBEB",
+  description: "Design, maintain, and optimise databases. Ensure data integrity, performance, availability, and security across production systems.",
+  jobTitles: ["Database Administrator", "DBA", "Database Engineer", "Data Platform Engineer"],
+  avgSalary: "Rp 12–30 jt/bulan",
+  timeToJob: "12–18 months",
+  sections: [
+    { id: "dba-sql", title: "SQL Mastery", icon: "📝", topics: [
+      { id: "dba-advanced-sql", title: "Advanced SQL", description: "CTEs, window functions, lateral joins, recursive queries, EXPLAIN ANALYZE.", level: "foundation", resources: [{ label: "Use The Index, Luke", url: "https://use-the-index-luke.com", type: "article" }, { label: "PostgreSQL Exercises", url: "https://pgexercises.com", type: "article" }] },
+      { id: "dba-stored-procs", title: "Stored Procedures & Functions", description: "PL/pgSQL, triggers, user-defined functions, procedural logic.", level: "core", resources: [{ label: "PostgreSQL PL/pgSQL Docs", url: "https://www.postgresql.org/docs/current/plpgsql.html", type: "docs" }] },
+    ]},
+    { id: "dba-admin", title: "Database Administration", icon: "⚙️", topics: [
+      { id: "dba-installation", title: "Installation & Config", description: "postgresql.conf, pg_hba.conf, connection pooling (PgBouncer), tablespaces.", level: "core", resources: [{ label: "PostgreSQL Admin Guide", url: "https://www.postgresql.org/docs/current/admin.html", type: "docs" }] },
+      { id: "dba-backup", title: "Backup & Recovery", description: "pg_dump, pg_basebackup, PITR, WAL archiving, recovery strategies.", level: "core", resources: [{ label: "PostgreSQL Backup Docs", url: "https://www.postgresql.org/docs/current/backup.html", type: "docs" }] },
+      { id: "dba-ha", title: "High Availability", description: "Streaming replication, Patroni, pgpool-II, failover, read replicas.", level: "advanced", resources: [{ label: "Patroni Docs", url: "https://patroni.readthedocs.io", type: "docs" }] },
+    ]},
+    { id: "dba-performance", title: "Performance Tuning", icon: "⚡", topics: [
+      { id: "dba-indexes", title: "Indexing Strategies", description: "B-tree, GIN, GiST, partial indexes, covering indexes, index bloat.", level: "core", resources: [{ label: "PostgreSQL Indexes Docs", url: "https://www.postgresql.org/docs/current/indexes.html", type: "docs" }] },
+      { id: "dba-query-opt", title: "Query Optimization", description: "EXPLAIN, EXPLAIN ANALYZE, planner statistics, vacuuming, autovacuum.", level: "core", resources: [{ label: "EXPLAIN Docs", url: "https://www.postgresql.org/docs/current/using-explain.html", type: "docs" }] },
+      { id: "dba-partitioning", title: "Partitioning & Sharding", description: "Range/list/hash partitioning, Citus for horizontal sharding.", level: "advanced", resources: [{ label: "Citus Docs", url: "https://docs.citusdata.com", type: "docs" }] },
+    ]},
+    { id: "dba-nosql", title: "NoSQL & Cloud Databases", icon: "☁️", topics: [
+      { id: "dba-nosql-overview", title: "NoSQL Systems", description: "MongoDB, Redis, Cassandra, DynamoDB — when to use each.", level: "core", resources: [{ label: "MongoDB Docs", url: "https://www.mongodb.com/docs/", type: "docs" }] },
+      { id: "dba-cloud-db", title: "Cloud-Managed Databases", description: "AWS RDS, Aurora, Cloud Spanner, AlloyDB — managed vs self-hosted trade-offs.", level: "advanced", resources: [{ label: "AWS RDS Docs", url: "https://docs.aws.amazon.com/rds/", type: "docs" }] },
+    ]},
+  ],
+};
+
+// ─── Embedded Systems Engineer ───────────────────────────────────────────────
+
+const embeddedRoadmap: CareerRoadmap = {
+  id: "embedded",
+  title: "Embedded Systems Engineer",
+  icon: "🔌",
+  color: "#059669",
+  bg: "#ECFDF5",
+  description: "Program microcontrollers and hardware. Build firmware for IoT devices, robotics, and consumer electronics.",
+  jobTitles: ["Embedded Engineer", "Firmware Engineer", "IoT Developer", "Systems Programmer"],
+  avgSalary: "Rp 10–30 jt/bulan",
+  timeToJob: "18–36 months",
+  sections: [
+    { id: "emb-foundations", title: "Foundations", icon: "📐", topics: [
+      { id: "emb-c", title: "C Programming", description: "Pointers, memory management, structs, bitwise ops, volatile keyword.", level: "foundation", resources: [{ label: "The C Programming Language (K&R)", url: "https://en.wikipedia.org/wiki/The_C_Programming_Language", type: "book" }] },
+      { id: "emb-electronics", title: "Electronics Basics", description: "Voltage, current, Ohm's law, capacitors, transistors, logic levels.", level: "foundation", resources: [{ label: "All About Circuits", url: "https://www.allaboutcircuits.com", type: "article" }] },
+      { id: "emb-digital", title: "Digital Logic", description: "Binary, hex, logic gates, flip-flops, state machines, timing diagrams.", level: "foundation", resources: [{ label: "Nand to Tetris", url: "https://www.nand2tetris.org", type: "course" }] },
+    ]},
+    { id: "emb-microcontrollers", title: "Microcontrollers", icon: "🔧", topics: [
+      { id: "emb-arduino", title: "Arduino / AVR", description: "GPIO, PWM, ADC, I2C, SPI, UART — starting point for embedded.", level: "core", resources: [{ label: "Arduino Reference", url: "https://www.arduino.cc/reference/en/", type: "docs" }] },
+      { id: "emb-stm32", title: "STM32 / ARM Cortex-M", description: "Registers, HAL library, timers, interrupts, DMA, clock trees.", level: "core", resources: [{ label: "STM32 Reference Manuals", url: "https://www.st.com/en/microcontrollers-microprocessors/stm32-32-bit-arm-cortex-mcus.html", type: "docs" }] },
+      { id: "emb-rtos", title: "RTOS (FreeRTOS)", description: "Tasks, queues, semaphores, mutexes, scheduling, watchdog timers.", level: "advanced", resources: [{ label: "FreeRTOS Docs", url: "https://www.freertos.org/Documentation/RTOS_book.html", type: "docs" }] },
+    ]},
+    { id: "emb-protocols", title: "Protocols & Interfaces", icon: "📡", topics: [
+      { id: "emb-serial", title: "Serial Protocols", description: "UART, SPI, I2C, CAN bus — timing, framing, debugging with logic analyser.", level: "core", resources: [{ label: "SparkFun Serial Comms", url: "https://learn.sparkfun.com/tutorials/serial-communication", type: "article" }] },
+      { id: "emb-iot", title: "IoT Connectivity", description: "MQTT, BLE, WiFi (ESP32), LoRaWAN, AWS IoT Core.", level: "advanced", resources: [{ label: "ESP-IDF Docs", url: "https://docs.espressif.com/projects/esp-idf/en/latest/", type: "docs" }] },
+    ]},
+    { id: "emb-advanced", title: "Advanced Topics", icon: "🚀", topics: [
+      { id: "emb-linux", title: "Embedded Linux", description: "Yocto, Buildroot, device trees, kernel modules, U-Boot.", level: "advanced", resources: [{ label: "Yocto Project Docs", url: "https://docs.yoctoproject.org", type: "docs" }] },
+      { id: "emb-debugging", title: "Debugging & Testing", description: "JTAG/SWD, GDB, oscilloscopes, unit testing with Unity/Ceedling.", level: "advanced", resources: [{ label: "Embedded Artistry Testing", url: "https://embeddedartistry.com/blog/2020/05/04/an-introduction-to-embedded-testing/", type: "article" }] },
+    ]},
+  ],
+};
+
+// ─── Technical Writer ────────────────────────────────────────────────────────
+
+const technicalWriterRoadmap: CareerRoadmap = {
+  id: "technical-writer",
+  title: "Technical Writer",
+  icon: "✍️",
+  color: "#6366F1",
+  bg: "#EEF2FF",
+  description: "Create clear, accurate documentation for developers and users. API docs, guides, tutorials, and content strategy for technical products.",
+  jobTitles: ["Technical Writer", "Documentation Engineer", "Developer Advocate", "Content Engineer"],
+  avgSalary: "Rp 8–25 jt/bulan",
+  timeToJob: "6–12 months",
+  sections: [
+    { id: "tw-writing", title: "Writing Craft", icon: "📝", topics: [
+      { id: "tw-style", title: "Technical Style Guides", description: "Microsoft Writing Style Guide, Google Developer Docs Style — tone, voice, clarity.", level: "foundation", resources: [{ label: "Google Developer Documentation Style Guide", url: "https://developers.google.com/style", type: "docs" }, { label: "Microsoft Writing Style Guide", url: "https://learn.microsoft.com/en-us/style-guide/welcome/", type: "docs" }] },
+      { id: "tw-minimalism", title: "Minimalism in Docs", description: "Task-oriented writing, DITA principles, progressive disclosure.", level: "foundation", resources: [{ label: "Every Page is Page One", url: "https://everypageispageone.com", type: "article" }] },
+      { id: "tw-structured", title: "Structured Writing", description: "Topic-based authoring, concept/task/reference model, reuse.", level: "core", resources: [{ label: "DITA Introduction", url: "https://www.oasis-open.org/committees/dita/", type: "docs" }] },
+    ]},
+    { id: "tw-docs-as-code", title: "Docs as Code", icon: "💻", topics: [
+      { id: "tw-markdown", title: "Markdown & MDX", description: "Markdown syntax, frontmatter, MDX components, doc site generators.", level: "foundation", resources: [{ label: "Markdown Guide", url: "https://www.markdownguide.org", type: "docs" }] },
+      { id: "tw-git", title: "Git for Writers", description: "Branching, pull requests, reviews, conflict resolution in prose.", level: "core", resources: [{ label: "Git for Docs Writers", url: "https://www.writethedocs.org/guide/tools/git-for-docs/", type: "article" }] },
+      { id: "tw-static-sites", title: "Doc Site Generators", description: "Docusaurus, MkDocs, Sphinx, Hugo — building and deploying doc sites.", level: "core", resources: [{ label: "Docusaurus Docs", url: "https://docusaurus.io/docs", type: "docs" }] },
+    ]},
+    { id: "tw-api-docs", title: "API Documentation", icon: "🔌", topics: [
+      { id: "tw-openapi", title: "OpenAPI / Swagger", description: "Writing OpenAPI 3.0 specs, generating reference docs, Redoc.", level: "core", resources: [{ label: "OpenAPI Specification", url: "https://spec.openapis.org/oas/latest.html", type: "docs" }, { label: "Swagger Editor", url: "https://editor.swagger.io", type: "article" }] },
+      { id: "tw-api-concepts", title: "API Concepts for Writers", description: "REST, authentication, request/response, pagination, error codes.", level: "core", resources: [{ label: "I'd Rather Be Writing — API Docs", url: "https://idratherbewriting.com/learnapidoc/", type: "course" }] },
+    ]},
+    { id: "tw-tools", title: "Tools & Process", icon: "🛠️", topics: [
+      { id: "tw-diagramming", title: "Diagrams & Visuals", description: "Mermaid, draw.io, Excalidraw, screenshots, annotated images.", level: "core", resources: [{ label: "Mermaid Docs", url: "https://mermaid.js.org/intro/", type: "docs" }] },
+      { id: "tw-metrics", title: "Docs Metrics", description: "Page analytics, time-on-page, search queries, user feedback loops.", level: "optional", resources: [{ label: "Write the Docs Guide", url: "https://www.writethedocs.org/guide/", type: "article" }] },
+    ]},
+  ],
+};
+
+// ─── Scrum Master / Agile Coach ──────────────────────────────────────────────
+
+const scrumMasterRoadmap: CareerRoadmap = {
+  id: "scrum-master",
+  title: "Scrum Master",
+  icon: "🏃",
+  color: "#0EA5E9",
+  bg: "#F0F9FF",
+  description: "Facilitate agile teams to deliver value continuously. Remove blockers, coach the team on Scrum, and drive continuous improvement.",
+  jobTitles: ["Scrum Master", "Agile Coach", "Agile Delivery Manager", "RTE"],
+  avgSalary: "Rp 12–35 jt/bulan",
+  timeToJob: "3–12 months",
+  sections: [
+    { id: "sm-agile", title: "Agile & Scrum", icon: "📐", topics: [
+      { id: "sm-manifesto", title: "Agile Manifesto & Principles", description: "4 values, 12 principles, agile mindset vs process — understanding the why.", level: "foundation", resources: [{ label: "Agile Manifesto", url: "https://agilemanifesto.org", type: "article" }] },
+      { id: "sm-scrum", title: "Scrum Framework", description: "Roles (PO, SM, Dev), events (Sprint, Planning, Daily, Review, Retro), artifacts.", level: "foundation", resources: [{ label: "Scrum Guide 2020", url: "https://scrumguides.org/scrum-guide.html", type: "docs" }] },
+      { id: "sm-kanban", title: "Kanban", description: "Visualise workflow, WIP limits, flow metrics, Kanban vs Scrum.", level: "core", resources: [{ label: "Kanban Guide", url: "https://kanbanguides.org/html-kanban-guide/", type: "docs" }] },
+    ]},
+    { id: "sm-facilitation", title: "Facilitation", icon: "🎯", topics: [
+      { id: "sm-ceremonies", title: "Running Scrum Ceremonies", description: "Sprint Planning, Daily Standup, Sprint Review, Retrospective facilitation techniques.", level: "core", resources: [{ label: "Fun Retrospectives", url: "https://www.funretrospectives.com", type: "article" }] },
+      { id: "sm-conflict", title: "Conflict Resolution", description: "Team dynamics, Tuckman stages, coaching conversations, non-violent communication.", level: "core", resources: [{ label: "Coaching Agile Teams (book)", url: "https://www.lyssa.com/coaching-agile-teams", type: "book" }] },
+    ]},
+    { id: "sm-metrics", title: "Metrics & Improvement", icon: "📊", topics: [
+      { id: "sm-velocity", title: "Velocity & Forecasting", description: "Story points, velocity trends, Monte Carlo forecasting, capacity planning.", level: "core", resources: [{ label: "AgileForce Forecasting Guide", url: "https://medium.com/agileinsider/monte-carlo-simulation-in-agile-project-planning-8bc11a91fe9f", type: "article" }] },
+      { id: "sm-flow", title: "Flow Metrics", description: "Cycle time, lead time, throughput, cumulative flow diagrams.", level: "advanced", resources: [{ label: "Actionable Agile Metrics (book)", url: "https://actionableagile.com/resources/publications/aamfp/", type: "book" }] },
+    ]},
+    { id: "sm-scaling", title: "Scaling Agile", icon: "🏗️", topics: [
+      { id: "sm-safe", title: "SAFe Framework", description: "PI Planning, ARTs, trains, portfolio kanban, Release Train Engineer.", level: "advanced", resources: [{ label: "Scaled Agile Framework", url: "https://scaledagileframework.com", type: "docs" }] },
+      { id: "sm-less", title: "LeSS & Nexus", description: "Large-Scale Scrum, Nexus integration team, multi-team coordination.", level: "advanced", resources: [{ label: "LeSS Framework", url: "https://less.works", type: "docs" }] },
+    ]},
+    { id: "sm-certs", title: "Certifications", icon: "🏅", topics: [
+      { id: "sm-csm", title: "CSM / PSM I", description: "Certified ScrumMaster (Scrum Alliance) or Professional Scrum Master (Scrum.org).", level: "core", resources: [{ label: "Scrum.org PSM I", url: "https://www.scrum.org/assessments/professional-scrum-master-i-certification", type: "course" }] },
+      { id: "sm-safe-cert", title: "SAFe Agilist (SA)", description: "Leading SAFe certification — entry-level SAFe credential.", level: "optional", resources: [{ label: "Leading SAFe Certification", url: "https://scaledagile.com/training/leading-safe/", type: "course" }] },
+    ]},
+  ],
+};
+
+// ─── AI Engineer ─────────────────────────────────────────────────────────────
+
+const aiEngineerRoadmap: CareerRoadmap = {
+  id: "ai-engineer",
+  title: "AI Engineer",
+  icon: "🧠",
+  color: "#6366F1",
+  bg: "#EEF2FF",
+  description: "Build AI-powered products using foundation models, APIs, and orchestration frameworks. The fastest-growing role in tech.",
+  jobTitles: ["AI Engineer", "LLM Engineer", "Generative AI Engineer", "AI Application Developer"],
+  avgSalary: "Rp 20–55 jt/bulan",
+  timeToJob: "6–18 months",
+  sections: [
+    { id: "aie-foundations", title: "Foundations", icon: "📐", topics: [
+      { id: "aie-python", title: "Python for AI", description: "Data types, async/await, REST calls, environment management, type hints.", level: "foundation", resources: [{ label: "Python Docs Tutorial", url: "https://docs.python.org/3/tutorial/", type: "docs" }] },
+      { id: "aie-llm-concepts", title: "How LLMs Work", description: "Transformer architecture, tokenization, context windows, temperature, sampling.", level: "foundation", resources: [{ label: "Attention Is All You Need (paper)", url: "https://arxiv.org/abs/1706.03762", type: "article" }, { label: "Andrej Karpathy — Let's build GPT", url: "https://www.youtube.com/watch?v=kCc8FmEb1nY", type: "video" }] },
+    ]},
+    { id: "aie-apis", title: "Foundation Model APIs", icon: "🔌", topics: [
+      { id: "aie-openai", title: "OpenAI API", description: "Chat completions, function calling, embeddings, streaming, vision, JSON mode.", level: "core", resources: [{ label: "OpenAI API Docs", url: "https://platform.openai.com/docs/", type: "docs" }] },
+      { id: "aie-anthropic", title: "Anthropic Claude API", description: "Messages API, system prompts, tool use, long-context tasks.", level: "core", resources: [{ label: "Anthropic Docs", url: "https://docs.anthropic.com", type: "docs" }] },
+      { id: "aie-opensource", title: "Open-Source Models", description: "Llama 3, Mistral, Gemma — run locally with Ollama or deploy on HuggingFace.", level: "core", resources: [{ label: "Ollama Docs", url: "https://ollama.com/library", type: "docs" }, { label: "HuggingFace Hub", url: "https://huggingface.co/models", type: "docs" }] },
+    ]},
+    { id: "aie-orchestration", title: "Orchestration & RAG", icon: "⚙️", topics: [
+      { id: "aie-langchain", title: "LangChain / LlamaIndex", description: "Chains, agents, tools, memory, document loaders, retrievers.", level: "core", resources: [{ label: "LangChain Docs", url: "https://python.langchain.com/docs/", type: "docs" }, { label: "LlamaIndex Docs", url: "https://docs.llamaindex.ai", type: "docs" }] },
+      { id: "aie-rag", title: "RAG (Retrieval-Augmented Generation)", description: "Chunking, embedding, vector search, re-ranking, hybrid search.", level: "core", resources: [{ label: "RAG Survey Paper", url: "https://arxiv.org/abs/2312.10997", type: "article" }] },
+      { id: "aie-vector-db", title: "Vector Databases", description: "Pinecone, Qdrant, Chroma, Weaviate — similarity search, metadata filtering.", level: "core", resources: [{ label: "Qdrant Docs", url: "https://qdrant.tech/documentation/", type: "docs" }] },
+    ]},
+    { id: "aie-agents", title: "AI Agents", icon: "🤖", topics: [
+      { id: "aie-agents-core", title: "Agentic Patterns", description: "ReAct, tool use, multi-step planning, reflection, self-correction loops.", level: "advanced", resources: [{ label: "LangGraph Docs", url: "https://langchain-ai.github.io/langgraph/", type: "docs" }] },
+      { id: "aie-multi-agent", title: "Multi-Agent Systems", description: "CrewAI, AutoGen — agent orchestration, role assignment, communication protocols.", level: "advanced", resources: [{ label: "CrewAI Docs", url: "https://docs.crewai.com", type: "docs" }, { label: "AutoGen Docs", url: "https://microsoft.github.io/autogen/", type: "docs" }] },
+    ]},
+    { id: "aie-production", title: "Production & Evals", icon: "🚀", topics: [
+      { id: "aie-evals", title: "LLM Evaluation", description: "RAGAS, DeepEval, LLM-as-judge, hallucination detection, benchmarking.", level: "advanced", resources: [{ label: "RAGAS Docs", url: "https://docs.ragas.io", type: "docs" }] },
+      { id: "aie-guardrails", title: "Guardrails & Safety", description: "NeMo Guardrails, content moderation, PII detection, prompt injection defense.", level: "advanced", resources: [{ label: "NeMo Guardrails Docs", url: "https://github.com/NVIDIA/NeMo-Guardrails", type: "docs" }] },
+      { id: "aie-cost", title: "Cost & Latency Optimization", description: "Caching (semantic cache), prompt compression, model routing, batching.", level: "advanced", resources: [{ label: "LiteLLM Docs", url: "https://docs.litellm.ai", type: "docs" }] },
+    ]},
+  ],
+};
+
+// ─── Prompt Engineer ─────────────────────────────────────────────────────────
+
+const promptEngineerRoadmap: CareerRoadmap = {
+  id: "prompt-engineer",
+  title: "Prompt Engineer",
+  icon: "💬",
+  color: "#10B981",
+  bg: "#ECFDF5",
+  description: "Design and optimise prompts for LLMs to maximise reliability, accuracy, and safety across AI applications.",
+  jobTitles: ["Prompt Engineer", "AI Content Strategist", "LLM Specialist", "Conversational AI Designer"],
+  avgSalary: "Rp 12–35 jt/bulan",
+  timeToJob: "3–9 months",
+  sections: [
+    { id: "pe-fundamentals", title: "LLM Fundamentals", icon: "📐", topics: [
+      { id: "pe-how-llms", title: "How LLMs Work", description: "Tokens, context windows, temperature, top-p, frequency/presence penalties.", level: "foundation", resources: [{ label: "OpenAI Tokenizer", url: "https://platform.openai.com/tokenizer", type: "article" }, { label: "Intro to LLMs (Karpathy)", url: "https://www.youtube.com/watch?v=zjkBMFhNj_g", type: "video" }] },
+      { id: "pe-models", title: "Model Landscape", description: "GPT-4o, Claude 3.5, Gemini, Llama 3 — strengths, pricing, context limits.", level: "foundation", resources: [{ label: "LMSYS Chatbot Arena", url: "https://chat.lmsys.org", type: "article" }] },
+    ]},
+    { id: "pe-techniques", title: "Core Techniques", icon: "🔧", topics: [
+      { id: "pe-zero-few", title: "Zero-Shot & Few-Shot", description: "In-context learning, example selection, format demonstration.", level: "core", resources: [{ label: "Prompt Engineering Guide", url: "https://www.promptingguide.ai", type: "article" }] },
+      { id: "pe-cot", title: "Chain-of-Thought (CoT)", description: "Step-by-step reasoning, zero-shot CoT, self-consistency, tree of thoughts.", level: "core", resources: [{ label: "Chain-of-Thought Paper", url: "https://arxiv.org/abs/2201.11903", type: "article" }] },
+      { id: "pe-system", title: "System Prompt Design", description: "Persona, constraints, output format, tone, safety instructions.", level: "core", resources: [{ label: "Anthropic Prompt Library", url: "https://docs.anthropic.com/en/prompt-library/", type: "docs" }] },
+      { id: "pe-rag-prompts", title: "RAG Prompt Patterns", description: "Grounding, citation instructions, context stuffing, fallback handling.", level: "core", resources: [{ label: "LlamaIndex Prompting Guide", url: "https://docs.llamaindex.ai/en/stable/understanding/querying/querying/", type: "docs" }] },
+    ]},
+    { id: "pe-advanced", title: "Advanced Prompting", icon: "🧩", topics: [
+      { id: "pe-react", title: "ReAct & Tool Use", description: "Thought-Action-Observation loop, function calling, structured output.", level: "advanced", resources: [{ label: "ReAct Paper", url: "https://arxiv.org/abs/2210.03629", type: "article" }] },
+      { id: "pe-adversarial", title: "Adversarial Prompting", description: "Prompt injection, jailbreaks, red-teaming, defense strategies.", level: "advanced", resources: [{ label: "Prompt Injection Guide", url: "https://www.promptingguide.ai/risks/adversarial", type: "article" }] },
+    ]},
+    { id: "pe-eval", title: "Evaluation & Iteration", icon: "📊", topics: [
+      { id: "pe-testing", title: "Prompt Testing", description: "A/B prompt testing, regression suites, LLM-as-judge scoring.", level: "core", resources: [{ label: "PromptFoo Docs", url: "https://promptfoo.dev/docs/intro/", type: "docs" }] },
+      { id: "pe-structured", title: "Structured Output", description: "JSON mode, Pydantic + instructor, constrained generation, grammar-based.", level: "advanced", resources: [{ label: "Instructor Docs", url: "https://python.useinstructor.com", type: "docs" }] },
+    ]},
+  ],
+};
+
+// ─── Computer Vision Engineer ─────────────────────────────────────────────────
+
+const computerVisionRoadmap: CareerRoadmap = {
+  id: "computer-vision",
+  title: "Computer Vision Engineer",
+  icon: "👁️",
+  color: "#0EA5E9",
+  bg: "#F0F9FF",
+  description: "Build systems that understand and interpret images and video. From classic OpenCV to deep learning with CNNs and Vision Transformers.",
+  jobTitles: ["Computer Vision Engineer", "CV Researcher", "Vision AI Engineer", "Perception Engineer"],
+  avgSalary: "Rp 18–50 jt/bulan",
+  timeToJob: "18–36 months",
+  sections: [
+    { id: "cv-foundations", title: "Foundations", icon: "📐", topics: [
+      { id: "cv-math", title: "Linear Algebra & Calculus", description: "Matrix ops, eigendecomposition, gradient descent — essential for CNNs.", level: "foundation", resources: [{ label: "3Blue1Brown Linear Algebra", url: "https://www.youtube.com/playlist?list=PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab", type: "video" }] },
+      { id: "cv-python-cv", title: "Python & OpenCV", description: "Image loading, colour spaces, morphological ops, contours, histograms.", level: "foundation", resources: [{ label: "OpenCV Python Tutorial", url: "https://docs.opencv.org/4.x/d6/d00/tutorial_py_root.html", type: "docs" }] },
+    ]},
+    { id: "cv-classical", title: "Classical CV", icon: "🔍", topics: [
+      { id: "cv-image-processing", title: "Image Processing", description: "Filtering, edge detection (Canny), Hough transform, SIFT/ORB features.", level: "core", resources: [{ label: "OpenCV Tutorials", url: "https://docs.opencv.org/4.x/d9/df8/tutorial_root.html", type: "docs" }] },
+      { id: "cv-camera", title: "Camera Geometry", description: "Pinhole model, intrinsics, extrinsics, distortion, homography.", level: "advanced", resources: [{ label: "Multiple View Geometry (book)", url: "https://www.robots.ox.ac.uk/~vgg/hzbook/", type: "book" }] },
+    ]},
+    { id: "cv-deep", title: "Deep Learning for CV", icon: "🧠", topics: [
+      { id: "cv-cnns", title: "CNNs", description: "Convolutions, pooling, ResNet, EfficientNet, transfer learning.", level: "core", resources: [{ label: "Stanford CS231n", url: "https://cs231n.github.io", type: "course" }] },
+      { id: "cv-detection", title: "Object Detection", description: "YOLO (v8/v11), Faster R-CNN, DETR, NMS, anchor boxes, mAP metric.", level: "core", resources: [{ label: "Ultralytics YOLOv8 Docs", url: "https://docs.ultralytics.com", type: "docs" }] },
+      { id: "cv-segmentation", title: "Segmentation", description: "Semantic, instance, panoptic — Mask R-CNN, SAM (Segment Anything).", level: "advanced", resources: [{ label: "SAM2 Docs", url: "https://ai.meta.com/sam2/", type: "docs" }] },
+      { id: "cv-vit", title: "Vision Transformers", description: "ViT, DINO, CLIP — self-supervised vision, vision-language models.", level: "advanced", resources: [{ label: "ViT Paper", url: "https://arxiv.org/abs/2010.11929", type: "article" }] },
+    ]},
+    { id: "cv-deploy", title: "Deployment & Edge", icon: "🚀", topics: [
+      { id: "cv-onnx", title: "ONNX & TensorRT", description: "Model export, quantization, int8/fp16, TensorRT optimization for NVIDIA GPUs.", level: "advanced", resources: [{ label: "ONNX Runtime Docs", url: "https://onnxruntime.ai/docs/", type: "docs" }] },
+      { id: "cv-edge", title: "Edge Deployment", description: "OpenVINO, TFLite, Coral TPU, Raspberry Pi, NVIDIA Jetson.", level: "advanced", resources: [{ label: "OpenVINO Docs", url: "https://docs.openvino.ai", type: "docs" }] },
+    ]},
+  ],
+};
+
+// ─── NLP Engineer ─────────────────────────────────────────────────────────────
+
+const nlpEngineerRoadmap: CareerRoadmap = {
+  id: "nlp-engineer",
+  title: "NLP Engineer",
+  icon: "📖",
+  color: "#8B5CF6",
+  bg: "#F5F3FF",
+  description: "Build systems that understand and generate text. From classical NLP to transformers, fine-tuning LLMs, and production NLP pipelines.",
+  jobTitles: ["NLP Engineer", "Computational Linguist", "Text Analytics Engineer", "Conversational AI Engineer"],
+  avgSalary: "Rp 15–45 jt/bulan",
+  timeToJob: "18–30 months",
+  sections: [
+    { id: "nlp-foundations", title: "Foundations", icon: "📐", topics: [
+      { id: "nlp-linguistics", title: "Linguistics Basics", description: "Tokenization, morphology, POS tagging, parsing, named entities.", level: "foundation", resources: [{ label: "NLTK Book (free)", url: "https://www.nltk.org/book/", type: "book" }] },
+      { id: "nlp-python", title: "Python NLP Libraries", description: "spaCy, NLTK, Gensim — text preprocessing pipelines.", level: "foundation", resources: [{ label: "spaCy Course", url: "https://course.spacy.io", type: "course" }] },
+    ]},
+    { id: "nlp-classical", title: "Classical NLP", icon: "📝", topics: [
+      { id: "nlp-features", title: "Text Features", description: "Bag of Words, TF-IDF, n-grams, word2vec, GloVe, FastText.", level: "core", resources: [{ label: "Stanford NLP Group", url: "https://nlp.stanford.edu", type: "article" }] },
+      { id: "nlp-tasks", title: "Core NLP Tasks", description: "Text classification, NER, sentiment, relation extraction, summarization.", level: "core", resources: [{ label: "Papers With Code NLP", url: "https://paperswithcode.com/area/natural-language-processing", type: "article" }] },
+    ]},
+    { id: "nlp-transformers", title: "Transformers", icon: "🤖", topics: [
+      { id: "nlp-attention", title: "Attention & Transformers", description: "Self-attention, multi-head attention, BERT, GPT architectures.", level: "core", resources: [{ label: "The Illustrated Transformer", url: "https://jalammar.github.io/illustrated-transformer/", type: "article" }] },
+      { id: "nlp-huggingface", title: "HuggingFace Ecosystem", description: "Transformers, Datasets, Tokenizers, PEFT, Accelerate, Hub.", level: "core", resources: [{ label: "HuggingFace NLP Course", url: "https://huggingface.co/learn/nlp-course", type: "course" }] },
+      { id: "nlp-finetuning", title: "Fine-Tuning LLMs", description: "Full fine-tune, LoRA, QLoRA, RLHF, DPO — when and how.", level: "advanced", resources: [{ label: "HuggingFace PEFT Docs", url: "https://huggingface.co/docs/peft", type: "docs" }] },
+    ]},
+    { id: "nlp-production", title: "Production NLP", icon: "🚀", topics: [
+      { id: "nlp-serving", title: "Model Serving", description: "vLLM, TGI, OpenAI-compatible APIs, batching, streaming.", level: "advanced", resources: [{ label: "vLLM Docs", url: "https://docs.vllm.ai", type: "docs" }] },
+      { id: "nlp-eval", title: "NLP Evaluation", description: "BLEU, ROUGE, BERTScore, human eval, task-specific metrics.", level: "advanced", resources: [{ label: "SacreBLEU", url: "https://github.com/mjpost/sacrebleu", type: "docs" }] },
+    ]},
+  ],
+};
+
+// ─── AI Product Manager ───────────────────────────────────────────────────────
+
+const aiPMRoadmap: CareerRoadmap = {
+  id: "ai-product-manager",
+  title: "AI Product Manager",
+  icon: "🎯",
+  color: "#F97316",
+  bg: "#FFF7ED",
+  description: "Lead the development of AI-powered products. Understand model capabilities, set the right metrics, and ship responsibly.",
+  jobTitles: ["AI Product Manager", "ML Product Manager", "Head of AI Product", "Technical PM — AI"],
+  avgSalary: "Rp 20–60 jt/bulan",
+  timeToJob: "6–18 months",
+  sections: [
+    { id: "aipm-ai-literacy", title: "AI Literacy", icon: "🧠", topics: [
+      { id: "aipm-ml-basics", title: "ML Concepts for PMs", description: "Supervised vs unsupervised, classification, regression, clustering — no math needed.", level: "foundation", resources: [{ label: "Google ML Crash Course", url: "https://developers.google.com/machine-learning/crash-course", type: "course" }] },
+      { id: "aipm-llm-basics", title: "LLMs for Product Leaders", description: "Tokens, context, hallucination, latency, cost — building intuition for AI products.", level: "foundation", resources: [{ label: "Ethan Mollick — One Useful Thing", url: "https://www.oneusefulthing.org", type: "article" }] },
+      { id: "aipm-capabilities", title: "Current AI Capabilities", description: "What AI is and isn't good at, capability vs reliability, failure modes.", level: "foundation", resources: [{ label: "State of AI Report", url: "https://www.stateof.ai", type: "article" }] },
+    ]},
+    { id: "aipm-discovery", title: "AI Product Discovery", icon: "🔍", topics: [
+      { id: "aipm-problem-fit", title: "Problem–AI Fit", description: "When AI adds value vs when it's overkill — heuristics for choosing AI.", level: "core", resources: [{ label: "AI Product Canvas", url: "https://www.ai-canvas.org", type: "article" }] },
+      { id: "aipm-data-strategy", title: "Data Strategy", description: "Training data, labelling workflows, data flywheel, privacy constraints.", level: "core", resources: [{ label: "Andrew Ng — Data-Centric AI", url: "https://datacentricai.org", type: "article" }] },
+    ]},
+    { id: "aipm-execution", title: "Building AI Products", icon: "⚡", topics: [
+      { id: "aipm-metrics", title: "AI-Specific Metrics", description: "Accuracy, precision/recall, latency, cost-per-call, human fallback rate.", level: "core", resources: [{ label: "Chip Huyen — Designing ML Systems", url: "https://www.oreilly.com/library/view/designing-machine-learning/9781098107956/", type: "book" }] },
+      { id: "aipm-iteration", title: "Rapid Experimentation", description: "Prompt versioning, A/B evals, shadow mode, gradual rollout for AI features.", level: "core", resources: [{ label: "PromptFoo Docs", url: "https://promptfoo.dev/docs/intro/", type: "docs" }] },
+      { id: "aipm-human-loop", title: "Human-in-the-Loop Design", description: "When to surface AI suggestions, confidence thresholds, review queues, override UX.", level: "advanced", resources: [{ label: "Google PAIR Guidebook", url: "https://pair.withgoogle.com/guidebook/", type: "article" }] },
+    ]},
+    { id: "aipm-ethics", title: "AI Ethics & Responsible AI", icon: "⚖️", topics: [
+      { id: "aipm-bias", title: "Bias & Fairness", description: "Types of bias, disparate impact, fairness metrics, audit frameworks.", level: "core", resources: [{ label: "Fairlearn Docs", url: "https://fairlearn.org", type: "docs" }] },
+      { id: "aipm-safety", title: "AI Safety & Alignment", description: "Misuse vectors, content policy, red-teaming, EU AI Act basics.", level: "core", resources: [{ label: "EU AI Act Summary", url: "https://artificialintelligenceact.eu/the-act/", type: "article" }] },
+    ]},
+  ],
+};
+
 // ─── Master export ────────────────────────────────────────────────────────────
 
 export const CAREER_ROADMAPS: CareerRoadmap[] = [
+  // Original 10
   frontendRoadmap,
   backendRoadmap,
   fullStackRoadmap,
@@ -484,6 +1076,25 @@ export const CAREER_ROADMAPS: CareerRoadmap[] = [
   uiuxRoadmap,
   androidRoadmap,
   productManagerRoadmap,
+  // New 12
+  cloudArchitectRoadmap,
+  iosRoadmap,
+  mlEngineerRoadmap,
+  blockchainRoadmap,
+  gameDevRoadmap,
+  dataEngineerRoadmap,
+  qaEngineerRoadmap,
+  sreRoadmap,
+  dbaRoadmap,
+  embeddedRoadmap,
+  technicalWriterRoadmap,
+  scrumMasterRoadmap,
+  // AI & ML
+  aiEngineerRoadmap,
+  promptEngineerRoadmap,
+  computerVisionRoadmap,
+  nlpEngineerRoadmap,
+  aiPMRoadmap,
 ];
 
 export function getRoadmapById(id: string): CareerRoadmap | undefined {

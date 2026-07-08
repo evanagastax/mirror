@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -13,8 +13,10 @@ import { useRouter } from "expo-router";
 import { usePillars } from "../hooks/usePillars";
 import { useAuthStore } from "../store/authStore";
 import { useThemeStore } from "../store/themeStore";
+import { useStreak } from "../hooks/useStreak";
 import { calculateSynergy } from "../utils/synergy";
 import { scoreToLevel } from "../utils/pillarLevel";
+import { supabase } from "../api/supabase";
 
 // ─── pillar config ────────────────────────────────────────────────────────────
 
@@ -77,6 +79,25 @@ export default function CompassScreen() {
   const userId = useAuthStore((s) => s.userId);
   const { isDark, colors } = useThemeStore();
   const { data: pillars, isLoading, isError, refetch } = usePillars(userId);
+  const { data: streak } = useStreak(userId);
+
+  const [displayName, setDisplayName] = useState("You");
+  const [initial,     setInitial]     = useState("?");
+
+  useEffect(() => {
+    if (!userId) return;
+    supabase
+      .from("profiles")
+      .select("username")
+      .eq("id", userId)
+      .single()
+      .then(({ data }) => {
+        if (data?.username) {
+          setDisplayName(data.username);
+          setInitial(data.username[0].toUpperCase());
+        }
+      });
+  }, [userId]);
 
   if (isLoading) {
     return (
@@ -135,14 +156,22 @@ export default function CompassScreen() {
         <View style={[styles.banner, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
           <View style={styles.bannerLeft}>
             <View style={[styles.avatar, { backgroundColor: colors.bgSubtle, borderColor: colors.border }]}>
-              <Text style={[styles.avatarText, { color: colors.textPrimary }]}>M</Text>
+              <Text style={[styles.avatarText, { color: colors.textPrimary }]}>{initial}</Text>
               <View style={[styles.avatarLevel, { backgroundColor: "#BA7517" }]}>
                 <Text style={styles.avatarLevelText}>{Math.floor(synergy / 100) + 1}</Text>
               </View>
             </View>
             <View>
-              <Text style={[styles.characterName, { color: colors.textPrimary }]}>Made</Text>
+              <Text style={[styles.characterName, { color: colors.textPrimary }]}>{displayName}</Text>
               <Text style={[styles.rankBadge, { color: "#BA7517" }]}>{rank}</Text>
+              {streak && streak.current > 0 && (
+                <View style={styles.streakRow}>
+                  <Text style={styles.streakFire}>🔥</Text>
+                  <Text style={[styles.streakText, { color: "#D85A30" }]}>
+                    {streak.current} day streak
+                  </Text>
+                </View>
+              )}
             </View>
           </View>
           <View style={styles.bannerRight}>
@@ -151,6 +180,11 @@ export default function CompassScreen() {
             <Text style={[styles.synergyHint, { color: colors.textDisabled }]}>
               {ptsToNext > 0 ? `${ptsToNext} to next rank` : "Max rank"}
             </Text>
+            {streak && streak.loggedToday && (
+              <View style={[styles.todayBadge, { backgroundColor: "#F0FBF7" }]}>
+                <Text style={[styles.todayBadgeText, { color: "#1D9E75" }]}>✓ Logged today</Text>
+              </View>
+            )}
           </View>
         </View>
 
@@ -312,4 +346,11 @@ const styles = StyleSheet.create({
   pillarLevel: { fontSize: 11, fontWeight: "700" },
 
   hint: { textAlign: "center", fontSize: 11, marginTop: 4 },
+
+  // Streak
+  streakRow: { flexDirection: "row", alignItems: "center", gap: 3, marginTop: 3 },
+  streakFire: { fontSize: 11 },
+  streakText: { fontSize: 11, fontWeight: "700" },
+  todayBadge: { marginTop: 4, paddingHorizontal: 7, paddingVertical: 3, borderRadius: 99 },
+  todayBadgeText: { fontSize: 10, fontWeight: "700" },
 });

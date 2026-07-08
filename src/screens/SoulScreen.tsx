@@ -201,8 +201,8 @@ function DuaTab({ colors }: { colors: C }) {
         <LangToggle lang={lang} setLang={setLang} colors={colors} />
         <View style={[S.arabicCard, { backgroundColor: SOUL_BG }]}>
           <Text style={[S.arabicCardSource, { color: "#BA7517" }]}>{selectedDua.source}</Text>
-          <Text style={[S.arabicCardMain, { color: "#1a1a1a" }]}>{selectedDua.arabic}</Text>
-          <Text style={[S.arabicCardLatin, { color: "#666" }]}>{selectedDua.transliteration}</Text>
+          <Text style={[S.arabicCardMain, { color: colors.textPrimary }]}>{selectedDua.arabic}</Text>
+          <Text style={[S.arabicCardLatin, { color: colors.textMuted }]}>{selectedDua.transliteration}</Text>
         </View>
         <View style={[S.translationCard, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
           <Text style={[S.translationCardText, { color: colors.textSecondary }]}>
@@ -290,7 +290,7 @@ function DzikirTab({ colors }: { colors: C }) {
           <Text style={[S.arabicCardMain, { color: "#1a1a1a" }]}>{selectedDzikir.arabic}</Text>
           <Text style={[S.arabicCardLatin, { color: "#666" }]}>{selectedDzikir.transliteration}</Text>
           <View style={[S.divider, { backgroundColor: "#c8ede2" }]} />
-          <Text style={[S.translationText, { color: "#444" }]}>
+          <Text style={[S.translationText, { color: colors.textSecondary }]}>
             {lang === "id" ? selectedDzikir.translation_id : selectedDzikir.translation_en}
           </Text>
         </View>
@@ -322,7 +322,7 @@ function DzikirTab({ colors }: { colors: C }) {
           </View>
         )}
 
-        <View style={[S.virtueCard, { borderLeftColor: SOUL_COLOR }]}>
+        <View style={[S.virtueCard, { borderLeftColor: SOUL_COLOR, backgroundColor: colors.bgSubtle }]}>
           <Text style={S.virtueLabel}>Keutamaan</Text>
           <Text style={[S.virtueText, { color: colors.textSecondary }]}>{selectedDzikir.virtue}</Text>
           <Text style={[S.virtueSource, { color: colors.textMuted }]}>{selectedDzikir.source}</Text>
@@ -404,7 +404,7 @@ function AsmaulHusnaTab({ colors }: { colors: C }) {
           <View style={S.asmaulDetailNum}>
             <Text style={S.asmaulDetailNumText}>{selected.number}</Text>
           </View>
-          <Text style={[S.asmaulDetailArabic, { color: "#1a1a1a" }]}>{selected.arabic}</Text>
+          <Text style={[S.asmaulDetailArabic, { color: colors.textPrimary }]}>{selected.arabic}</Text>
           <Text style={S.asmaulDetailLatin}>{selected.transliteration}</Text>
         </View>
         <View style={[S.translationCard, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
@@ -436,7 +436,7 @@ function AsmaulHusnaTab({ colors }: { colors: C }) {
             android_ripple={{ color: "#c8ede2" }}
           >
             <Text style={S.asmaulNum}>{item.number}</Text>
-            <Text style={[S.asmaulArabic, { color: "#1a1a1a" }]}>{item.arabic}</Text>
+            <Text style={[S.asmaulArabic, { color: colors.textPrimary }]}>{item.arabic}</Text>
             <Text style={S.asmaulLatin} numberOfLines={1}>{item.transliteration}</Text>
             <Text style={[S.asmaulMeaning, { color: colors.textSecondary }]} numberOfLines={2}>
               {lang === "id" ? item.meaning_id : item.meaning_en}
@@ -601,7 +601,7 @@ function SurahReaderModal({ surahNumber, onClose, colors }: { surahNumber: numbe
                   {lang === "id" ? ayah.teksIndonesia : ayah.teksEnglish}
                 </Text>
                 {showTafsir && expandedAyah === ayah.nomorAyat && ayah.tafsir && (
-                  <View style={S.tafsirBlock}>
+                  <View style={[S.tafsirBlock, { backgroundColor: colors.bgSubtle }]}>
                     <Text style={S.tafsirLabel}>Tafsir</Text>
                     <Text style={[S.tafsirText, { color: colors.textSecondary }]}>{ayah.tafsir}</Text>
                   </View>
@@ -1124,7 +1124,7 @@ const S = StyleSheet.create({
   doneText: { fontSize: 16, fontWeight: "700", color: SOUL_COLOR },
   resetBtn: { borderWidth: 1.5, borderRadius: 8, paddingHorizontal: 14, paddingVertical: 7 },
   resetBtnText: { fontSize: 13, fontWeight: "600" },
-  virtueCard: { borderRadius: 12, padding: 14, borderLeftWidth: 3, backgroundColor: "#FAFFF8" },
+  virtueCard: { borderRadius: 12, padding: 14, borderLeftWidth: 3 },
   virtueLabel: { fontSize: 10, fontWeight: "700", color: SOUL_COLOR, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 },
   virtueText: { fontSize: 13, lineHeight: 20, marginBottom: 6 },
   virtueSource: { fontSize: 11 },
@@ -1174,7 +1174,7 @@ const S = StyleSheet.create({
   ayahArabic: { fontSize: 22, textAlign: "right", lineHeight: 44, marginBottom: 8 },
   ayahLatin: { fontSize: 13, fontStyle: "italic", lineHeight: 20, marginBottom: 8, color: "#888" },
   ayahTranslation: { fontSize: 14, lineHeight: 22 },
-  tafsirBlock: { marginTop: 12, backgroundColor: "#FAFFF8", borderRadius: 10, padding: 12, borderLeftWidth: 3, borderLeftColor: SOUL_COLOR },
+  tafsirBlock: { marginTop: 12, borderRadius: 10, padding: 12, borderLeftWidth: 3, borderLeftColor: SOUL_COLOR },
   tafsirLabel: { fontSize: 10, fontWeight: "700", color: SOUL_COLOR, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 },
   tafsirText: { fontSize: 13, lineHeight: 20 },
 

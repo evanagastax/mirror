@@ -39,6 +39,7 @@ export default function RootLayout() {
         <Stack.Screen name="vessel-profile" options={{ presentation: "card" }} />
         <Stack.Screen name="vessel-plan" options={{ presentation: "card" }} />
         <Stack.Screen name="soul" options={{ presentation: "card" }} />
+        <Stack.Screen name="stewardship-budget" options={{ presentation: "card" }} />
       </Stack>
     </QueryClientProvider>
   );

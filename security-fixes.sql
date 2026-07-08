@@ -83,3 +83,35 @@ set privacy_settings = privacy_settings
   - 'github_username'
 where privacy_settings ? 'github_token'
    or privacy_settings ? 'github_username';
+
+
+-- =============================================================
+-- Migration v3 — goals status constraint + streak index
+-- =============================================================
+
+-- Ensure status column exists (idempotent)
+alter table goals
+  add column if not exists status text not null default 'todo'
+  check (status in ('todo', 'in_progress', 'done'));
+
+-- Keep is_done in sync with status via trigger
+create or replace function sync_goal_is_done()
+returns trigger as $$
+begin
+  new.is_done := (new.status = 'done');
+  return new;
+end;
+$$ language plpgsql;
+
+drop trigger if exists sync_goal_is_done_trigger on goals;
+create trigger sync_goal_is_done_trigger
+  before insert or update on goals
+  for each row execute function sync_goal_is_done();
+
+-- Index to speed up streak queries (logs by user + date)
+create index if not exists logs_user_date_idx
+  on logs (user_id, created_at desc);
+
+-- Index for impact logs specifically
+create index if not exists logs_user_pillar_idx
+  on logs (user_id, pillar_type, created_at desc);
