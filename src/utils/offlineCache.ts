@@ -31,7 +31,7 @@ const NS = "@mirror_cache:";
 export const CACHE_KEYS = {
   exercisePage: (cursor: string, bodyPart: string, name: string) =>
     `${NS}exercises:${bodyPart}:${name}:${cursor}`,
-  exerciseAll: () => `${NS}exercises:all:v2`,
+  exerciseAll: () => `${NS}exercises:all:v3`,
   surahList: () => `${NS}surah_list`,
   surahDetail: (n: number) => `${NS}surah:${n}`,
   surahEN: (n: number) => `${NS}surah_en:${n}`,
@@ -116,7 +116,7 @@ export async function clearStaleExerciseCache(): Promise<void> {
     const stale = (all as string[]).filter(
       (k) =>
         k.startsWith(`${NS}exercises:`) &&
-        !k.includes(":all:v2") // keep only the current key
+        !k.includes(":all:v3") // keep only the current key
     );
     if (stale.length) await AsyncStorage.multiRemove(stale);
   } catch {}
