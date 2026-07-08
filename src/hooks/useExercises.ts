@@ -2,19 +2,29 @@ import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import {
   fetchExercises,
   fetchExerciseById,
+  fetchAllByBodyPart,
   searchCachedExercises,
   ExerciseFilters,
 } from "../services/exerciseDb";
 
 /**
+ * Fetch ALL exercises for a specific body part — single bulk request.
+ * Much better than paginated browsing when user drills into a muscle group.
+ * Returns the full list (typically 100–300 exercises per category).
+ */
+export function useBodyPartExercises(bodyPart: string) {
+  return useQuery({
+    queryKey: ["exercises:bodyPart", bodyPart],
+    queryFn: () => fetchAllByBodyPart(bodyPart),
+    staleTime: 1000 * 60 * 60 * 24, // 24 hours — exercise library barely changes
+    networkMode: "always",
+    enabled: !!bodyPart,
+  });
+}
+
+/**
  * Infinite-scroll hook for browsing exercises.
- * Supports optional name search and body-part filter.
- *
- * The underlying fetchExercises() is cache-first:
- *  - Each page is cached for 7 days in AsyncStorage.
- *  - On first unfiltered load the full library is prefetched in the background.
- *  - When offline, stale cached pages are served and fromCache=true is set on
- *    the page data so the screen can show an offline badge.
+ * Still used for name search queries.
  */
 export function useExercises(filters: Omit<ExerciseFilters, "cursor"> = {}) {
   return useInfiniteQuery({

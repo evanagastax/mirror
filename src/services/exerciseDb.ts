@@ -183,7 +183,66 @@ export async function prefetchAllExercises(): Promise<void> {
   await cacheSet(CACHE_KEYS.exerciseAll(), unique);
 }
 
-// ─── offline search through full library cache ────────────────────────────────
+// ─── body-part bulk fetch ──────────────────────────────────────────────────────
+
+/**
+ * Fetch ALL exercises for a specific body part in a single request.
+ * Uses a large limit so we get everything in one shot.
+ * Result is cached per bodyPart for 7 days.
+ *
+ * Falls back to filtering the full-library cache if it exists.
+ */
+export async function fetchAllByBodyPart(
+  bodyPart: string
+): Promise<{ data: Exercise[]; fromCache: boolean }> {
+  const cacheKey = `${CACHE_KEYS.exercisePage("all", bodyPart, "")}:bulk`;
+
+  // 1. Check bodyPart-specific bulk cache
+  const cached = await cacheGet<Exercise[]>(cacheKey, TTL.EXERCISE_LIST);
+  if (cached) return { data: cached, fromCache: false };
+
+  // 2. Check full-library cache (built by prefetchAllExercises)
+  const allCached = await cacheGet<Exercise[]>(CACHE_KEYS.exerciseAll(), Infinity);
+  if (allCached) {
+    const filtered = allCached.filter((e) =>
+      e.bodyParts.some((p) => p.toLowerCase() === bodyPart.toLowerCase())
+    );
+    // Save as bodyPart cache too
+    await cacheSet(cacheKey, filtered);
+    return { data: filtered, fromCache: false };
+  }
+
+  // 3. Fetch from network with a large limit to get everything in one go
+  try {
+    const result = await networkFetchExercises({ bodyPart, limit: 400 });
+    const filtered = result.data.filter((e) =>
+      e.bodyParts.some((p) => p.toLowerCase() === bodyPart.toLowerCase())
+    );
+    await cacheSet(cacheKey, filtered);
+
+    // Also trigger full-library prefetch in the background if not done yet
+    prefetchAllExercises().catch(() => {});
+
+    return { data: filtered, fromCache: false };
+  } catch {
+    // Network failed — check stale bodyPart cache
+    const stale = await cacheGet<Exercise[]>(cacheKey, Infinity);
+    if (stale) return { data: stale, fromCache: true };
+
+    // Last resort: stale full library
+    const staleAll = await cacheGet<Exercise[]>(CACHE_KEYS.exerciseAll(), Infinity);
+    if (staleAll) {
+      const filtered = staleAll.filter((e) =>
+        e.bodyParts.some((p) => p.toLowerCase() === bodyPart.toLowerCase())
+      );
+      return { data: filtered, fromCache: true };
+    }
+
+    throw new Error("No internet connection and no cached data available.");
+  }
+}
+
+
 
 /**
  * Search the locally cached exercise list by name and/or body part.

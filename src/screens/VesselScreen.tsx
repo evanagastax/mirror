@@ -9,7 +9,7 @@ import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
 import { useAuthStore } from "../store/authStore";
 import { useThemeStore } from "../store/themeStore";
-import { useExercises } from "../hooks/useExercises";
+import { useExercises, useBodyPartExercises } from "../hooks/useExercises";
 import { usePillars } from "../hooks/usePillars";
 import { useCreateLog } from "../hooks/useCreateLog";
 import { scoreToLevel } from "../utils/pillarLevel";
@@ -252,36 +252,55 @@ function ExerciseList({ bodyPart, userId, colors, isDark }: {
     ...(debounced.trim() ? { name: debounced.trim() } : {}),
   }), [bodyPart, debounced]);
 
+  // When no search query → bulk fetch ALL exercises for this bodyPart (full list)
+  // When searching → fall back to paginated search endpoint
+  const isSearching = debounced.trim().length > 0;
+
+  const bulkQuery = useBodyPartExercises(bodyPart);
+
   const {
-    data, isLoading, isError,
+    data: pagedData, isLoading: pagedLoading, isError: pagedError,
     fetchNextPage, hasNextPage, isFetchingNextPage,
-    refetch, isRefetching,
+    refetch: refetchPaged, isRefetching: pagedRefetching,
   } = useExercises(filters);
 
+  const isLoading   = isSearching ? pagedLoading   : bulkQuery.isLoading;
+  const isError     = isSearching ? pagedError      : bulkQuery.isError;
+  const isRefetching = isSearching ? pagedRefetching : bulkQuery.isFetching;
+
+  function refetch() {
+    if (isSearching) refetchPaged();
+    else bulkQuery.refetch();
+  }
+
   const exercises = useMemo(() => {
-    const all  = data?.pages.flatMap((p) => p.data) ?? [];
-    const seen = new Set<string>();
-    const deduped = all.filter((e) => {
-      if (seen.has(e.exerciseId)) return false;
-      seen.add(e.exerciseId);
-      return true;
-    });
+    let source: Exercise[];
 
-    // 1. Enforce bodyPart — re-filter on the client so only exercises
-    //    that actually belong to the selected category are shown.
-    const partFiltered = deduped.filter((ex) =>
-      ex.bodyParts.some((p) => p.toLowerCase() === bodyPart.toLowerCase())
-    );
+    if (isSearching) {
+      // Paginated search — de-duplicate pages
+      const all = pagedData?.pages.flatMap((p) => p.data) ?? [];
+      const seen = new Set<string>();
+      source = all.filter((e) => {
+        if (seen.has(e.exerciseId)) return false;
+        seen.add(e.exerciseId);
+        return true;
+      });
+    } else {
+      // Bulk load — already all exercises for this bodyPart
+      source = bulkQuery.data?.data ?? [];
+    }
 
-    // 2. In-list equipment filter — only applied when user has selected one
-    if (!activeEquipment) return partFiltered;
-    return partFiltered.filter((ex) =>
+    // Equipment filter — only applied when user has selected one
+    if (!activeEquipment) return source;
+    return source.filter((ex) =>
       ex.equipments.length === 0 ||
       ex.equipments.some((eq) => eq.toLowerCase() === activeEquipment.toLowerCase())
     );
-  }, [data, activeEquipment, bodyPart]);
+  }, [isSearching, pagedData, bulkQuery.data, activeEquipment]);
 
-  const isOffline = useMemo(() => data?.pages.some((p) => p.fromCache) ?? false, [data]);
+  const isOffline = isSearching
+    ? (pagedData?.pages.some((p) => p.fromCache) ?? false)
+    : (bulkQuery.data?.fromCache ?? false);
 
   function openModal(ex: Exercise) { setSelected(ex); setModal(true); }
   function closeModal() { setModal(false); setTimeout(() => setSelected(null), 300); }
@@ -383,7 +402,7 @@ function ExerciseList({ bodyPart, userId, colors, isDark }: {
           renderItem={({ item }) => (
             <ExerciseCard exercise={item} onPress={() => openModal(item)} colors={colors} />
           )}
-          onEndReached={() => { if (hasNextPage && !isFetchingNextPage) fetchNextPage(); }}
+          onEndReached={() => { if (isSearching && hasNextPage && !isFetchingNextPage) fetchNextPage(); }}
           onEndReachedThreshold={0.4}
           ListFooterComponent={
             isFetchingNextPage
