@@ -1,39 +1,57 @@
+/**
+ * Exercise database — backed by the free-exercise-db dataset.
+ * Source: https://github.com/yuhonas/free-exercise-db
+ *
+ * Strategy:
+ *  - Fetch the full 873-exercise JSON once (single ~500KB request).
+ *  - Cache in AsyncStorage for 7 days.
+ *  - All filtering (bodyPart, equipment, name search) is 100% client-side.
+ *  - No pagination needed — the whole library fits in memory easily.
+ */
+
 import { cacheGet, cacheSet, CACHE_KEYS, TTL } from "../utils/offlineCache";
 
-const BASE_URL = "https://oss.exercisedb.dev/api/v1";
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-// ─── types ────────────────────────────────────────────────────────────────────
+/** Shape of raw records from the free-exercise-db JSON */
+type RawExercise = {
+  id: string;
+  name: string;
+  category: string;                 // e.g. "strength", "cardio"
+  primaryMuscles: string[];         // e.g. ["chest", "triceps"]
+  secondaryMuscles: string[];
+  equipment: string;                // single string e.g. "barbell"
+  instructions: string[];
+  images: string[];                 // relative paths e.g. "Bench_Press/0.jpg"
+  force: string | null;
+  level: string;
+  mechanic: string | null;
+};
 
+/** Normalised exercise shape used throughout the app */
 export type Exercise = {
   exerciseId: string;
   name: string;
-  gifUrl: string;
-  bodyParts: string[];
-  equipments: string[];
-  targetMuscles: string[];
+  gifUrl: string;                   // first image URL (static JPEG)
+  images: string[];                 // all image URLs
+  bodyParts: string[];              // mapped from primaryMuscles → our BODY_PARTS keys
+  targetMuscles: string[];          // original primaryMuscles values
   secondaryMuscles: string[];
+  equipments: string[];             // normalised equipment array
   instructions: string[];
-};
-
-export type ExerciseListResponse = {
-  success: boolean;
-  meta: {
-    total: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-    nextCursor: string | null;
-  };
-  data: Exercise[];
+  level: string;
+  category: string;
 };
 
 export type ExerciseFilters = {
   name?: string;
   bodyPart?: string;
+  equipment?: string;
   limit?: number;
   cursor?: string;
 };
 
-// ─── body part constants ──────────────────────────────────────────────────────
+// ─── Body part constants ──────────────────────────────────────────────────────
 
 export const BODY_PARTS = [
   "back",
@@ -50,161 +68,127 @@ export const BODY_PARTS = [
 
 export type BodyPart = (typeof BODY_PARTS)[number];
 
-// ─── network fetch (no cache) ─────────────────────────────────────────────────
+// ─── Muscle → BodyPart mapping ────────────────────────────────────────────────
 
-async function networkFetchExercises(
-  filters: ExerciseFilters
-): Promise<ExerciseListResponse> {
-  const params = new URLSearchParams();
-  if (filters.name) params.set("name", filters.name);
-  if (filters.bodyPart) params.set("bodyPart", filters.bodyPart);
-  params.set("limit", String(filters.limit ?? 20));
-  if (filters.cursor) params.set("cursor", filters.cursor);
+const MUSCLE_TO_BODY_PART: Record<string, string> = {
+  chest:         "chest",
+  lats:          "back",
+  "middle back": "back",
+  "lower back":  "back",
+  traps:         "back",
+  abdominals:    "waist",
+  obliques:      "waist",
+  shoulders:     "shoulders",
+  biceps:        "upper arms",
+  triceps:       "upper arms",
+  forearms:      "lower arms",
+  quadriceps:    "upper legs",
+  hamstrings:    "upper legs",
+  glutes:        "upper legs",
+  adductors:     "upper legs",
+  abductors:     "upper legs",
+  calves:        "lower legs",
+  neck:          "neck",
+};
 
-  const res = await fetch(`${BASE_URL}/exercises?${params.toString()}`);
-  if (!res.ok) throw new Error(`ExerciseDB error: ${res.status}`);
-  return res.json() as Promise<ExerciseListResponse>;
-}
+const IMG_BASE =
+  "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/";
 
-// ─── cached page fetch ────────────────────────────────────────────────────────
+const DB_URL =
+  "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json";
 
-/**
- * Fetch a single page of exercises.
- *
- * Strategy:
- *  1. Return cached page immediately if within TTL.
- *  2. On cache miss, fetch from network, cache the result, return it.
- *  3. On network failure with a stale cached page, return stale + fromCache=true.
- *
- * Returns { data: ExerciseListResponse, fromCache: boolean }
- */
-export async function fetchExercises(
-  filters: ExerciseFilters = {}
-): Promise<ExerciseListResponse & { fromCache: boolean }> {
-  const key = CACHE_KEYS.exercisePage(
-    filters.cursor ?? "first",
-    filters.bodyPart ?? "all",
-    filters.name ?? ""
-  );
+// ─── Normalise raw → Exercise ─────────────────────────────────────────────────
 
-  // 1. Fresh cache hit
-  const cached = await cacheGet<ExerciseListResponse>(key, TTL.EXERCISE_LIST);
-  if (cached) return { ...cached, fromCache: false };
+function normalise(raw: RawExercise): Exercise {
+  const bodyParts = [
+    ...new Set(
+      raw.primaryMuscles
+        .map((m) => MUSCLE_TO_BODY_PART[m.toLowerCase()])
+        .filter(Boolean)
+    ),
+  ];
 
-  // 2. Try network
-  try {
-    const fresh = await networkFetchExercises(filters);
-    await cacheSet(key, fresh);
-
-    // Kick off a background prefetch of the full library (unfiltered, all pages)
-    // so the user has everything available offline after their first browse.
-    if (!filters.name && !filters.bodyPart && !filters.cursor) {
-      prefetchAllExercises().catch(() => {/* background — ignore errors */});
-    }
-
-    return { ...fresh, fromCache: false };
-  } catch {
-    // 3. Network failed — try stale cache (any age)
-    const stale = await cacheGet<ExerciseListResponse>(key, Infinity);
-    if (stale) return { ...stale, fromCache: true };
-    throw new Error("No internet connection and no cached data available.");
-  }
-}
-
-// ─── single exercise detail ───────────────────────────────────────────────────
-
-export async function fetchExerciseById(
-  id: string
-): Promise<Exercise> {
-  // Individual exercises are embedded in the list pages so we scan the
-  // full-library cache first before making a network request.
-  const allCached = await cacheGet<Exercise[]>(CACHE_KEYS.exerciseAll(), Infinity);
-  if (allCached) {
-    const found = allCached.find((e) => e.exerciseId === id);
-    if (found) return found;
+  // If no primary muscle maps (e.g. "cardio" category), use category itself
+  if (bodyParts.length === 0 && raw.category === "cardio") {
+    bodyParts.push("cardio");
   }
 
-  const res = await fetch(`${BASE_URL}/exercises/${id}`);
-  if (!res.ok) throw new Error(`ExerciseDB error: ${res.status}`);
-  const json = (await res.json()) as { success: boolean; data: Exercise };
-  return json.data;
+  const imageUrls = raw.images.map((p) => IMG_BASE + p);
+
+  return {
+    exerciseId:       raw.id,
+    name:             raw.name,
+    gifUrl:           imageUrls[0] ?? "",
+    images:           imageUrls,
+    bodyParts,
+    targetMuscles:    raw.primaryMuscles,
+    secondaryMuscles: raw.secondaryMuscles,
+    equipments:       raw.equipment ? [raw.equipment] : [],
+    instructions:     raw.instructions,
+    level:            raw.level,
+    category:         raw.category,
+  };
 }
 
-// ─── background full-library prefetch ────────────────────────────────────────
+// ─── Full-library fetch & cache ───────────────────────────────────────────────
 
 /**
- * Fetches the ENTIRE exercise library in a single request (limit=2000).
- * Stores a flat deduplicated array to CACHE_KEYS.exerciseAll() for instant
- * client-side filtering by bodyPart, name, or equipment.
- *
- * Called in the background after any exercise-related screen loads.
- * Safe to call multiple times — exits early if the cache is still fresh.
+ * Loads the full exercise library.
+ * Returns immediately from cache if available.
+ * Falls back to stale cache when offline.
  */
 export async function prefetchAllExercises(): Promise<void> {
-  // Skip if the full-library snapshot is still fresh
-  const existing = await cacheGet<Exercise[]>(
-    CACHE_KEYS.exerciseAll(),
-    TTL.EXERCISE_LIST
-  );
-  if (existing) return;
+  const existing = await cacheGet<Exercise[]>(CACHE_KEYS.exerciseAll(), TTL.EXERCISE_LIST);
+  if (existing) return; // still fresh
 
-  // Single large request — get everything at once
-  const response = await networkFetchExercises({ limit: 2000 });
+  const res = await fetch(DB_URL);
+  if (!res.ok) throw new Error(`Exercise DB fetch failed: ${res.status}`);
 
-  // Deduplicate and store
-  const seen = new Set<string>();
-  const unique = response.data.filter((e) => {
-    if (seen.has(e.exerciseId)) return false;
-    seen.add(e.exerciseId);
-    return true;
-  });
-
-  await cacheSet(CACHE_KEYS.exerciseAll(), unique);
+  const raw: RawExercise[] = await res.json();
+  const exercises = raw.map(normalise);
+  await cacheSet(CACHE_KEYS.exerciseAll(), exercises);
 }
 
-// ─── body-part bulk fetch ──────────────────────────────────────────────────────
+async function getAllExercises(): Promise<{ data: Exercise[]; fromCache: boolean }> {
+  // 1. Fresh cache
+  const fresh = await cacheGet<Exercise[]>(CACHE_KEYS.exerciseAll(), TTL.EXERCISE_LIST);
+  if (fresh) return { data: fresh, fromCache: false };
+
+  // 2. Fetch
+  try {
+    const res = await fetch(DB_URL);
+    if (!res.ok) throw new Error(`${res.status}`);
+    const raw: RawExercise[] = await res.json();
+    const exercises = raw.map(normalise);
+    await cacheSet(CACHE_KEYS.exerciseAll(), exercises);
+    return { data: exercises, fromCache: false };
+  } catch {
+    // 3. Stale fallback
+    const stale = await cacheGet<Exercise[]>(CACHE_KEYS.exerciseAll(), Infinity);
+    if (stale) return { data: stale, fromCache: true };
+    throw new Error("No internet connection and no cached exercise data.");
+  }
+}
+
+// ─── Public API ───────────────────────────────────────────────────────────────
 
 /**
  * Returns all exercises for a specific body part.
- * Priority:
- *  1. Filter from full-library cache (instant, no network)
- *  2. Trigger full-library fetch (limit=2000), then filter
- *  3. Stale cache fallback when offline
+ * Loads the full library first if not yet cached.
  */
 export async function fetchAllByBodyPart(
   bodyPart: string
 ): Promise<{ data: Exercise[]; fromCache: boolean }> {
-  function filterByPart(all: Exercise[]) {
-    return all.filter((e) =>
-      e.bodyParts.some((p) => p.toLowerCase() === bodyPart.toLowerCase())
-    );
-  }
-
-  // 1. Full library already cached — filter and return immediately
-  const allCached = await cacheGet<Exercise[]>(CACHE_KEYS.exerciseAll(), TTL.EXERCISE_LIST);
-  if (allCached) {
-    return { data: filterByPart(allCached), fromCache: false };
-  }
-
-  // 2. Cache miss — fetch the full library in one shot, then filter
-  try {
-    await prefetchAllExercises();
-    const fresh = await cacheGet<Exercise[]>(CACHE_KEYS.exerciseAll(), TTL.EXERCISE_LIST);
-    if (fresh) return { data: filterByPart(fresh), fromCache: false };
-    throw new Error("Library fetch succeeded but cache write failed.");
-  } catch {
-    // 3. Offline fallback — stale full library
-    const stale = await cacheGet<Exercise[]>(CACHE_KEYS.exerciseAll(), Infinity);
-    if (stale) return { data: filterByPart(stale), fromCache: true };
-    throw new Error("No internet connection and no cached data available.");
-  }
+  const { data: all, fromCache } = await getAllExercises();
+  const filtered = all.filter((e) =>
+    e.bodyParts.some((p) => p.toLowerCase() === bodyPart.toLowerCase())
+  );
+  return { data: filtered, fromCache };
 }
 
-
-
 /**
- * Search the locally cached exercise list by name and/or body part.
- * Returns null if the full-library cache hasn't been built yet.
+ * Search exercises by name and/or bodyPart.
+ * Returns null if library is not yet loaded.
  */
 export async function searchCachedExercises(opts: {
   name?: string;
@@ -222,4 +206,49 @@ export async function searchCachedExercises(opts: {
       : true;
     return nameMatch && partMatch;
   });
+}
+
+/**
+ * Get a single exercise by ID from cache.
+ */
+export async function fetchExerciseById(id: string): Promise<Exercise> {
+  const all = await cacheGet<Exercise[]>(CACHE_KEYS.exerciseAll(), Infinity);
+  if (all) {
+    const found = all.find((e) => e.exerciseId === id);
+    if (found) return found;
+  }
+  throw new Error(`Exercise ${id} not found. Open Vessel to load the library.`);
+}
+
+/**
+ * Legacy compat — returns first page of exercises from cache or triggers fetch.
+ * Only used by the paginated search path in useExercises.
+ */
+export async function fetchExercises(
+  filters: ExerciseFilters = {}
+): Promise<{ data: Exercise[]; meta: { total: number; hasNextPage: boolean; hasPreviousPage: boolean; nextCursor: string | null }; fromCache: boolean }> {
+  const { data: all, fromCache } = await getAllExercises();
+
+  let filtered = all;
+  if (filters.bodyPart) {
+    filtered = filtered.filter((e) =>
+      e.bodyParts.some((p) => p.toLowerCase() === filters.bodyPart!.toLowerCase())
+    );
+  }
+  if (filters.name) {
+    const q = filters.name.toLowerCase();
+    filtered = filtered.filter((e) => e.name.toLowerCase().includes(q));
+  }
+  if (filters.equipment) {
+    const eq = filters.equipment.toLowerCase();
+    filtered = filtered.filter((e) =>
+      e.equipments.some((eq2) => eq2.toLowerCase() === eq)
+    );
+  }
+
+  return {
+    data: filtered,
+    meta: { total: filtered.length, hasNextPage: false, hasPreviousPage: false, nextCursor: null },
+    fromCache,
+  };
 }

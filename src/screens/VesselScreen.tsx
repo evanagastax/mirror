@@ -9,7 +9,7 @@ import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
 import { useAuthStore } from "../store/authStore";
 import { useThemeStore } from "../store/themeStore";
-import { useExercises, useBodyPartExercises } from "../hooks/useExercises";
+import { useBodyPartExercises } from "../hooks/useExercises";
 import { usePillars } from "../hooks/usePillars";
 import { useCreateLog } from "../hooks/useCreateLog";
 import { scoreToLevel } from "../utils/pillarLevel";
@@ -250,72 +250,39 @@ function ExerciseList({ bodyPart, userId, colors, isDark }: {
     debounceRef.current = setTimeout(() => setDebounced(t), 400);
   }, []);
 
-  const filters = useMemo(() => ({
-    bodyPart,
-    ...(debounced.trim() ? { name: debounced.trim() } : {}),
-  }), [bodyPart, debounced]);
-
-  // When no search query → bulk fetch ALL exercises for this bodyPart (full list)
-  // When searching → fall back to paginated search endpoint
   const isSearching = debounced.trim().length > 0;
 
   const bulkQuery = useBodyPartExercises(bodyPart);
 
-  const {
-    data: pagedData, isLoading: pagedLoading, isError: pagedError,
-    fetchNextPage, hasNextPage, isFetchingNextPage,
-    refetch: refetchPaged, isRefetching: pagedRefetching,
-  } = useExercises(filters);
+  const isLoading    = bulkQuery.isLoading;
+  const isError      = bulkQuery.isError;
+  const isRefetching = bulkQuery.isFetching;
 
-  const isLoading   = isSearching ? pagedLoading   : bulkQuery.isLoading;
-  const isError     = isSearching ? pagedError      : bulkQuery.isError;
-  const isRefetching = isSearching ? pagedRefetching : bulkQuery.isFetching;
-
-  function refetch() {
-    if (isSearching) refetchPaged();
-    else bulkQuery.refetch();
-  }
+  function refetch() { bulkQuery.refetch(); }
 
   const exercises = useMemo(() => {
-    let source: Exercise[];
+    const all = bulkQuery.data?.data ?? [];
 
+    // When searching — filter by name/target/equipment within this bodyPart's list
+    let source = all;
     if (isSearching) {
-      // Search within the already-loaded full library — instant, no extra request
-      const allFromBulk = bulkQuery.data?.data ?? [];
-      if (allFromBulk.length > 0) {
-        // Full library is loaded — search client-side
-        const q = debounced.toLowerCase();
-        source = allFromBulk.filter((e) =>
-          e.name.toLowerCase().includes(q) ||
-          e.targetMuscles.some((m) => m.toLowerCase().includes(q)) ||
-          e.equipments.some((eq) => eq.toLowerCase().includes(q))
-        );
-      } else {
-        // Full library not ready yet — fall back to paginated API results
-        const all = pagedData?.pages.flatMap((p) => p.data) ?? [];
-        const seen = new Set<string>();
-        source = all.filter((e) => {
-          if (seen.has(e.exerciseId)) return false;
-          seen.add(e.exerciseId);
-          return true;
-        });
-      }
-    } else {
-      // No search — show all exercises for this bodyPart from full library
-      source = bulkQuery.data?.data ?? [];
+      const q = debounced.toLowerCase();
+      source = all.filter((e) =>
+        e.name.toLowerCase().includes(q) ||
+        e.targetMuscles.some((m) => m.toLowerCase().includes(q)) ||
+        e.equipments.some((eq) => eq.toLowerCase().includes(q))
+      );
     }
 
-    // Equipment filter — only applied when user has selected one
+    // Equipment chip filter
     if (!activeEquipment) return source;
     return source.filter((ex) =>
       ex.equipments.length === 0 ||
       ex.equipments.some((eq) => eq.toLowerCase() === activeEquipment.toLowerCase())
     );
-  }, [isSearching, debounced, pagedData, bulkQuery.data, activeEquipment]);
+  }, [isSearching, debounced, bulkQuery.data, activeEquipment]);
 
-  const isOffline = isSearching
-    ? (pagedData?.pages.some((p) => p.fromCache) ?? false)
-    : (bulkQuery.data?.fromCache ?? false);
+  const isOffline = bulkQuery.data?.fromCache ?? false;
 
   function openModal(ex: Exercise) { setSelected(ex); setModal(true); }
   function closeModal() { setModal(false); setTimeout(() => setSelected(null), 300); }
@@ -417,13 +384,6 @@ function ExerciseList({ bodyPart, userId, colors, isDark }: {
           renderItem={({ item }) => (
             <ExerciseCard exercise={item} onPress={() => openModal(item)} colors={colors} />
           )}
-          onEndReached={() => { if (isSearching && hasNextPage && !isFetchingNextPage) fetchNextPage(); }}
-          onEndReachedThreshold={0.4}
-          ListFooterComponent={
-            isFetchingNextPage
-              ? <View style={S.footerLoader}><ActivityIndicator color={VESSEL_COLOR} size="small" /></View>
-              : null
-          }
         />
       )}
 
