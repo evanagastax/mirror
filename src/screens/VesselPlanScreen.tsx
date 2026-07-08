@@ -106,8 +106,8 @@ export default function VesselPlanScreen() {
       const days = profile.daysPerWeek;
       const templates = SPLITS[Math.min(Math.max(days, 2), 6)] ?? SPLITS[3];
 
-      // Assign day indices (skip Sunday for 5-day, start Mon)
-      const dayIndices = [0, 1, 2, 3, 4, 5].slice(0, days);
+      // Assign day indices Mon–Sat/Sun depending on days count
+      const dayIndices = [0, 1, 2, 3, 4, 5, 6].slice(0, days);
 
       const planDays: PlanDay[] = [];
 

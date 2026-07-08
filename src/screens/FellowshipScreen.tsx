@@ -78,8 +78,9 @@ export default function FellowshipScreen() {
       .eq("id", userId);
   }
 
-  const totalGoals = (goals ?? []).length;
-  const doneGoals  = (goals ?? []).filter((g) => g.is_done).length;
+  const totalGoals   = (goals ?? []).length;
+  const doneGoals    = (goals ?? []).filter((g) => g.status === "done").length;
+  const activeGoals  = (goals ?? []).filter((g) => g.status === "in_progress").length;
 
   if (loading) {
     return (
@@ -160,18 +161,18 @@ export default function FellowshipScreen() {
         {/* ── Goals summary ── */}
         <View style={[styles.goalsRow, { backgroundColor: colors.bgSubtle, borderRadius: 14 }]}>
           <View style={styles.goalsStat}>
-            <Text style={[styles.goalsNum, { color: colors.textPrimary }]}>{doneGoals}</Text>
+            <Text style={[styles.goalsNum, { color: "#1D9E75" }]}>{doneGoals}</Text>
             <Text style={[styles.goalsLabel, { color: colors.textMuted }]}>Done</Text>
           </View>
           <View style={[styles.goalsDivider, { backgroundColor: colors.border }]} />
           <View style={styles.goalsStat}>
-            <Text style={[styles.goalsNum, { color: colors.textPrimary }]}>{totalGoals - doneGoals}</Text>
-            <Text style={[styles.goalsLabel, { color: colors.textMuted }]}>Pending</Text>
+            <Text style={[styles.goalsNum, { color: "#378ADD" }]}>{activeGoals}</Text>
+            <Text style={[styles.goalsLabel, { color: colors.textMuted }]}>Active</Text>
           </View>
           <View style={[styles.goalsDivider, { backgroundColor: colors.border }]} />
           <View style={styles.goalsStat}>
             <Text style={[styles.goalsNum, { color: colors.textPrimary }]}>{totalGoals}</Text>
-            <Text style={[styles.goalsLabel, { color: colors.textMuted }]}>Total Goals</Text>
+            <Text style={[styles.goalsLabel, { color: colors.textMuted }]}>Total</Text>
           </View>
         </View>
 
