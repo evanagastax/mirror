@@ -44,8 +44,10 @@ export function SalahTracker({
     try {
       const updated = await togglePrayer(userId, prayer, record);
       setRecord(updated);
-      // Invalidate pillars so Compass XP bar refreshes
+      // Invalidate so Compass, Activity, and streak all refresh
       queryClient.invalidateQueries({ queryKey: ["pillars", userId] });
+      queryClient.invalidateQueries({ queryKey: ["logs",    userId] });
+      queryClient.invalidateQueries({ queryKey: ["streak",  userId] });
     } finally {
       setPending(null);
     }

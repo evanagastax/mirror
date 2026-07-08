@@ -62,6 +62,7 @@ export default function GitHubSyncScreen() {
       setLastSync(now);
       queryClient.invalidateQueries({ queryKey: ["pillars", userId] });
       queryClient.invalidateQueries({ queryKey: ["logs",    userId] });
+      queryClient.invalidateQueries({ queryKey: ["streak",  userId] });
       setResult({ synced, total });
     } catch (e: any) {
       Alert.alert("Sync failed", e.message ?? "Check your token and try again.");

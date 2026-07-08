@@ -33,8 +33,9 @@ export function useCreateLog(userId: string) {
     mutationFn: (payload: Omit<NewLog, "user_id">) =>
       insertLog({ ...payload, user_id: userId }),
     onSuccess: () => {
-      // Pillars will update via realtime, but invalidate as a safety net
       queryClient.invalidateQueries({ queryKey: ["pillars", userId] });
+      queryClient.invalidateQueries({ queryKey: ["logs",    userId] });
+      queryClient.invalidateQueries({ queryKey: ["streak",  userId] });
     },
   });
 }
@@ -47,6 +48,8 @@ export function useCreateTransaction(userId: string) {
       insertTransaction({ ...payload, user_id: userId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pillars", userId] });
+      queryClient.invalidateQueries({ queryKey: ["ledger",  userId] });
+      queryClient.invalidateQueries({ queryKey: ["streak",  userId] });
     },
   });
 }
