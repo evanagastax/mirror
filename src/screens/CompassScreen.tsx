@@ -17,6 +17,8 @@ import { useStreak } from "../hooks/useStreak";
 import { calculateSynergy } from "../utils/synergy";
 import { scoreToLevel } from "../utils/pillarLevel";
 import { supabase } from "../api/supabase";
+import { useXPToast } from "../hooks/useXPToast";
+import { XPToastContainer } from "../components/XPToast";
 
 // ─── pillar config ────────────────────────────────────────────────────────────
 
@@ -80,9 +82,15 @@ export default function CompassScreen() {
   const { isDark, colors } = useThemeStore();
   const { data: pillars, isLoading, isError, refetch } = usePillars(userId);
   const { data: streak } = useStreak(userId);
+  const { toasts, removeToast, trackScores } = useXPToast();
 
   const [displayName, setDisplayName] = useState("You");
   const [initial,     setInitial]     = useState("?");
+
+  // Track pillar score changes to fire XP toasts
+  useEffect(() => {
+    if (pillars) trackScores(pillars);
+  }, [pillars]);
 
   useEffect(() => {
     if (!userId) return;
@@ -132,6 +140,10 @@ export default function CompassScreen() {
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: colors.bg }]} edges={["top"]}>
       <StatusBar style={isDark ? "light" : "dark"} />
+      {/* XP toast layer — floats above everything */}
+      <View style={styles.toastAnchor} pointerEvents="none">
+        <XPToastContainer toasts={toasts} onDone={removeToast} />
+      </View>
       <ScrollView
         style={styles.flex}
         contentContainerStyle={styles.content}
@@ -242,6 +254,15 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   content: { padding: 16, paddingBottom: 24 },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
+  toastAnchor: {
+    position: "absolute",
+    top: 80,
+    left: 0,
+    right: 0,
+    zIndex: 999,
+    alignItems: "center",
+    pointerEvents: "none",
+  },
   errorText: { marginBottom: 12, fontSize: 15 },
   retryBtn: { paddingHorizontal: 16, paddingVertical: 8, borderWidth: 1, borderRadius: 8 },
   retryText: { fontSize: 14 },
