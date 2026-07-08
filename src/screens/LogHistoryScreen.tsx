@@ -1,15 +1,15 @@
 import React, { useState, useMemo } from "react";
 import {
   View, Text, ScrollView, Pressable,
-  ActivityIndicator, StyleSheet, RefreshControl, Linking,
+  ActivityIndicator, StyleSheet, RefreshControl, Linking, Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
 import { useAuthStore } from "../store/authStore";
 import { useThemeStore } from "../store/themeStore";
-import { useLogs, Log } from "../hooks/useLogs";
-import { useLedger, Transaction } from "../hooks/useLedger";
+import { useLogs, useDeleteLog, Log } from "../hooks/useLogs";
+import { useLedger, useDeleteTransaction, Transaction } from "../hooks/useLedger";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -104,6 +104,8 @@ export default function LogHistoryScreen() {
 
   const { data: logs,         isLoading: logsLoading,   isError: logsError,   refetch: refetchLogs,   isRefetching: logsRefetching }   = useLogs(userId);
   const { data: transactions, isLoading: txLoading,     isError: txError,     refetch: refetchTx,     isRefetching: txRefetching }     = useLedger(userId);
+  const deleteLog         = useDeleteLog(userId ?? "");
+  const deleteTransaction = useDeleteTransaction(userId ?? "");
 
   const [filter, setFilter] = useState<Filter>("all");
 
@@ -256,6 +258,7 @@ export default function LogHistoryScreen() {
                       log={item.data}
                       colors={colors}
                       last={idx === dayItems.length - 1}
+                      onDelete={() => deleteLog.mutate(item.data.id)}
                     />
                   ) : (
                     <TransactionRow
@@ -263,6 +266,7 @@ export default function LogHistoryScreen() {
                       tx={item.data}
                       colors={colors}
                       last={idx === dayItems.length - 1}
+                      onDelete={() => deleteTransaction.mutate(item.data.id)}
                     />
                   )
                 )}
@@ -281,16 +285,33 @@ function LogRow({
   log,
   colors,
   last,
+  onDelete,
 }: {
   log: Log;
   colors: ReturnType<typeof useThemeStore.getState>["colors"];
   last: boolean;
+  onDelete: () => void;
 }) {
   const meta = PILLAR_META[log.pillar_type as keyof typeof PILLAR_META];
   if (!meta) return null;
 
+  function handleLongPress() {
+    Alert.alert(
+      "Delete entry?",
+      `Remove "${getLogTitle(log)}" from your activity log? This cannot be undone.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Delete", style: "destructive", onPress: onDelete },
+      ]
+    );
+  }
+
   return (
-    <View style={[S.row, !last && { borderBottomColor: colors.border, borderBottomWidth: 1 }]}>
+    <Pressable
+      style={[S.row, !last && { borderBottomColor: colors.border, borderBottomWidth: 1 }]}
+      onLongPress={handleLongPress}
+      android_ripple={{ color: colors.bgSubtle }}
+    >
       <View style={[S.rowIcon, { backgroundColor: meta.bg }]}>
         <Text style={{ fontSize: 14, color: meta.color }}>{meta.icon}</Text>
       </View>
@@ -313,7 +334,7 @@ function LogRow({
           </Pressable>
         ) : null}
       </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -323,16 +344,33 @@ function TransactionRow({
   tx,
   colors,
   last,
+  onDelete,
 }: {
   tx: Transaction;
   colors: ReturnType<typeof useThemeStore.getState>["colors"];
   last: boolean;
+  onDelete: () => void;
 }) {
   const meta    = PILLAR_META.stewardship;
   const catMeta = CAT_META[tx.category];
 
+  function handleLongPress() {
+    Alert.alert(
+      "Delete transaction?",
+      `Remove "${tx.note ?? tx.category}" (${formatRp(tx.amount)})? This cannot be undone.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Delete", style: "destructive", onPress: onDelete },
+      ]
+    );
+  }
+
   return (
-    <View style={[S.row, !last && { borderBottomColor: colors.border, borderBottomWidth: 1 }]}>
+    <Pressable
+      style={[S.row, !last && { borderBottomColor: colors.border, borderBottomWidth: 1 }]}
+      onLongPress={handleLongPress}
+      android_ripple={{ color: colors.bgSubtle }}
+    >
       <View style={[S.rowIcon, { backgroundColor: meta.bg }]}>
         <Text style={{ fontSize: 14, color: catMeta.color }}>{catMeta.icon}</Text>
       </View>
@@ -352,7 +390,7 @@ function TransactionRow({
       <View style={S.rowRight}>
         <Text style={[S.rowTime, { color: colors.textDisabled }]}>{formatTime(tx.created_at)}</Text>
       </View>
-    </View>
+    </Pressable>
   );
 }
 

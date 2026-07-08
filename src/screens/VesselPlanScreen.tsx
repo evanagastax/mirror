@@ -94,8 +94,8 @@ export default function VesselPlanScreen() {
   const userEquipApiValues = useMemo(() => {
     if (!profile) return new Set<string>();
     const vals = profile.equipment.flatMap((k) => [EQUIPMENT_META[k].apiValue]);
-    // Always include body weight
-    vals.push("body weight");
+    // Always include bodyweight exercises
+    vals.push("body only");
     return new Set(vals);
   }, [profile]);
 

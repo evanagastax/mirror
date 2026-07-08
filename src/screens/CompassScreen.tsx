@@ -155,7 +155,7 @@ export default function CompassScreen() {
             <Text style={[styles.appTitle, { color: colors.textPrimary }]}>The Mirror</Text>
             <Text style={[styles.appSub, { color: colors.textMuted }]}>Know thyself.</Text>
           </View>
-          <Pressable
+        <Pressable
             onPress={() => router.push("/github-sync")}
             style={[styles.syncChip, { backgroundColor: colors.bgSubtle, borderColor: colors.border }]}
           >
