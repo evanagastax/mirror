@@ -711,15 +711,22 @@ function HafalanTab({ colors, userId }: { colors: C; userId: string }) {
   }
 
   async function handleReset() {
-    Alert.alert("Reset hafalan?", "Semua progres akan dihapus.", [
-      { text: "Batal", style: "cancel" },
-      {
-        text: "Reset", style: "destructive", onPress: async () => {
-          await deletePlan(userId);
-          setPlan(null);
+    Alert.alert(
+      "Reset progres?",
+      "Semua sesi akan dikembalikan ke awal. Surah tetap sama.",
+      [
+        { text: "Batal", style: "cancel" },
+        {
+          text: "Reset", style: "destructive", onPress: async () => {
+            // Rebuild the same plan from scratch — keeps surah, resets all milestones
+            if (!plan) return;
+            const fresh = buildPlan(plan.surahNumber, plan.surahName, plan.totalAyat, plan.chunkSize);
+            await savePlan(userId, fresh);
+            setPlan(fresh);
+          },
         },
-      },
-    ]);
+      ]
+    );
   }
 
   const filteredSurahs = surahSearch.trim()
@@ -890,12 +897,18 @@ function HafalanTab({ colors, userId }: { colors: C; userId: string }) {
         <Text style={[S.hafalanPct, { color: SOUL_COLOR }]}>
           {Math.round(prog.pct * 100)}% hafal
         </Text>
-        <Pressable onPress={handleReset} hitSlop={8} style={S.hafalanResetProgBtn}>
-          <Text style={[S.hafalanResetProgText, { color: colors.textDisabled }]}>Reset progres</Text>
-        </Pressable>
       </View>
 
-      {/* Timeline */}
+      {/* Reset progress — standalone button outside the card so it's never touch-blocked */}
+      <Pressable
+        onPress={handleReset}
+        hitSlop={12}
+        style={[S.hafalanResetProgBtn, { borderColor: colors.border, backgroundColor: colors.bgCard }]}
+        android_ripple={{ color: colors.bgSubtle }}
+      >
+        <Text style={[S.hafalanResetProgText, { color: colors.textMuted }]}>↺  Reset progres</Text>
+      </Pressable>
+
       <Text style={[S.sectionLabel, { color: colors.textMuted }]}>TIMELINE SESI</Text>
       <View style={S.timeline}>
         {plan.milestones.map((m, idx) => {
@@ -1328,8 +1341,8 @@ const S = StyleSheet.create({
   hafalanTrack: { height: 6, borderRadius: 99, overflow: "hidden" },
   hafalanFill: { height: 6, borderRadius: 99, backgroundColor: SOUL_COLOR },
   hafalanPct: { fontSize: 12, fontWeight: "700", textAlign: "center" },
-  hafalanResetProgBtn: { alignSelf: "center", paddingVertical: 4, paddingHorizontal: 8 },
-  hafalanResetProgText: { fontSize: 11, textDecorationLine: "underline" },
+  hafalanResetProgBtn: { borderWidth: 1, borderRadius: 12, paddingVertical: 10, alignItems: "center", marginBottom: 4 },
+  hafalanResetProgText: { fontSize: 13, fontWeight: "600" },
 
   timeline: { gap: 0, paddingBottom: 32 },
   timelineRow: { flexDirection: "row", gap: 12 },
