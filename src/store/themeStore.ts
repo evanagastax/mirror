@@ -14,8 +14,8 @@ type ThemeState = {
 };
 
 export const useThemeStore = create<ThemeState>((set, get) => ({
-  isDark: true, // default to dark — matches the existing Compass/Impact dark style
-  colors: dark,
+  isDark: false, // default to light
+  colors: light,
 
   toggle: async () => {
     const next = !get().isDark;

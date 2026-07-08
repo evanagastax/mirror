@@ -3,6 +3,8 @@ import {
   View, Text, TextInput, Pressable,
   ActivityIndicator, StyleSheet, Alert, ScrollView,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
 import { useAuthStore } from "../store/authStore";
 import { useThemeStore } from "../store/themeStore";
@@ -16,7 +18,7 @@ const STORAGE_KEY_USERNAME = "github_username";
 export default function GitHubSyncScreen() {
   const router = useRouter();
   const userId = useAuthStore((s) => s.userId)!;
-  const colors = useThemeStore((s) => s.colors);
+  const { isDark, colors } = useThemeStore();
   const queryClient = useQueryClient();
 
   const [username, setUsername] = useState("");
@@ -91,9 +93,12 @@ export default function GitHubSyncScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.center, { backgroundColor: colors.bg }]}>
-        <ActivityIndicator color={colors.textPrimary} />
-      </View>
+      <SafeAreaView style={[styles.flex, { backgroundColor: colors.bg }]} edges={["top"]}>
+        <StatusBar style={isDark ? "light" : "dark"} />
+        <View style={styles.center}>
+          <ActivityIndicator color={colors.textPrimary} size="large" />
+        </View>
+      </SafeAreaView>
     );
   }
 
@@ -104,10 +109,12 @@ export default function GitHubSyncScreen() {
   }];
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: colors.bg }]}
-      contentContainerStyle={styles.content}
-    >
+    <SafeAreaView style={[styles.flex, { backgroundColor: colors.bg }]} edges={["top"]}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <ScrollView
+        style={styles.flex}
+        contentContainerStyle={styles.content}
+      >
       <View style={styles.header}>
         <Pressable onPress={() => router.back()}>
           <Text style={[styles.back, { color: colors.textMuted }]}>← Back</Text>
@@ -213,7 +220,8 @@ export default function GitHubSyncScreen() {
           <Text style={styles.clearBtnText}>Clear saved credentials</Text>
         </Pressable>
       )}
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -233,6 +241,7 @@ function Field({
 }
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
   container: { flex: 1 },
   content: { padding: 20, paddingBottom: 40 },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
