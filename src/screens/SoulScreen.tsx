@@ -642,6 +642,8 @@ function HafalanTab({ colors, userId }: { colors: C; userId: string }) {
   const [plan,        setPlan]        = useState<HafalanPlan | null>(null);
   const [loading,     setLoading]     = useState(true);
   const [showPicker,  setShowPicker]  = useState(false);
+  // true when picker is opened via "Ganti" (replacing existing plan)
+  const [isReplacing, setIsReplacing] = useState(false);
   const [surahs,      setSurahs]      = useState<Surah[]>([]);
   const [surahSearch, setSurahSearch] = useState("");
   const [surahLoading, setSurahLoading] = useState(false);
@@ -686,7 +688,18 @@ function HafalanTab({ colors, userId }: { colors: C; userId: string }) {
     await savePlan(userId, newPlan);
     setPlan(newPlan);
     setShowPicker(false);
+    setIsReplacing(false);
     setSelectedSurah(null);
+    setSurahSearch("");
+  }
+
+  function handleGanti() {
+    // Open picker directly so the user picks a new surah first.
+    // Old plan is only deleted once they confirm a new one.
+    setIsReplacing(true);
+    setSelectedSurah(null);
+    setSurahSearch("");
+    setShowPicker(true);
   }
 
   async function handleStatusChange(milestoneId: string, status: MilestoneStatus) {
@@ -848,8 +861,8 @@ function HafalanTab({ colors, userId }: { colors: C; userId: string }) {
               {plan.totalAyat} ayat · {plan.milestones.length} sesi · {plan.chunkSize} ayat/sesi
             </Text>
           </View>
-          <Pressable onPress={handleReset} style={S.hafalanResetBtn}>
-            <Text style={[S.hafalanResetBtnText, { color: "#D85A30" }]}>Ganti</Text>
+          <Pressable onPress={handleGanti} style={S.hafalanResetBtn} hitSlop={10}>
+            <Text style={[S.hafalanResetBtnText, { color: "#D85A30" }]}>🔄 Ganti</Text>
           </Pressable>
         </View>
         {/* Big progress arc replaced with bar + numbers */}
@@ -877,6 +890,9 @@ function HafalanTab({ colors, userId }: { colors: C; userId: string }) {
         <Text style={[S.hafalanPct, { color: SOUL_COLOR }]}>
           {Math.round(prog.pct * 100)}% hafal
         </Text>
+        <Pressable onPress={handleReset} hitSlop={8} style={S.hafalanResetProgBtn}>
+          <Text style={[S.hafalanResetProgText, { color: colors.textDisabled }]}>Reset progres</Text>
+        </Pressable>
       </View>
 
       {/* Timeline */}
@@ -982,6 +998,95 @@ function HafalanTab({ colors, userId }: { colors: C; userId: string }) {
                 </View>
               ))}
             </ScrollView>
+          )}
+        </SafeAreaView>
+      </Modal>
+
+      {/* ── Surah picker modal (for "Ganti") ── */}
+      <Modal visible={showPicker} animationType="slide" onRequestClose={() => { setShowPicker(false); setIsReplacing(false); setSurahSearch(""); setSelectedSurah(null); }}>
+        <SafeAreaView style={[S.readerRoot, { backgroundColor: colors.bg }]} edges={["top", "bottom"]}>
+          <View style={[S.readerHeader, { borderBottomColor: colors.border }]}>
+            <Pressable onPress={() => { setShowPicker(false); setIsReplacing(false); setSurahSearch(""); setSelectedSurah(null); }} hitSlop={12}>
+              <Text style={[S.back, { color: colors.textMuted }]}>✕</Text>
+            </Pressable>
+            <Text style={[S.readerTitle, { color: colors.textPrimary }]}>
+              {isReplacing ? "Ganti Surah" : "Pilih Surah"}
+            </Text>
+          </View>
+
+          {/* Chunk size selector */}
+          <View style={[S.chunkRow, { borderBottomColor: colors.border }]}>
+            <Text style={[S.chunkLabel, { color: colors.textMuted }]}>Ayat per sesi:</Text>
+            {CHUNK_OPTIONS.map((n) => (
+              <Pressable key={n} onPress={() => setChunkSize(n)}
+                style={[S.chunkBtn, { borderColor: colors.border },
+                  chunkSize === n && { backgroundColor: SOUL_COLOR, borderColor: SOUL_COLOR }]}>
+                <Text style={[S.chunkBtnText, { color: chunkSize === n ? "#fff" : colors.textMuted }]}>
+                  {n}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+
+          {/* Search */}
+          <View style={[S.quranSearch, { borderBottomColor: colors.border }]}>
+            <View style={[S.quranSearchBox, { backgroundColor: colors.bgInput, borderColor: colors.border }]}>
+              <Text style={[S.quranSearchIcon, { color: colors.textMuted }]}>🔍</Text>
+              <TextInput
+                style={[S.quranSearchInput, { color: colors.textPrimary }]}
+                placeholder="Cari surah…"
+                placeholderTextColor={colors.textMuted}
+                value={surahSearch}
+                onChangeText={setSurahSearch}
+              />
+            </View>
+          </View>
+
+          {surahLoading ? (
+            <View style={S.center}><ActivityIndicator color={SOUL_COLOR} size="large" /></View>
+          ) : (
+            <FlatList
+              data={filteredSurahs}
+              keyExtractor={(item) => String(item.nomor)}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}
+              ItemSeparatorComponent={() => <View style={{ height: 1, backgroundColor: colors.border }} />}
+              renderItem={({ item }) => {
+                const sel = selectedSurah?.nomor === item.nomor;
+                return (
+                  <Pressable
+                    style={[S.surahRow, sel && { backgroundColor: SOUL_BG }]}
+                    onPress={() => setSelectedSurah(sel ? null : item)}
+                    android_ripple={{ color: SOUL_BG }}
+                  >
+                    <View style={[S.surahNum, sel && { backgroundColor: SOUL_COLOR }]}>
+                      <Text style={[S.surahNumText, sel && { color: "#fff" }]}>{item.nomor}</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[S.surahLatin, { color: colors.textPrimary }]}>{item.namaLatin}</Text>
+                      <Text style={[S.surahMeta, { color: colors.textMuted }]}>
+                        {item.arti} · {item.jumlahAyat} ayat · {Math.ceil(item.jumlahAyat / chunkSize)} sesi
+                      </Text>
+                    </View>
+                    <Text style={[S.surahArabic, { color: sel ? SOUL_COLOR : colors.textPrimary }]}>{item.nama}</Text>
+                  </Pressable>
+                );
+              }}
+            />
+          )}
+
+          {selectedSurah && (
+            <View style={[S.pickerFooter, { backgroundColor: colors.bgCard, borderTopColor: colors.border }]}>
+              <View style={{ flex: 1 }}>
+                <Text style={[S.pickerFooterTitle, { color: colors.textPrimary }]}>{selectedSurah.namaLatin}</Text>
+                <Text style={[S.pickerFooterSub, { color: colors.textMuted }]}>
+                  {selectedSurah.jumlahAyat} ayat · {Math.ceil(selectedSurah.jumlahAyat / chunkSize)} sesi · {chunkSize} ayat/sesi
+                </Text>
+              </View>
+              <Pressable style={[S.pickerConfirmBtn, { backgroundColor: SOUL_COLOR }]} onPress={handleCreatePlan}>
+                <Text style={S.pickerConfirmText}>{isReplacing ? "Ganti" : "Mulai"}</Text>
+              </Pressable>
+            </View>
           )}
         </SafeAreaView>
       </Modal>
@@ -1223,6 +1328,8 @@ const S = StyleSheet.create({
   hafalanTrack: { height: 6, borderRadius: 99, overflow: "hidden" },
   hafalanFill: { height: 6, borderRadius: 99, backgroundColor: SOUL_COLOR },
   hafalanPct: { fontSize: 12, fontWeight: "700", textAlign: "center" },
+  hafalanResetProgBtn: { alignSelf: "center", paddingVertical: 4, paddingHorizontal: 8 },
+  hafalanResetProgText: { fontSize: 11, textDecorationLine: "underline" },
 
   timeline: { gap: 0, paddingBottom: 32 },
   timelineRow: { flexDirection: "row", gap: 12 },
