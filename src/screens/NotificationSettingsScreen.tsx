@@ -52,6 +52,14 @@ export default function NotificationSettingsScreen() {
     }
   }
 
+  function goBack() {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(app)" as any);
+    }
+  }
+
   async function handleSave() {
     if (permission !== "granted") {
       const granted = await requestNotificationPermission();
@@ -62,12 +70,13 @@ export default function NotificationSettingsScreen() {
     try {
       await saveNotifSettings(settings);
       await applyNotificationSettings(settings);
-      router.back();
     } catch (e: any) {
       Alert.alert("Error", e.message ?? "Couldn't save notifications.");
-    } finally {
       setSaving(false);
+      return;
     }
+    setSaving(false);
+    goBack();
   }
 
   async function handleDisableAll() {
@@ -110,7 +119,7 @@ export default function NotificationSettingsScreen() {
 
       {/* Header */}
       <View style={[S.header, { borderBottomColor: colors.border }]}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
+        <Pressable onPress={goBack} hitSlop={12}>
           <Text style={[S.back, { color: colors.textMuted }]}>←</Text>
         </Pressable>
         <View style={S.headerCenter}>
