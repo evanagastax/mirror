@@ -1,17 +1,50 @@
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, StyleSheet, Animated } from "react-native";
+import NetInfo from "@react-native-community/netinfo";
 
 /**
- * Slim amber banner shown when content is being served from the local
- * AsyncStorage cache because the device is offline or the network request
- * failed. Drop it at the top of any screen that supports offline data.
+ * Subscribes to the device's network state. Shows a slim amber banner
+ * whenever the device goes offline, and hides it automatically when
+ * connectivity is restored.
+ *
+ * Drop this at the top of any screen — or once in the root layout
+ * so it covers the whole app.
  */
 export function OfflineBanner() {
+  const [isOffline, setIsOffline] = useState(false);
+  const opacity = React.useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener((state) => {
+      const offline = !(state.isConnected && state.isInternetReachable !== false);
+      setIsOffline(offline);
+    });
+
+    // Check current state immediately on mount
+    NetInfo.fetch().then((state) => {
+      const offline = !(state.isConnected && state.isInternetReachable !== false);
+      setIsOffline(offline);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
+    Animated.timing(opacity, {
+      toValue: isOffline ? 1 : 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, [isOffline]);
+
+  // Keep in the tree but invisible when online so the animation works
+  if (!isOffline && opacity.__getValue() === 0) return null;
+
   return (
-    <View style={styles.banner}>
+    <Animated.View style={[styles.banner, { opacity }]}>
       <Text style={styles.icon}>📶</Text>
       <Text style={styles.text}>Offline — showing cached data</Text>
-    </View>
+    </Animated.View>
   );
 }
 

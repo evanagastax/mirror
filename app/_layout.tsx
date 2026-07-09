@@ -3,7 +3,6 @@ import { Stack } from "expo-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { supabase } from "../src/api/supabase";
 import { useAuthStore } from "../src/store/authStore";
-
 import { useThemeStore } from "../src/store/themeStore";
 import {
   loadNotifSettings,
@@ -11,6 +10,8 @@ import {
   setupAndroidChannels,
 } from "../src/services/notificationService";
 import { clearStaleExerciseCache } from "../src/utils/offlineCache";
+import { ErrorBoundary } from "../src/components/ErrorBoundary";
+import { OfflineBanner } from "../src/components/OfflineBanner";
 
 const queryClient = new QueryClient();
 
@@ -52,18 +53,21 @@ export default function RootLayout() {
   }, [setUserId, hydrate]);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(app)" />
-        <Stack.Screen name="log/new" options={{ presentation: "modal" }} />
-        <Stack.Screen name="impact-roadmap" options={{ presentation: "card" }} />
-        <Stack.Screen name="vessel-profile" options={{ presentation: "card" }} />
-        <Stack.Screen name="vessel-plan" options={{ presentation: "card" }} />
-        <Stack.Screen name="soul" options={{ presentation: "card" }} />
-        <Stack.Screen name="stewardship-budget" options={{ presentation: "card" }} />
-        <Stack.Screen name="notification-settings" options={{ presentation: "card" }} />
-      </Stack>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <OfflineBanner />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(app)" />
+          <Stack.Screen name="log/new" options={{ presentation: "modal" }} />
+          <Stack.Screen name="impact-roadmap" options={{ presentation: "card" }} />
+          <Stack.Screen name="vessel-profile" options={{ presentation: "card" }} />
+          <Stack.Screen name="vessel-plan" options={{ presentation: "card" }} />
+          <Stack.Screen name="soul" options={{ presentation: "card" }} />
+          <Stack.Screen name="stewardship-budget" options={{ presentation: "card" }} />
+          <Stack.Screen name="notification-settings" options={{ presentation: "card" }} />
+        </Stack>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
