@@ -241,36 +241,68 @@ export default function CompassScreen() {
           </Pressable>
         </View>
 
-        <View style={styles.pillarGrid}>
-          {PILLARS.map((pillar) => {
-            const { level, xp, xpMax } = scoreToLevel(pillars[pillar.key]);
-            const barPct = xp / xpMax;
-            return (
-              <Pressable
-                key={pillar.key}
-                style={[styles.pillarCard, { backgroundColor: colors.bgCard, borderColor: colors.border }]}
-                onPress={() => router.push(pillar.route as any)}
-                android_ripple={{ color: pillar.bg, borderless: false }}
-              >
-                <View style={[styles.pillarIconBg, { backgroundColor: pillar.bg }]}>
-                  <Text style={[styles.pillarIcon, { color: pillar.color }]}>{pillar.icon}</Text>
-                </View>
-                <Text style={[styles.pillarName, { color: colors.textPrimary }]}>{pillar.label}</Text>
-                <Text style={[styles.pillarSub, { color: colors.textMuted }]} numberOfLines={1}>
-                  {pillar.subtitle}
-                </Text>
-                <View style={styles.pillarFooter}>
-                  <View style={[styles.xpTrack, { backgroundColor: colors.border }]}>
-                    <View
-                      style={[styles.xpFill, { width: `${barPct * 100}%` as any, backgroundColor: pillar.color }]}
-                    />
+        {/* Empty state — shown when all pillars are 0 and onboarding is done */}
+        {pillars.soul === 0 && pillars.vessel === 0 &&
+         pillars.impact === 0 && pillars.stewardship === 0 ? (
+          <View style={[styles.emptyState, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
+            <Text style={styles.emptyEmoji}>✦</Text>
+            <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
+              Your journey starts here
+            </Text>
+            <Text style={[styles.emptySub, { color: colors.textMuted }]}>
+              Tap + to log your first activity and start building your Synergy score.
+            </Text>
+            <View style={styles.emptyPillars}>
+              {PILLARS.map((p) => (
+                <Pressable
+                  key={p.key}
+                  style={[styles.emptyPillarChip, { backgroundColor: p.bg, borderColor: p.color + "40" }]}
+                  onPress={() => router.push("/log/new" as any)}
+                >
+                  <Text style={{ color: p.color, fontSize: 14 }}>{p.icon}</Text>
+                  <Text style={[styles.emptyPillarLabel, { color: p.color }]}>{p.label}</Text>
+                </Pressable>
+              ))}
+            </View>
+            <Pressable
+              style={[styles.emptyLogBtn, { backgroundColor: colors.textPrimary }]}
+              onPress={() => router.push("/log/new" as any)}
+            >
+              <Text style={[styles.emptyLogBtnText, { color: colors.bg }]}>+ Log your first activity</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <View style={styles.pillarGrid}>
+            {PILLARS.map((pillar) => {
+              const { level, xp, xpMax } = scoreToLevel(pillars[pillar.key]);
+              const barPct = xp / xpMax;
+              return (
+                <Pressable
+                  key={pillar.key}
+                  style={[styles.pillarCard, { backgroundColor: colors.bgCard, borderColor: colors.border }]}
+                  onPress={() => router.push(pillar.route as any)}
+                  android_ripple={{ color: pillar.bg, borderless: false }}
+                >
+                  <View style={[styles.pillarIconBg, { backgroundColor: pillar.bg }]}>
+                    <Text style={[styles.pillarIcon, { color: pillar.color }]}>{pillar.icon}</Text>
                   </View>
-                  <Text style={[styles.pillarLevel, { color: pillar.color }]}>Lv {level}</Text>
-                </View>
-              </Pressable>
-            );
-          })}
-        </View>
+                  <Text style={[styles.pillarName, { color: colors.textPrimary }]}>{pillar.label}</Text>
+                  <Text style={[styles.pillarSub, { color: colors.textMuted }]} numberOfLines={1}>
+                    {pillar.subtitle}
+                  </Text>
+                  <View style={styles.pillarFooter}>
+                    <View style={[styles.xpTrack, { backgroundColor: colors.border }]}>
+                      <View
+                        style={[styles.xpFill, { width: `${barPct * 100}%` as any, backgroundColor: pillar.color }]}
+                      />
+                    </View>
+                    <Text style={[styles.pillarLevel, { color: pillar.color }]}>Lv {level}</Text>
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
+        )}
 
         {/* ── Bottom hint ── */}
         <Text style={[styles.hint, { color: colors.textDisabled }]}>
@@ -388,6 +420,26 @@ const styles = StyleSheet.create({
   pillarLevel: { fontSize: 11, fontWeight: "700" },
 
   hint: { textAlign: "center", fontSize: 11, marginTop: 4 },
+
+  // Empty state
+  emptyState: {
+    borderWidth: 1, borderRadius: 20, padding: 24,
+    alignItems: "center", gap: 10, marginBottom: 24,
+  },
+  emptyEmoji: { fontSize: 40 },
+  emptyTitle: { fontSize: 18, fontWeight: "800", letterSpacing: -0.5, textAlign: "center" },
+  emptySub: { fontSize: 13, textAlign: "center", lineHeight: 20, maxWidth: 280 },
+  emptyPillars: { flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "center", marginTop: 4 },
+  emptyPillarChip: {
+    flexDirection: "row", alignItems: "center", gap: 6,
+    paddingHorizontal: 12, paddingVertical: 7, borderRadius: 99, borderWidth: 1,
+  },
+  emptyPillarLabel: { fontSize: 12, fontWeight: "700" },
+  emptyLogBtn: {
+    borderRadius: 14, paddingVertical: 13, paddingHorizontal: 28,
+    marginTop: 4, alignItems: "center",
+  },
+  emptyLogBtnText: { fontSize: 15, fontWeight: "700" },
 
   // Streak
   streakRow: { flexDirection: "row", alignItems: "center", gap: 3, marginTop: 3 },
