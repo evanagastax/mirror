@@ -37,6 +37,16 @@ const CATEGORIES: { key: Category; label: string; icon: string }[] = [
   { key: "leak",        label: "Leak",        icon: "↓" },
 ];
 
+/** Accepts http:// and https:// URLs only. */
+function isValidUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url.trim());
+    return parsed.protocol === "https:" || parsed.protocol === "http:";
+  } catch {
+    return false;
+  }
+}
+
 export default function LogScreen() {
   const router = useRouter();
   const userId = useAuthStore((s) => s.userId)!;
@@ -78,6 +88,9 @@ export default function LogScreen() {
         if (pillar === "soul") {
           if (!soulMinutes) return Alert.alert("Enter duration.");
           value = parseInt(soulMinutes, 10);
+          if (soulEvidence && !isValidUrl(soulEvidence)) {
+            return Alert.alert("Invalid URL", "Evidence link must start with https://");
+          }
           evidence_url = soulEvidence || undefined;
           metadata = { activity: soulActivity };
         } else if (pillar === "vessel") {
@@ -97,6 +110,9 @@ export default function LogScreen() {
           if (!impactDescription.trim()) return Alert.alert("Enter a title for what you did.");
           if (!impactEffort) return Alert.alert("Enter effort score.");
           value = Math.min(10, Math.max(1, parseInt(impactEffort, 10)));
+          if (impactEvidence && !isValidUrl(impactEvidence)) {
+            return Alert.alert("Invalid URL", "Evidence link must start with https://");
+          }
           evidence_url = impactEvidence || undefined;
           metadata = {
             title:       impactDescription.trim(),
