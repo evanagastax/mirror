@@ -69,10 +69,82 @@ async function saveSalah(userId: string, record: SalahRecord): Promise<void> {
   await AsyncStorage.setItem(storageKey(userId), JSON.stringify(record));
 }
 
-// ─── Business logic ───────────────────────────────────────────────────────────
+// ─── Prayer window helpers ───────────────────────────────────────────────────
+
+/** Parse "HH:MM" → total minutes since midnight. */
+function parseMinutes(timeStr: string): number {
+  const [h, m] = timeStr.split(":").map(Number);
+  return h * 60 + m;
+}
 
 /**
- * Mark a prayer as done (or undo it).
+ * Each prayer's window:
+ *   Opens  → at its own adhan time
+ *   Closes → 15 minutes before the next prayer's adhan
+ *   Isha   → closes at midnight (1440 min)
+ *
+ * Sunrise acts as Fajr's "next prayer" since there is no adhan for it.
+ * If prayer times are unavailable all prayers default to available.
+ */
+const NEXT_PRAYER_KEY: Record<PrayerName, string> = {
+  Fajr:    "Sunrise",
+  Dhuhr:   "Asr",
+  Asr:     "Maghrib",
+  Maghrib: "Isha",
+  Isha:    "", // no next — closes at midnight
+};
+
+function windowFor(
+  prayer: PrayerName,
+  prayerTimes: Record<string, string>
+): { open: number; close: number } | null {
+  const openStr  = prayerTimes[prayer];
+  const nextKey  = NEXT_PRAYER_KEY[prayer];
+  const closeStr = nextKey ? prayerTimes[nextKey] : null;
+
+  if (!openStr) return null;
+
+  const open  = parseMinutes(openStr);
+  const close = closeStr ? parseMinutes(closeStr) - 15 : 1440; // midnight
+
+  return { open, close };
+}
+
+/**
+ * Returns whether a prayer button should be tappable right now.
+ * If prayer times aren't loaded yet, everything is enabled.
+ */
+export function isPrayerAvailable(
+  prayer: PrayerName,
+  prayerTimes: Record<string, string> | null | undefined
+): boolean {
+  if (!prayerTimes) return true;
+  const win = windowFor(prayer, prayerTimes);
+  if (!win) return true;
+  const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
+  return nowMin >= win.open && nowMin < win.close;
+}
+
+/**
+ * Returns display status for each prayer button:
+ *   "upcoming"  → adhan hasn't happened yet
+ *   "passed"    → window has closed (15 min before next prayer)
+ *   "available" → currently in window
+ */
+export function getPrayerStatus(
+  prayer: PrayerName,
+  prayerTimes: Record<string, string> | null | undefined
+): "upcoming" | "passed" | "available" {
+  if (!prayerTimes) return "available";
+  const win = windowFor(prayer, prayerTimes);
+  if (!win) return "available";
+  const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
+  if (nowMin < win.open)  return "upcoming";
+  if (nowMin >= win.close) return "passed";
+  return "available";
+}
+
+// ─── Business logic ───────────────────────────────────────────────────────────
  * Awards XP to the Soul pillar via the logs table when completing.
  * Awards a full-day bonus when all 5 are done.
  * Returns the updated record.

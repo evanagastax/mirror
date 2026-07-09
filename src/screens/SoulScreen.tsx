@@ -156,7 +156,7 @@ function DailyTab({ colors, userId }: { colors: C; userId: string }) {
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={SOUL_COLOR} />}
     >
       {fromCache && <OfflineBanner />}
-      <SalahTracker userId={userId} colors={colors} />
+      <SalahTracker userId={userId} colors={colors} prayerTimes={prayerTimes} />
       <LangToggle lang={lang} setLang={setLang} colors={colors} />
 
       {/* Prayer times */}
