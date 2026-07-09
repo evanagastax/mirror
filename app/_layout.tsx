@@ -54,7 +54,6 @@ export default function RootLayout() {
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(app)" />
         <Stack.Screen name="log/new" options={{ presentation: "modal" }} />
-        <Stack.Screen name="github-sync" options={{ presentation: "card" }} />
         <Stack.Screen name="impact-roadmap" options={{ presentation: "card" }} />
         <Stack.Screen name="vessel-profile" options={{ presentation: "card" }} />
         <Stack.Screen name="vessel-plan" options={{ presentation: "card" }} />

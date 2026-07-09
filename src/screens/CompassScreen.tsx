@@ -155,13 +155,7 @@ export default function CompassScreen() {
             <Text style={[styles.appTitle, { color: colors.textPrimary }]}>The Mirror</Text>
             <Text style={[styles.appSub, { color: colors.textMuted }]}>Know thyself.</Text>
           </View>
-        <Pressable
-            onPress={() => router.push("/github-sync")}
-            style={[styles.syncChip, { backgroundColor: colors.bgSubtle, borderColor: colors.border }]}
-          >
-            <Text style={[styles.syncChipIcon, { color: "#378ADD" }]}>⟳</Text>
-            <Text style={[styles.syncChipText, { color: "#378ADD" }]}>GitHub</Text>
-          </Pressable>
+
         </View>
 
         {/* ── Character / Synergy banner ── */}
@@ -277,18 +271,6 @@ const styles = StyleSheet.create({
   topLeft: { gap: 1 },
   appTitle: { fontSize: 18, fontWeight: "800", letterSpacing: -0.5 },
   appSub: { fontSize: 11, letterSpacing: 0.5 },
-  syncChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 20,
-    borderWidth: 1,
-  },
-  syncChipIcon: { fontSize: 13 },
-  syncChipText: { fontSize: 12, fontWeight: "600" },
-
   // Banner
   banner: {
     flexDirection: "row",

@@ -97,8 +97,6 @@ export default function ImpactScreen() {
             onPress={() => router.push("/impact-roadmap" as any)} colors={colors} />
           <ActionCard icon="◈" label="Goals" sub="Track goals" color={COLOR} bg={BG}
             onPress={() => router.push("/(app)/roadmap")} colors={colors} />
-          <ActionCard icon="⟳" label="GitHub" sub="Sync commits" color={COLOR} bg={BG}
-            onPress={() => router.push("/github-sync")} colors={colors} />
           <ActionCard icon="+" label="Log" sub="New entry" color={COLOR} bg={BG}
             onPress={() => router.push("/log/new")} colors={colors} />
         </View>
