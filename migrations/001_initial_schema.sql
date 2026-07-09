@@ -70,6 +70,11 @@ alter table pillars      enable row level security;
 alter table logs         enable row level security;
 alter table transactions enable row level security;
 
+drop policy if exists "Own profile only"      on profiles;
+drop policy if exists "Own pillars only"      on pillars;
+drop policy if exists "Own logs only"         on logs;
+drop policy if exists "Own transactions only" on transactions;
+
 create policy "Own profile only"       on profiles     for all using (auth.uid() = id);
 create policy "Own pillars only"       on pillars      for all using (auth.uid() = user_id);
 create policy "Own logs only"          on logs         for all using (auth.uid() = user_id);
@@ -167,4 +172,12 @@ create trigger on_transaction_insert
 -- without needing a manual refetch interval.
 -- =============================================================
 
-alter publication supabase_realtime add table pillars;
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and tablename = 'pillars'
+  ) then
+    alter publication supabase_realtime add table pillars;
+  end if;
+end $$;

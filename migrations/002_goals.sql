@@ -28,6 +28,7 @@ create table if not exists goals (
 
 alter table goals enable row level security;
 
+drop policy if exists "Own goals only" on goals;
 create policy "Own goals only" on goals
   for all using (auth.uid() = user_id);
 
