@@ -30,11 +30,11 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
   hydrate: async () => {
     try {
       const saved = await AsyncStorage.getItem(STORAGE_KEY);
-      if (saved === "light") {
-        set({ isDark: false, colors: light });
-      } else {
-        // "dark" or no value → stay dark
+      if (saved === "dark") {
         set({ isDark: true, colors: dark });
+      } else {
+        // "light" or no value (first launch) → light mode
+        set({ isDark: false, colors: light });
       }
     } catch (e) {
       console.warn("Could not load theme preference:", e);
