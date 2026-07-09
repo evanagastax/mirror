@@ -86,7 +86,7 @@ export function useDeleteGoal(userId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("goals").delete().eq("id", id);
+      const { error } = await supabase.from("goals").delete().eq("id", id).eq("user_id", userId);
       if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["goals", userId] }),
