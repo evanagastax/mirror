@@ -21,7 +21,7 @@ const PILLAR_META = [
   { key: "stewardship" as const, label: "Stewardship", color: "#BA7517", bg: "#FAEEDA", icon: "◎" },
 ];
 
-export default function FellowshipScreen() {
+export default function ProfileScreen() {
   const userId = useAuthStore((s) => s.userId)!;
   const { data: pillars } = usePillars(userId);
   const { data: goals } = useGoals(userId);

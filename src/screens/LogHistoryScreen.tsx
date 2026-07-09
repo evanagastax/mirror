@@ -10,6 +10,7 @@ import { useAuthStore } from "../store/authStore";
 import { useThemeStore } from "../store/themeStore";
 import { useLogs, useDeleteLog, Log } from "../hooks/useLogs";
 import { useLedger, useDeleteTransaction, Transaction } from "../hooks/useLedger";
+import { useStreak } from "../hooks/useStreak";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -106,6 +107,7 @@ export default function LogHistoryScreen() {
   const { data: transactions, isLoading: txLoading,     isError: txError,     refetch: refetchTx,     isRefetching: txRefetching }     = useLedger(userId);
   const deleteLog         = useDeleteLog(userId ?? "");
   const deleteTransaction = useDeleteTransaction(userId ?? "");
+  const { data: streak }  = useStreak(userId);
 
   const [filter, setFilter] = useState<Filter>("all");
 
@@ -191,6 +193,9 @@ export default function LogHistoryScreen() {
       >
         {/* ── Stats row ── */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={S.statsRow}>
+          {streak && streak.current > 0 && (
+            <StatChip label="Streak" value={`🔥 ${streak.current}d`} color="#D85A30" bg="#FEF3EE" />
+          )}
           <StatChip label="Soul"    value={`${totalSoul}m`}                     color="#1D9E75" bg="#F0FBF7" />
           <StatChip label="Vessel"  value={`${totalVessel.toLocaleString()}vol`} color="#D85A30" bg="#FEF3EE" />
           <StatChip label="Impact"  value={`${totalImpact}pts`}                  color="#378ADD" bg="#F0F7FE" />
@@ -332,8 +337,7 @@ function LogRow({
           <Pressable onPress={() => Linking.openURL(log.evidence_url!)}>
             <Text style={[S.rowEvidence, { color: meta.color }]}>↗</Text>
           </Pressable>
-        ) : null}
-      </View>
+        ) : null}      </View>
     </Pressable>
   );
 }

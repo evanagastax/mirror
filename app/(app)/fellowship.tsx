@@ -1,2 +1,2 @@
-import FellowshipScreen from "../../src/screens/FellowshipScreen";
-export default FellowshipScreen;
+import ProfileScreen from "../../src/screens/FellowshipScreen";
+export default ProfileScreen;
