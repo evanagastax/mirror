@@ -12,7 +12,7 @@ import { useThemeStore } from "../store/themeStore";
 import { usePillars } from "../hooks/usePillars";
 import { useGoals } from "../hooks/useGoals";
 
-type Privacy = { gym: boolean; spirit: boolean; impact: boolean };
+type Privacy = { vessel: boolean; soul: boolean; impact: boolean };
 
 const PILLAR_META = [
   { key: "soul" as const,        label: "Soul",        color: "#1D9E75", bg: "#F0FBF7", icon: "✦" },
@@ -49,7 +49,13 @@ export default function ProfileScreen() {
 
       if (data) {
         setUsername(data.username ?? "");
-        setPrivacy(data.privacy_settings ?? { gym: false, spirit: false, impact: false });
+        // Migrate legacy key names (gym → vessel, spirit → soul)
+        const raw = data.privacy_settings ?? {};
+        setPrivacy({
+          vessel: raw.vessel ?? raw.gym     ?? false,
+          soul:   raw.soul   ?? raw.spirit  ?? false,
+          impact: raw.impact ?? false,
+        });
       }
       setLoading(false);
     }
@@ -78,7 +84,6 @@ export default function ProfileScreen() {
       .update({ privacy_settings: updated })
       .eq("id", userId);
     if (error) {
-      // Roll back optimistic update
       setPrivacy(privacy);
       Alert.alert("Couldn't update privacy setting.", error.message);
     }
@@ -192,18 +197,26 @@ export default function ProfileScreen() {
         {/* ── Attributes ── */}
         <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>ATTRIBUTES</Text>
         <View style={styles.pillarsGrid}>
-          {PILLAR_META.map((meta) => (
-            <View
-              key={meta.key}
-              style={[styles.pillarCard, { backgroundColor: meta.bg }]}
-            >
-              <Text style={[styles.pillarIcon, { color: meta.color }]}>{meta.icon}</Text>
-              <Text style={[styles.pillarLabel, { color: meta.color }]}>{meta.label}</Text>
-              <Text style={[styles.pillarValue, { color: meta.color }]}>
-                {pillars?.[meta.key] ?? 0}
-              </Text>
-            </View>
-          ))}
+          {PILLAR_META.map((meta) => {
+            const privacyKey = meta.key as keyof Privacy;
+            const isPrivate = privacy[privacyKey] ?? false;
+            return (
+              <View
+                key={meta.key}
+                style={[styles.pillarCard, { backgroundColor: meta.bg }]}
+              >
+                <Text style={[styles.pillarIcon, { color: meta.color }]}>{meta.icon}</Text>
+                <Text style={[styles.pillarLabel, { color: meta.color }]}>{meta.label}</Text>
+                {isPrivate ? (
+                  <Text style={[styles.pillarLock, { color: meta.color }]}>🔒</Text>
+                ) : (
+                  <Text style={[styles.pillarValue, { color: meta.color }]}>
+                    {pillars?.[meta.key] ?? 0}
+                  </Text>
+                )}
+              </View>
+            );
+          })}
         </View>
 
         {/* ── Appearance ── */}
@@ -248,9 +261,9 @@ export default function ProfileScreen() {
         {/* ── Privacy ── */}
         <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>PRIVACY</Text>
         <View style={[styles.settingCard, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
-          <PrivacyRow label="Vessel (gym)"    description="Share workout activity"    value={privacy.gym}    onToggle={() => togglePrivacy("gym")}    colors={colors} />
+          <PrivacyRow label="Vessel (gym)"    description="Share workout activity"      value={privacy.vessel} onToggle={() => togglePrivacy("vessel")} colors={colors} />
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
-          <PrivacyRow label="Soul (spirit)"   description="Share spiritual activity"  value={privacy.spirit} onToggle={() => togglePrivacy("spirit")} colors={colors} />
+          <PrivacyRow label="Soul (spirit)"   description="Share spiritual activity"    value={privacy.soul}   onToggle={() => togglePrivacy("soul")}   colors={colors} />
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
           <PrivacyRow label="Impact (work)"   description="Share professional activity" value={privacy.impact} onToggle={() => togglePrivacy("impact")} colors={colors} />
         </View>
@@ -375,6 +388,7 @@ const styles = StyleSheet.create({
   pillarIcon: { fontSize: 18 },
   pillarLabel: { fontSize: 10, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5 },
   pillarValue: { fontSize: 22, fontWeight: "800" },
+  pillarLock: { fontSize: 16, opacity: 0.5 },
 
   // Setting cards
   settingCard: { borderWidth: 1, borderRadius: 14, overflow: "hidden", marginBottom: 24 },

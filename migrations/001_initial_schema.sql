@@ -21,8 +21,8 @@ create table if not exists profiles (
   username         text unique,
   avatar_url       text,
   privacy_settings jsonb not null default '{
-    "gym": false,
-    "spirit": false,
+    "vessel": false,
+    "soul": false,
     "impact": false
   }'::jsonb,
   created_at       timestamptz not null default now()
