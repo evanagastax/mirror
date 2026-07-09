@@ -22,6 +22,16 @@ create table if not exists goals (
 );
 
 
+-- If the table already existed without the status column, add it now.
+alter table goals
+  add column if not exists status text not null default 'todo'
+  check (status in ('todo', 'in_progress', 'done'));
+
+-- Back-fill any rows created before status existed
+update goals set status = case when is_done then 'done' else 'todo' end
+  where status = 'todo' and is_done = true;
+
+
 -- =============================================================
 -- 2. ROW LEVEL SECURITY
 -- =============================================================
