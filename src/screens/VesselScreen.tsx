@@ -7,6 +7,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
+import { useFocusEffect } from "expo-router";
 import { useAuthStore } from "../store/authStore";
 import { useThemeStore } from "../store/themeStore";
 import { useBodyPartExercises } from "../hooks/useExercises";
@@ -76,11 +77,18 @@ export default function VesselScreen() {
   const [profile, setProfile] = useState<VesselProfile | null>(null);
 
   useEffect(() => {
-    if (userId) loadProfile(userId).then(setProfile);
     // Kick off full library download in the background so it's ready
     // before the user taps any muscle group
     prefetchAllExercises().catch(() => {});
-  }, [userId]);
+  }, []);
+
+  // Reload profile every time this screen comes into focus so changes
+  // saved in VesselProfileScreen are reflected immediately
+  useFocusEffect(
+    useCallback(() => {
+      if (userId) loadProfile(userId).then(setProfile);
+    }, [userId])
+  );
 
   const { level, xp, xpMax } = scoreToLevel(pillars?.vessel ?? 0);
   const barPct = xp / xpMax;
