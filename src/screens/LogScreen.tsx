@@ -110,7 +110,22 @@ export default function LogScreen() {
       }
       router.back();
     } catch (e: any) {
-      Alert.alert("Something went wrong.", e.message ?? "Try again.");
+      // Supabase wraps Postgres trigger errors in e.message.
+      // Surface them directly so rate-limit and constraint messages
+      // are readable (e.g. "Rate limit: maximum 100 logs per day reached.")
+      const raw: string = e?.message ?? "";
+      const isRateLimit = raw.toLowerCase().includes("rate limit");
+      const isConstraint =
+        raw.toLowerCase().includes("check constraint") ||
+        raw.toLowerCase().includes("violates");
+
+      if (isRateLimit) {
+        Alert.alert("Daily limit reached", raw.replace(/^Rate limit:\s*/i, ""));
+      } else if (isConstraint) {
+        Alert.alert("Invalid value", "One of your inputs is out of the allowed range. Check your values and try again.");
+      } else {
+        Alert.alert("Something went wrong", raw || "Please try again.");
+      }
     }
   }
 
