@@ -9,27 +9,41 @@
  *
  * All schedule state is persisted in AsyncStorage so we can cancel
  * and re-schedule when the user changes settings.
+ *
+ * NOTE: expo-notifications remote push support was removed from Expo Go
+ * on Android in SDK 53. Local scheduled notifications still work in a
+ * development build. In Expo Go on Android, all functions below no-op
+ * silently so the app doesn't crash.
  */
 
-import * as Notifications from "expo-notifications";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
 
-// ─── Notification handler (foreground) ───────────────────────────────────────
+// ─── Safe Notifications import ────────────────────────────────────────────────
+// Wrap in try/catch so Expo Go on Android (SDK 53+) doesn't crash the app.
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+let Notifications: typeof import("expo-notifications") | null = null;
+try {
+  Notifications = require("expo-notifications");
+  Notifications!.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+} catch {
+  // expo-notifications not available in this environment (e.g. Expo Go Android SDK 53+)
+  Notifications = null;
+}
+
+export const notificationsAvailable = Notifications !== null;
 
 // ─── Android channels ─────────────────────────────────────────────────────────
 
 export async function setupAndroidChannels() {
-  if (Platform.OS !== "android") return;
+  if (Platform.OS !== "android" || !Notifications) return;
   await Notifications.setNotificationChannelAsync("prayer", {
     name: "Prayer Times",
     importance: Notifications.AndroidImportance.HIGH,
@@ -54,6 +68,7 @@ export async function setupAndroidChannels() {
 // ─── Permissions ──────────────────────────────────────────────────────────────
 
 export async function requestNotificationPermission(): Promise<boolean> {
+  if (!Notifications) return false;
   const { status: existing } = await Notifications.getPermissionsAsync();
   if (existing === "granted") return true;
   const { status } = await Notifications.requestPermissionsAsync();
@@ -61,6 +76,7 @@ export async function requestNotificationPermission(): Promise<boolean> {
 }
 
 export async function getNotificationPermissionStatus(): Promise<string> {
+  if (!Notifications) return "unavailable";
   const { status } = await Notifications.getPermissionsAsync();
   return status;
 }
@@ -68,15 +84,15 @@ export async function getNotificationPermissionStatus(): Promise<string> {
 // ─── Settings persistence ─────────────────────────────────────────────────────
 
 export type NotifSettings = {
-  prayerEnabled:  boolean;
+  prayerEnabled:   boolean;
   reminderEnabled: boolean;
   /** 24h hour for daily reminder e.g. 20 = 8pm */
-  reminderHour:   number;
-  reminderMinute: number;
-  streakEnabled:  boolean;
+  reminderHour:    number;
+  reminderMinute:  number;
+  streakEnabled:   boolean;
   /** 24h hour for streak warning e.g. 21 = 9pm */
-  streakHour:     number;
-  streakMinute:   number;
+  streakHour:      number;
+  streakMinute:    number;
 };
 
 export const DEFAULT_NOTIF_SETTINGS: NotifSettings = {
@@ -105,14 +121,13 @@ export async function saveNotifSettings(s: NotifSettings): Promise<void> {
 }
 
 // ─── Identifier storage ───────────────────────────────────────────────────────
-// We store scheduled notification IDs so we can cancel them precisely.
 
 const IDS_KEY = "notification_ids";
 
 type ScheduledIDs = {
-  prayer:  string[];
+  prayer:   string[];
   reminder: string | null;
-  streak:  string | null;
+  streak:   string | null;
 };
 
 async function loadIDs(): Promise<ScheduledIDs> {
@@ -131,6 +146,7 @@ async function saveIDs(ids: ScheduledIDs): Promise<void> {
 // ─── Cancel helpers ───────────────────────────────────────────────────────────
 
 export async function cancelPrayerNotifications() {
+  if (!Notifications) return;
   const ids = await loadIDs();
   for (const id of ids.prayer) {
     await Notifications.cancelScheduledNotificationAsync(id).catch(() => {});
@@ -140,6 +156,7 @@ export async function cancelPrayerNotifications() {
 }
 
 export async function cancelReminderNotification() {
+  if (!Notifications) return;
   const ids = await loadIDs();
   if (ids.reminder) {
     await Notifications.cancelScheduledNotificationAsync(ids.reminder).catch(() => {});
@@ -149,6 +166,7 @@ export async function cancelReminderNotification() {
 }
 
 export async function cancelStreakNotification() {
+  if (!Notifications) return;
   const ids = await loadIDs();
   if (ids.streak) {
     await Notifications.cancelScheduledNotificationAsync(ids.streak).catch(() => {});
@@ -158,6 +176,7 @@ export async function cancelStreakNotification() {
 }
 
 export async function cancelAllNotifications() {
+  if (!Notifications) return;
   await Notifications.cancelAllScheduledNotificationsAsync();
   await saveIDs({ prayer: [], reminder: null, streak: null });
 }
@@ -174,20 +193,16 @@ const PRAYER_MESSAGES: Record<string, { title: string; body: string }> = {
   Isha:    { title: "🌃 Isha",    body: "Waktunya sholat Isha. Tutup malam dengan ibadah." },
 };
 
-/**
- * Schedule daily repeating notifications for each prayer time.
- * Takes parsed prayer times from the API (name → "HH:MM" string).
- */
 export async function schedulePrayerNotifications(
   prayerTimes: Record<string, string>
 ): Promise<void> {
+  if (!Notifications) return;
   await cancelPrayerNotifications();
   const ids: string[] = [];
 
   for (const [name, timeStr] of Object.entries(prayerTimes)) {
     const msg = PRAYER_MESSAGES[name];
     if (!msg) continue;
-
     const [hourStr, minuteStr] = timeStr.split(":");
     const hour   = parseInt(hourStr, 10);
     const minute = parseInt(minuteStr, 10);
@@ -218,6 +233,7 @@ export async function schedulePrayerNotifications(
 // ─── Daily log reminder ───────────────────────────────────────────────────────
 
 export async function scheduleDailyReminder(hour: number, minute: number): Promise<void> {
+  if (!Notifications) return;
   await cancelReminderNotification();
 
   const id = await Notifications.scheduleNotificationAsync({
@@ -243,6 +259,7 @@ export async function scheduleDailyReminder(hour: number, minute: number): Promi
 // ─── Streak at-risk warning ───────────────────────────────────────────────────
 
 export async function scheduleStreakWarning(hour: number, minute: number): Promise<void> {
+  if (!Notifications) return;
   await cancelStreakNotification();
 
   const id = await Notifications.scheduleNotificationAsync({
@@ -267,15 +284,11 @@ export async function scheduleStreakWarning(hour: number, minute: number): Promi
 
 // ─── Master scheduler ─────────────────────────────────────────────────────────
 
-/**
- * Call this on app startup (after auth is confirmed).
- * Reads persisted settings and schedules/cancels accordingly.
- * Pass prayerTimes from the API if available.
- */
 export async function applyNotificationSettings(
   settings: NotifSettings,
   prayerTimes?: Record<string, string>
 ): Promise<void> {
+  if (!Notifications) return;
   await setupAndroidChannels();
 
   if (settings.prayerEnabled && prayerTimes) {

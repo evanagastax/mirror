@@ -11,7 +11,7 @@ import {
   loadNotifSettings, saveNotifSettings, NotifSettings,
   DEFAULT_NOTIF_SETTINGS, applyNotificationSettings,
   requestNotificationPermission, getNotificationPermissionStatus,
-  cancelAllNotifications,
+  cancelAllNotifications, notificationsAvailable,
 } from "../services/notificationService";
 
 const ACCENT = "#1D9E75";
@@ -109,6 +109,31 @@ export default function NotificationSettingsScreen() {
       <SafeAreaView style={[S.root, { backgroundColor: colors.bg }]} edges={["top"]}>
         <StatusBar style={isDark ? "light" : "dark"} />
         <View style={S.center}><ActivityIndicator color={ACCENT} size="large" /></View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!notificationsAvailable) {
+    return (
+      <SafeAreaView style={[S.root, { backgroundColor: colors.bg }]} edges={["top"]}>
+        <StatusBar style={isDark ? "light" : "dark"} />
+        <View style={[S.header, { borderBottomColor: colors.border }]}>
+          <Pressable onPress={goBack} hitSlop={12}>
+            <Text style={[S.back, { color: colors.textMuted }]}>←</Text>
+          </Pressable>
+          <Text style={[S.headerTitle, { color: colors.textPrimary }]}>Notifications</Text>
+          <View style={{ width: 24 }} />
+        </View>
+        <View style={S.center}>
+          <Text style={{ fontSize: 32, marginBottom: 12 }}>🔔</Text>
+          <Text style={[S.unavailTitle, { color: colors.textPrimary }]}>
+            Not available in Expo Go
+          </Text>
+          <Text style={[S.unavailSub, { color: colors.textMuted }]}>
+            Notifications require a development build.{"\n"}
+            Run <Text style={{ fontWeight: "700" }}>npx expo run:android</Text> to enable them.
+          </Text>
+        </View>
       </SafeAreaView>
     );
   }
@@ -414,4 +439,7 @@ const S = StyleSheet.create({
   disableBtnText: { fontSize: 14, fontWeight: "600" },
 
   platformNote: { fontSize: 11, textAlign: "center", lineHeight: 17, paddingHorizontal: 8 },
+
+  unavailTitle: { fontSize: 17, fontWeight: "700", marginBottom: 8, textAlign: "center" },
+  unavailSub: { fontSize: 13, textAlign: "center", lineHeight: 20, paddingHorizontal: 24 },
 });
