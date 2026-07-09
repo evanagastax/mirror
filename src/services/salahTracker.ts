@@ -145,6 +145,9 @@ export function getPrayerStatus(
 }
 
 // ─── Business logic ───────────────────────────────────────────────────────────
+
+/**
+ * Mark a prayer as done (or undo it).
  * Awards XP to the Soul pillar via the logs table when completing.
  * Awards a full-day bonus when all 5 are done.
  * Returns the updated record.
