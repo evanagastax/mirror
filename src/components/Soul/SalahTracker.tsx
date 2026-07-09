@@ -127,8 +127,12 @@ export function SalahTracker({
                   ? { backgroundColor: colors.bgSubtle, borderColor: colors.border, opacity: 0.4 }
                   : { backgroundColor: colors.bgSubtle, borderColor: colors.border },
               ]}
-              onPress={() => tappable && !pending && handleToggle(prayer)}
-              disabled={!!pending || locked}
+              onPress={() => {
+                if (isLoading) return;          // this button is mid-request
+                if (!isDone && locked) return;  // time-locked and not done
+                handleToggle(prayer);
+              }}
+              disabled={false}  // never hard-disable — we guard in onPress instead
               android_ripple={{ color: SOUL_BG, borderless: true, radius: 36 }}
             >
               {isLoading ? (
