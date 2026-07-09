@@ -21,6 +21,7 @@ import { OfflineBanner } from "../components/OfflineBanner";
 import {
   loadPlan, savePlan, deletePlan, buildPlan, updateMilestone,
   planProgress, HafalanPlan, HafalanMilestone, MilestoneStatus,
+  loadHistory, recordCompletion, HafalanHistoryEntry,
 } from "../services/hafalanStore";
 import { SalahTracker } from "../components/Soul/SalahTracker";
 import {
@@ -652,10 +653,15 @@ function HafalanTab({ colors, userId }: { colors: C; userId: string }) {
   const [detailOpen,  setDetailOpen]  = useState<HafalanMilestone | null>(null);
   const [ayahs,       setAyahs]       = useState<Ayah[]>([]);
   const [ayahLoading, setAyahLoading] = useState(false);
+  const [history,     setHistory]     = useState<HafalanHistoryEntry[]>([]);
 
-  // Load persisted plan on mount
+  // Load plan + history on mount
   useEffect(() => {
-    loadPlan(userId).then((p) => { setPlan(p); setLoading(false); });
+    Promise.all([loadPlan(userId), loadHistory(userId)]).then(([p, h]) => {
+      setPlan(p);
+      setHistory(h);
+      setLoading(false);
+    });
   }, [userId]);
 
   // Load surah list when picker opens
@@ -708,6 +714,23 @@ function HafalanTab({ colors, userId }: { colors: C; userId: string }) {
     await savePlan(userId, updated);
     setPlan(updated);
     if (detailOpen?.id === milestoneId) setDetailOpen(updated.milestones.find((m) => m.id === milestoneId) ?? null);
+
+    // If all milestones are now done, record the surah in history
+    const allDone = updated.milestones.every((m) => m.status === "done");
+    if (allDone) {
+      const entry: HafalanHistoryEntry = {
+        surahNumber: updated.surahNumber,
+        surahName:   updated.surahName,
+        totalAyat:   updated.totalAyat,
+        completedAt: new Date().toISOString(),
+      };
+      await recordCompletion(userId, entry);
+      setHistory((prev) => {
+        const idx = prev.findIndex((e) => e.surahNumber === entry.surahNumber);
+        if (idx >= 0) { const next = [...prev]; next[idx] = entry; return next; }
+        return [entry, ...prev];
+      });
+    }
   }
 
   async function handleReset() {
@@ -863,6 +886,35 @@ function HafalanTab({ colors, userId }: { colors: C; userId: string }) {
 
   return (
     <ScrollView contentContainerStyle={S.tabContent} showsVerticalScrollIndicator={false}>
+      {/* ── Completed surahs history ── */}
+      {history.length > 0 && (
+        <View style={S.historySection}>
+          <Text style={[S.sectionLabel, { color: colors.textMuted }]}>SUDAH DIHAFAL</Text>
+          <View style={[S.historyList, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
+            {history.map((entry, idx) => (
+              <View
+                key={entry.surahNumber}
+                style={[
+                  S.historyRow,
+                  idx < history.length - 1 && { borderBottomColor: colors.border, borderBottomWidth: 1 },
+                ]}
+              >
+                <View style={[S.historyNum, { backgroundColor: SOUL_BG }]}>
+                  <Text style={[S.historyNumText, { color: SOUL_COLOR }]}>{entry.surahNumber}</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[S.historyName, { color: colors.textPrimary }]}>{entry.surahName}</Text>
+                  <Text style={[S.historyMeta, { color: colors.textMuted }]}>
+                    {entry.totalAyat} ayat · selesai {new Date(entry.completedAt).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
+                  </Text>
+                </View>
+                <Text style={[S.historyCheck, { color: SOUL_COLOR }]}>✓</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
+
       {/* ── Resume / completion hero ── */}
       {isComplete ? (
         <View style={[S.resumeCard, { backgroundColor: "#0B7A5C" }]}>
@@ -1417,6 +1469,16 @@ const S = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.5)", backgroundColor: "rgba(255,255,255,0.15)",
   },
   resumeBtnText: { color: "#fff", fontSize: 14, fontWeight: "700" },
+
+  // Completed history
+  historySection: { gap: 8, marginBottom: 4 },
+  historyList: { borderWidth: 1, borderRadius: 16, overflow: "hidden" },
+  historyRow: { flexDirection: "row", alignItems: "center", gap: 12, padding: 14 },
+  historyNum: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center", flexShrink: 0 },
+  historyNumText: { fontSize: 12, fontWeight: "700" },
+  historyName: { fontSize: 15, fontWeight: "600" },
+  historyMeta: { fontSize: 12, marginTop: 2 },
+  historyCheck: { fontSize: 18, fontWeight: "700" },
 
   timeline: { gap: 0, paddingBottom: 32 },
   timelineRow: { flexDirection: "row", gap: 12 },

@@ -130,3 +130,44 @@ export function planProgress(plan: HafalanPlan) {
     .reduce((s, m) => s + (m.to - m.from + 1), 0);
   return { total, done, memorizing, pct, ayatDone };
 }
+
+// ─── Completed surah history ─────────────────────────────────────────────────
+
+export type HafalanHistoryEntry = {
+  surahNumber: number;
+  surahName:   string;
+  totalAyat:   number;
+  completedAt: string; // ISO date string
+};
+
+function historyKey(userId: string) {
+  return `hafalan_history_${userId}`;
+}
+
+export async function loadHistory(userId: string): Promise<HafalanHistoryEntry[]> {
+  try {
+    const raw = await AsyncStorage.getItem(historyKey(userId));
+    return raw ? (JSON.parse(raw) as HafalanHistoryEntry[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Append a completed surah to history.
+ * Deduplicates by surahNumber — if the same surah is completed again,
+ * the completedAt date is updated rather than adding a duplicate.
+ */
+export async function recordCompletion(
+  userId: string,
+  entry: HafalanHistoryEntry
+): Promise<void> {
+  const existing = await loadHistory(userId);
+  const idx = existing.findIndex((e) => e.surahNumber === entry.surahNumber);
+  if (idx >= 0) {
+    existing[idx] = entry; // update date
+  } else {
+    existing.unshift(entry); // newest first
+  }
+  await AsyncStorage.setItem(historyKey(userId), JSON.stringify(existing));
+}
