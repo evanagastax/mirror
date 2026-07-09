@@ -855,11 +855,62 @@ function HafalanTab({ colors, userId }: { colors: C; userId: string }) {
   }
 
   // ── Active plan view ──
-  const prog = planProgress(plan);
+  const prog         = planProgress(plan);
+  const resumeMilestone = plan.milestones.find((m) => m.status === "memorizing")
+    ?? plan.milestones.find((m) => m.status === "todo")
+    ?? null;
+  const isComplete   = prog.done === prog.total;
 
   return (
     <ScrollView contentContainerStyle={S.tabContent} showsVerticalScrollIndicator={false}>
-      {/* Plan header */}
+      {/* ── Resume / completion hero ── */}
+      {isComplete ? (
+        <View style={[S.resumeCard, { backgroundColor: "#0B7A5C" }]}>
+          <Text style={S.resumeEmoji}>🎉</Text>
+          <Text style={[S.resumeTitle, { color: "#fff" }]}>MasyaAllah! Selesai!</Text>
+          <Text style={[S.resumeSub, { color: "rgba(255,255,255,0.75)" }]}>
+            Kamu telah menghafal semua {plan.totalAyat} ayat {plan.surahName}.
+          </Text>
+          <Pressable
+            onPress={handleGanti}
+            style={[S.resumeBtn, { backgroundColor: "rgba(255,255,255,0.2)", borderColor: "rgba(255,255,255,0.4)" }]}
+          >
+            <Text style={[S.resumeBtnText, { color: "#fff" }]}>Pilih Surah Baru</Text>
+          </Pressable>
+        </View>
+      ) : resumeMilestone ? (
+        <View style={[S.resumeCard, { backgroundColor: SOUL_COLOR }]}>
+          <View style={S.resumeTop}>
+            <View>
+              <Text style={[S.resumeLabel, { color: "rgba(255,255,255,0.7)" }]}>LANJUT HAFALAN</Text>
+              <Text style={[S.resumeTitle, { color: "#fff" }]}>{plan.surahName}</Text>
+              <Text style={[S.resumeRange, { color: "rgba(255,255,255,0.85)" }]}>
+                Ayat {resumeMilestone.from}–{resumeMilestone.to}
+              </Text>
+            </View>
+            <View style={S.resumeProgress}>
+              <Text style={[S.resumeProgressNum, { color: "#fff" }]}>{prog.done}</Text>
+              <Text style={[S.resumeProgressOf, { color: "rgba(255,255,255,0.65)" }]}>/{prog.total}</Text>
+              <Text style={[S.resumeProgressLabel, { color: "rgba(255,255,255,0.65)" }]}>sesi</Text>
+            </View>
+          </View>
+          {/* Progress bar */}
+          <View style={S.resumeTrack}>
+            <View style={[S.resumeFill, { width: `${prog.pct * 100}%` as any }]} />
+          </View>
+          <Text style={[S.resumePct, { color: "rgba(255,255,255,0.7)" }]}>
+            {prog.ayatDone}/{plan.totalAyat} ayat hafal · {Math.round(prog.pct * 100)}%
+          </Text>
+          <Pressable
+            onPress={() => setDetailOpen(resumeMilestone)}
+            style={S.resumeBtn}
+          >
+            <Text style={S.resumeBtnText}>▶ Mulai Sesi Ini</Text>
+          </Pressable>
+        </View>
+      ) : null}
+
+      {/* Plan header (compact) */}
       <View style={[S.hafalanHeader, { backgroundColor: SOUL_BG }]}>
         <View style={S.hafalanHeaderTop}>
           <View style={{ flex: 1 }}>
@@ -872,7 +923,6 @@ function HafalanTab({ colors, userId }: { colors: C; userId: string }) {
             <Text style={[S.hafalanResetBtnText, { color: "#D85A30" }]}>🔄 Ganti</Text>
           </Pressable>
         </View>
-        {/* Big progress arc replaced with bar + numbers */}
         <View style={S.hafalanStats}>
           <View style={S.hafalanStat}>
             <Text style={[S.hafalanStatNum, { color: "#1D9E75" }]}>{prog.done}</Text>
@@ -1343,6 +1393,30 @@ const S = StyleSheet.create({
   hafalanPct: { fontSize: 12, fontWeight: "700", textAlign: "center" },
   hafalanResetProgBtn: { borderWidth: 1, borderRadius: 12, paddingVertical: 10, alignItems: "center", marginBottom: 4 },
   hafalanResetProgText: { fontSize: 13, fontWeight: "600" },
+
+  // Resume card
+  resumeCard: {
+    borderRadius: 20, padding: 18, gap: 10, marginBottom: 4,
+  },
+  resumeTop: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" },
+  resumeLabel: { fontSize: 10, fontWeight: "700", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 4 },
+  resumeTitle: { fontSize: 20, fontWeight: "800", letterSpacing: -0.5 },
+  resumeRange: { fontSize: 13, marginTop: 3 },
+  resumeEmoji: { fontSize: 36, textAlign: "center" },
+  resumeSub: { fontSize: 13, textAlign: "center", lineHeight: 20 },
+  resumeProgress: { alignItems: "center" },
+  resumeProgressNum: { fontSize: 32, fontWeight: "800", lineHeight: 36 },
+  resumeProgressOf: { fontSize: 14, fontWeight: "600" },
+  resumeProgressLabel: { fontSize: 10, textTransform: "uppercase", letterSpacing: 0.5 },
+  resumeTrack: { height: 5, borderRadius: 99, backgroundColor: "rgba(255,255,255,0.25)", overflow: "hidden" },
+  resumeFill: { height: 5, borderRadius: 99, backgroundColor: "#fff" },
+  resumePct: { fontSize: 11, fontWeight: "600" },
+  resumeBtn: {
+    marginTop: 4, borderRadius: 12, paddingVertical: 11,
+    alignItems: "center", borderWidth: 1.5,
+    borderColor: "rgba(255,255,255,0.5)", backgroundColor: "rgba(255,255,255,0.15)",
+  },
+  resumeBtnText: { color: "#fff", fontSize: 14, fontWeight: "700" },
 
   timeline: { gap: 0, paddingBottom: 32 },
   timelineRow: { flexDirection: "row", gap: 12 },
