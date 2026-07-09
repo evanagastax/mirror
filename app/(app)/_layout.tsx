@@ -18,14 +18,15 @@ const TABS = [
 ] as const;
 
 export default function AppLayout() {
-  const userId = useAuthStore((s) => s.userId);
-  const router = useRouter();
-  const pathname = usePathname();
-  const colors = useThemeStore((s) => s.colors);
+  const userId     = useAuthStore((s) => s.userId);
+  const isHydrated = useAuthStore((s) => s.isHydrated);
+  const router     = useRouter();
+  const pathname   = usePathname();
+  const colors     = useThemeStore((s) => s.colors);
 
   useEffect(() => {
-    if (!userId) router.replace("/(auth)");
-  }, [userId]);
+    if (isHydrated && !userId) router.replace("/(auth)");
+  }, [isHydrated, userId]);
 
   return (
     <Tabs

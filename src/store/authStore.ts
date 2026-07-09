@@ -2,7 +2,15 @@ import { create } from "zustand";
 
 type AuthState = {
   userId: string | undefined;
+  /**
+   * True once the first supabase.auth.getSession() call has resolved.
+   * Guards in (app) and (auth) layouts must wait for this before
+   * redirecting, otherwise they fire before the persisted session
+   * is restored from AsyncStorage and always see userId as undefined.
+   */
+  isHydrated: boolean;
   setUserId: (id: string | undefined) => void;
+  setHydrated: () => void;
 };
 
 /**
@@ -12,5 +20,7 @@ type AuthState = {
  */
 export const useAuthStore = create<AuthState>((set) => ({
   userId: undefined,
-  setUserId: (id) => set({ userId: id }),
+  isHydrated: false,
+  setUserId:  (id) => set({ userId: id }),
+  setHydrated: ()  => set({ isHydrated: true }),
 }));

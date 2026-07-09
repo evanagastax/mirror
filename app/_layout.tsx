@@ -3,6 +3,7 @@ import { Stack } from "expo-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { supabase } from "../src/api/supabase";
 import { useAuthStore } from "../src/store/authStore";
+
 import { useThemeStore } from "../src/store/themeStore";
 import {
   loadNotifSettings,
@@ -14,7 +15,8 @@ import { clearStaleExerciseCache } from "../src/utils/offlineCache";
 const queryClient = new QueryClient();
 
 export default function RootLayout() {
-  const setUserId = useAuthStore((s) => s.setUserId);
+  const setUserId  = useAuthStore((s) => s.setUserId);
+  const setHydrated = useAuthStore((s) => s.setHydrated);
   const hydrate   = useThemeStore((s) => s.hydrate);
 
   useEffect(() => {
@@ -28,6 +30,7 @@ export default function RootLayout() {
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUserId(session?.user.id ?? undefined);
+      setHydrated(); // mark session restored — guards can now redirect safely
       // Apply notification schedule once we know auth state
       if (session?.user.id) {
         loadNotifSettings().then((settings) => {
