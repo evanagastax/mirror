@@ -19,6 +19,8 @@ import { scoreToLevel } from "../utils/pillarLevel";
 import { supabase } from "../api/supabase";
 import { useXPToast } from "../hooks/useXPToast";
 import { XPToastContainer } from "../components/XPToast";
+import { OnboardingModal } from "../components/OnboardingModal";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // ─── pillar config ────────────────────────────────────────────────────────────
 
@@ -86,11 +88,24 @@ export default function CompassScreen() {
 
   const [displayName, setDisplayName] = useState("You");
   const [initial,     setInitial]     = useState("?");
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   // Track pillar score changes to fire XP toasts
   useEffect(() => {
     if (pillars) trackScores(pillars);
   }, [pillars]);
+
+  // Check if this is a first-time user (no username, all pillars 0)
+  useEffect(() => {
+    if (!userId || isLoading || !pillars) return;
+    const allZero = pillars.soul === 0 && pillars.vessel === 0 &&
+                    pillars.impact === 0 && pillars.stewardship === 0;
+    if (!allZero) return; // already has activity — skip onboarding
+
+    AsyncStorage.getItem(`onboarding_done_${userId}`).then((done) => {
+      if (!done) setShowOnboarding(true);
+    });
+  }, [userId, isLoading, pillars]);
 
   useEffect(() => {
     if (!userId) return;
@@ -106,6 +121,26 @@ export default function CompassScreen() {
         }
       });
   }, [userId]);
+
+  async function handleOnboardingDone(username: string, focusPillar: string) {
+    if (!userId) return;
+    // Save username if provided
+    if (username) {
+      const { data } = await supabase
+        .from("profiles")
+        .update({ username })
+        .eq("id", userId)
+        .select("username")
+        .single();
+      if (data?.username) {
+        setDisplayName(data.username);
+        setInitial(data.username[0].toUpperCase());
+      }
+    }
+    // Mark onboarding complete
+    await AsyncStorage.setItem(`onboarding_done_${userId}`, "1");
+    setShowOnboarding(false);
+  }
 
   if (isLoading) {
     return (
@@ -140,6 +175,10 @@ export default function CompassScreen() {
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: colors.bg }]} edges={["top"]}>
       <StatusBar style={isDark ? "light" : "dark"} />
+      <OnboardingModal
+        visible={showOnboarding}
+        onDone={handleOnboardingDone}
+      />
       {/* XP toast layer — floats above everything */}
       <View style={styles.toastAnchor} pointerEvents="none">
         <XPToastContainer toasts={toasts} onDone={removeToast} />
