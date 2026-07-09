@@ -39,9 +39,24 @@ export default function AuthScreen() {
     const { data, error } = await supabase.auth.signUp({ email: email.trim(), password });
     if (error) { setLoading(false); Alert.alert("Sign up failed", error.message); return; }
     if (username.trim() && data.user) {
-      await supabase.from("profiles")
+      const { error: usernameError } = await supabase
+        .from("profiles")
         .update({ username: username.toLowerCase().trim() })
         .eq("id", data.user.id);
+      if (usernameError) {
+        setLoading(false);
+        // Most likely cause: username already taken (unique constraint)
+        const taken = usernameError.message.toLowerCase().includes("unique") ||
+                      usernameError.message.toLowerCase().includes("duplicate") ||
+                      usernameError.code === "23505";
+        Alert.alert(
+          taken ? "Username taken" : "Couldn't set username",
+          taken
+            ? `"${username.trim()}" is already in use. You can change it later in your profile.`
+            : usernameError.message
+        );
+        // Account was created successfully — don't block the user, just warn
+      }
     }
     setLoading(false);
     if (!data.session) Alert.alert("Check your email", "We sent a confirmation link to activate your account.");
