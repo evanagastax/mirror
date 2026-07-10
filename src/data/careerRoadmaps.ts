@@ -30,6 +30,16 @@ export type Section = {
   topics: Topic[];
 };
 
+export type ProjectDifficulty = "beginner" | "intermediate" | "advanced";
+
+export type Project = {
+  title: string;
+  description: string;
+  difficulty: ProjectDifficulty;
+  /** Key skills / tech this project exercises */
+  skills: string[];
+};
+
 export type CareerRoadmap = {
   id: string;
   title: string;
@@ -40,6 +50,7 @@ export type CareerRoadmap = {
   jobTitles: string[];
   avgSalary: string;
   timeToJob: string;
+  projects: Project[];
   sections: Section[];
 };
 
@@ -55,6 +66,12 @@ const frontendRoadmap: CareerRoadmap = {
   jobTitles: ["Frontend Developer", "UI Developer", "React Developer", "Web Developer"],
   avgSalary: "Rp 8–20 jt/bulan",
   timeToJob: "6–12 months",
+  projects: [
+    { title: "Personal Portfolio", description: "Responsive portfolio site with dark mode, smooth scroll, and a contact form. Deploy to Vercel.", difficulty: "beginner", skills: ["HTML", "CSS", "Tailwind", "Vite"] },
+    { title: "GitHub User Explorer", description: "Search GitHub users, view their repos and stats. Fetch from the GitHub REST API using async/await.", difficulty: "intermediate", skills: ["React", "TypeScript", "REST API", "React Query"] },
+    { title: "Realtime Kanban Board", description: "Drag-and-drop task board with columns, local persistence, and optimistic updates. Think Trello-lite.", difficulty: "intermediate", skills: ["React", "Next.js", "Zustand", "Drag and Drop"] },
+    { title: "E-commerce Storefront", description: "Product listing, cart, checkout flow with Stripe. SSR for SEO, image optimisation with Next.js Image.", difficulty: "advanced", skills: ["Next.js", "TypeScript", "Stripe", "Tailwind"] },
+  ],
   sections: [
     {
       id: "fe-internet",
@@ -137,6 +154,12 @@ const backendRoadmap: CareerRoadmap = {
   jobTitles: ["Backend Developer", "API Developer", "Node.js Developer", "Python Developer"],
   avgSalary: "Rp 10–25 jt/bulan",
   timeToJob: "8–14 months",
+  projects: [
+    { title: "REST API with Auth", description: "CRUD API for a blog — users, posts, comments. JWT auth, bcrypt passwords, rate limiting, Postgres.", difficulty: "beginner", skills: ["Node.js", "Express", "PostgreSQL", "JWT"] },
+    { title: "URL Shortener Service", description: "Generate short links with click tracking, expiry, and analytics dashboard. Redis for caching.", difficulty: "intermediate", skills: ["Node.js", "Redis", "PostgreSQL", "Docker"] },
+    { title: "Real-time Chat API", description: "WebSocket-based chat server with rooms, message history, and online presence. Socket.io + Postgres.", difficulty: "intermediate", skills: ["Node.js", "Socket.io", "PostgreSQL", "WebSockets"] },
+    { title: "Multi-tenant SaaS Backend", description: "Organisation-scoped data model, subscription plans, Stripe webhooks, admin dashboard API.", difficulty: "advanced", skills: ["NestJS", "TypeScript", "PostgreSQL", "Stripe"] },
+  ],
   sections: [
     {
       id: "be-internet",
@@ -213,6 +236,11 @@ const fullStackRoadmap: CareerRoadmap = {
   jobTitles: ["Full Stack Developer", "Software Engineer", "Web Engineer"],
   avgSalary: "Rp 12–30 jt/bulan",
   timeToJob: "12–18 months",
+  projects: [
+    { title: "Task Management App", description: "Full-stack to-do app with auth, teams, due dates, and email reminders. Next.js + Supabase.", difficulty: "beginner", skills: ["Next.js", "Supabase", "TypeScript", "Tailwind"] },
+    { title: "Social Bookmarking Site", description: "Save, tag, and share links. Follow other users. Full auth, feed, and search backed by Postgres.", difficulty: "intermediate", skills: ["Next.js", "PostgreSQL", "Prisma", "NextAuth"] },
+    { title: "SaaS Invoicing Tool", description: "Create clients, invoices, track payments. PDF export, email delivery, Stripe for recurring billing.", difficulty: "advanced", skills: ["Next.js", "TypeScript", "Stripe", "PostgreSQL"] },
+  ],
   sections: [
     { id: "fs-foundation", title: "Foundation", icon: "📐", topics: [
       { id: "fs-html-css", title: "HTML & CSS", description: "Semantic HTML, Flexbox, Grid, responsive design fundamentals.", level: "foundation", resources: [{ label: "MDN Web Docs", url: "https://developer.mozilla.org/en-US/docs/Learn", type: "docs" }] },
@@ -248,6 +276,11 @@ const devopsRoadmap: CareerRoadmap = {
   jobTitles: ["DevOps Engineer", "Platform Engineer", "Site Reliability Engineer", "Cloud Engineer"],
   avgSalary: "Rp 15–35 jt/bulan",
   timeToJob: "12–18 months",
+  projects: [
+    { title: "Dockerised Node App + CI/CD", description: "Containerise a Node.js API, write a GitHub Actions pipeline to test, build, and push image to Docker Hub on every merge.", difficulty: "beginner", skills: ["Docker", "GitHub Actions", "Node.js"] },
+    { title: "Kubernetes Deployment", description: "Deploy a multi-service app (API + Redis + Postgres) to a local k8s cluster with Helm charts, HPA, and health probes.", difficulty: "intermediate", skills: ["Kubernetes", "Helm", "Docker", "kubectl"] },
+    { title: "Terraform AWS Infrastructure", description: "Provision a VPC, EC2, RDS, and S3 with Terraform. Remote state in S3, separate dev/prod workspaces.", difficulty: "advanced", skills: ["Terraform", "AWS", "IaC", "S3"] },
+  ],
   sections: [
     { id: "do-os", title: "OS & Networking", icon: "🖥️", topics: [
       { id: "do-linux", title: "Linux Administration", description: "File system, processes, users, cron, systemd, logs.", level: "foundation", resources: [{ label: "Linux Command Line Book", url: "https://linuxcommand.org/tlcl.php", type: "book" }] },
@@ -285,6 +318,11 @@ const mobileRoadmap: CareerRoadmap = {
   jobTitles: ["Mobile Developer", "React Native Developer", "Android Developer", "iOS Developer"],
   avgSalary: "Rp 10–28 jt/bulan",
   timeToJob: "8–14 months",
+  projects: [
+    { title: "Expense Tracker App", description: "Log income and expenses by category. Charts, monthly summary, AsyncStorage persistence. Expo + React Native.", difficulty: "beginner", skills: ["React Native", "Expo", "AsyncStorage", "Charts"] },
+    { title: "Habit Tracker with Notifications", description: "Create habits, track daily streaks, get push reminders. Supabase backend for sync across devices.", difficulty: "intermediate", skills: ["React Native", "Expo Notifications", "Supabase", "TanStack Query"] },
+    { title: "Realtime Chat App", description: "One-on-one and group chat with presence indicators, image sharing, and push notifications. Supabase Realtime.", difficulty: "advanced", skills: ["React Native", "Supabase Realtime", "Expo", "Push Notifications"] },
+  ],
   sections: [
     { id: "mob-foundation", title: "Foundation", icon: "📐", topics: [
       { id: "mob-js", title: "JavaScript & TypeScript", description: "ES6+, async patterns, TypeScript for type-safe mobile apps.", level: "foundation", resources: [{ label: "javascript.info", url: "https://javascript.info", type: "article" }] },
@@ -321,6 +359,11 @@ const dataScienceRoadmap: CareerRoadmap = {
   jobTitles: ["Data Scientist", "ML Engineer", "Data Analyst", "AI Engineer"],
   avgSalary: "Rp 12–35 jt/bulan",
   timeToJob: "12–24 months",
+  projects: [
+    { title: "Exploratory Data Analysis", description: "Pick any public dataset (Kaggle). Clean, explore, and visualise with Pandas, Seaborn, and a Jupyter notebook.", difficulty: "beginner", skills: ["Python", "Pandas", "Matplotlib", "Seaborn"] },
+    { title: "Churn Prediction Model", description: "Binary classification on customer data. Feature engineering, scikit-learn pipeline, ROC-AUC evaluation, SHAP explainability.", difficulty: "intermediate", skills: ["scikit-learn", "Pandas", "SHAP", "Python"] },
+    { title: "Sentiment Analysis API", description: "Fine-tune a DistilBERT model on product reviews. Serve via FastAPI, Docker, with a simple React frontend.", difficulty: "advanced", skills: ["HuggingFace", "PyTorch", "FastAPI", "Docker"] },
+  ],
   sections: [
     { id: "ds-math", title: "Math & Statistics", icon: "📐", topics: [
       { id: "ds-linear-algebra", title: "Linear Algebra", description: "Vectors, matrices, eigenvalues, SVD — the backbone of ML models.", level: "foundation", resources: [{ label: "3Blue1Brown Essence of Linear Algebra", url: "https://www.youtube.com/playlist?list=PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab", type: "video" }] },
@@ -356,6 +399,11 @@ const cyberSecRoadmap: CareerRoadmap = {
   jobTitles: ["Security Engineer", "Penetration Tester", "SOC Analyst", "Security Analyst"],
   avgSalary: "Rp 12–40 jt/bulan",
   timeToJob: "12–24 months",
+  projects: [
+    { title: "Vulnerable Web App Lab", description: "Set up DVWA or Juice Shop locally, exploit OWASP Top 10 vulnerabilities, and write a findings report.", difficulty: "beginner", skills: ["Burp Suite", "OWASP", "Kali Linux", "HTTP"] },
+    { title: "Network Scanner Tool", description: "Python script that does host discovery, port scanning, and banner grabbing. Wrapper around socket + nmap.", difficulty: "intermediate", skills: ["Python", "Nmap", "Networking", "Sockets"] },
+    { title: "CTF Portfolio (5 machines)", description: "Solve and write up 5 HackTheBox or TryHackMe machines covering recon, exploitation, and privilege escalation.", difficulty: "advanced", skills: ["Metasploit", "Linux", "Privilege Escalation", "OSINT"] },
+  ],
   sections: [
     { id: "cs-foundation", title: "Foundation", icon: "📐", topics: [
       { id: "cs-networking", title: "Networking", description: "TCP/IP, DNS, HTTP, TLS, firewalls, VPNs, Wireshark basics.", level: "foundation", resources: [{ label: "CompTIA Network+ Study", url: "https://www.professormesser.com/network-plus/n10-008/n10-008-video/n10-008-training-course/", type: "video" }] },
@@ -390,6 +438,11 @@ const uiuxRoadmap: CareerRoadmap = {
   jobTitles: ["UI Designer", "UX Designer", "Product Designer", "Interaction Designer"],
   avgSalary: "Rp 8–25 jt/bulan",
   timeToJob: "6–12 months",
+  projects: [
+    { title: "Mobile App Redesign", description: "Pick any app you use daily. Audit its UX, identify pain points, then redesign 5 key screens in Figma with a full component library.", difficulty: "beginner", skills: ["Figma", "UX Audit", "Components", "Auto Layout"] },
+    { title: "Design System", description: "Build a complete design system — colour tokens, typography scale, 20+ components, dark/light mode, documented in Figma.", difficulty: "intermediate", skills: ["Figma", "Design Tokens", "Components", "Documentation"] },
+    { title: "End-to-End Product Case Study", description: "Full UX process: user research, affinity mapping, wireframes, prototype, usability testing, and iterated hi-fi mockups.", difficulty: "advanced", skills: ["User Research", "Wireframing", "Prototyping", "Usability Testing"] },
+  ],
   sections: [
     { id: "ux-principles", title: "Design Principles", icon: "📐", topics: [
       { id: "ux-fundamentals", title: "Design Fundamentals", description: "Typography, colour theory, spacing, visual hierarchy, grid systems.", level: "foundation", resources: [{ label: "Design for Developers (Scrimba)", url: "https://scrimba.com/learn/design", type: "course" }] },
@@ -422,6 +475,11 @@ const androidRoadmap: CareerRoadmap = {
   jobTitles: ["Android Developer", "Mobile Engineer", "Kotlin Developer"],
   avgSalary: "Rp 10–30 jt/bulan",
   timeToJob: "10–18 months",
+  projects: [
+    { title: "Notes App with Room", description: "Create, edit, delete notes with search. Room for local DB, Jetpack Compose UI, ViewModel + StateFlow.", difficulty: "beginner", skills: ["Kotlin", "Jetpack Compose", "Room", "ViewModel"] },
+    { title: "Weather App", description: "Fetch weather from OpenWeatherMap API. Location permission, Retrofit, Hilt DI, animated conditions, offline cache.", difficulty: "intermediate", skills: ["Kotlin", "Retrofit", "Hilt", "Coroutines"] },
+    { title: "Fitness Tracker", description: "Log workouts, track sets/reps/weight over time. Room with migrations, charts, background sync, Play Store release.", difficulty: "advanced", skills: ["Kotlin", "Jetpack Compose", "Room", "WorkManager"] },
+  ],
   sections: [
     { id: "and-kotlin", title: "Kotlin", icon: "🟪", topics: [
       { id: "and-kotlin-basics", title: "Kotlin Fundamentals", description: "Null safety, data classes, coroutines, extension functions, lambdas.", level: "foundation", resources: [{ label: "Kotlin Docs", url: "https://kotlinlang.org/docs/home.html", type: "docs" }, { label: "Kotlin Koans", url: "https://play.kotlinlang.org/koans/overview", type: "course" }] },
@@ -454,6 +512,11 @@ const productManagerRoadmap: CareerRoadmap = {
   jobTitles: ["Product Manager", "Product Owner", "Associate PM", "Technical PM"],
   avgSalary: "Rp 15–50 jt/bulan",
   timeToJob: "6–18 months",
+  projects: [
+    { title: "PRD for a Feature", description: "Write a full Product Requirements Document for a real feature on a product you use. Problem, users, success metrics, edge cases.", difficulty: "beginner", skills: ["PRD Writing", "User Stories", "Acceptance Criteria"] },
+    { title: "Competitive Analysis Report", description: "Analyse 3 competitors in one vertical. Positioning matrix, feature gap analysis, pricing strategy, and strategic recommendations.", difficulty: "intermediate", skills: ["Market Research", "SWOT", "Positioning", "Deck Design"] },
+    { title: "Shipped Side Project", description: "Define, scope, and ship a small real product end-to-end — working with a developer (or no-code tools). Measure 2 metrics post-launch.", difficulty: "advanced", skills: ["Discovery", "Prioritisation", "OKRs", "Analytics"] },
+  ],
   sections: [
     { id: "pm-foundation", title: "PM Fundamentals", icon: "📐", topics: [
       { id: "pm-role", title: "The PM Role", description: "Discovery vs delivery, stakeholder management, working with engineers.", level: "foundation", resources: [{ label: "Inspired by Marty Cagan", url: "https://www.svpg.com/inspired-how-to-create-tech-products-customers-love/", type: "book" }] },
@@ -483,6 +546,11 @@ const cloudArchitectRoadmap: CareerRoadmap = {
   jobTitles: ["Cloud Architect", "Solutions Architect", "Cloud Engineer", "Infrastructure Architect"],
   avgSalary: "Rp 20–50 jt/bulan",
   timeToJob: "18–36 months",
+  projects: [
+    { title: "3-Tier App on AWS", description: "Deploy a React frontend (S3+CloudFront), Node.js API (EC2 + ALB), and Postgres (RDS) with proper VPC, SGs, and IAM.", difficulty: "intermediate", skills: ["AWS EC2", "RDS", "S3", "VPC", "IAM"] },
+    { title: "Serverless API", description: "Build a REST API with API Gateway + Lambda + DynamoDB. CI/CD via SAM or Serverless Framework, CloudWatch alarms.", difficulty: "intermediate", skills: ["AWS Lambda", "API Gateway", "DynamoDB", "CloudWatch"] },
+    { title: "Multi-Region DR Setup", description: "Design and implement active-passive failover between two AWS regions. Route 53 health checks, RDS cross-region replica, runbook.", difficulty: "advanced", skills: ["AWS", "Route 53", "RDS", "Terraform", "DR Planning"] },
+  ],
   sections: [
     { id: "ca-foundation", title: "Cloud Fundamentals", icon: "📐", topics: [
       { id: "ca-iaas-paas", title: "IaaS vs PaaS vs SaaS", description: "Service models, shared responsibility model, use cases for each.", level: "foundation", resources: [{ label: "AWS Cloud Concepts", url: "https://aws.amazon.com/what-is-cloud-computing/", type: "article" }] },
@@ -522,6 +590,11 @@ const iosRoadmap: CareerRoadmap = {
   jobTitles: ["iOS Developer", "Swift Developer", "Mobile Engineer"],
   avgSalary: "Rp 12–35 jt/bulan",
   timeToJob: "10–18 months",
+  projects: [
+    { title: "Pomodoro Timer", description: "Focus timer with customisable work/break intervals, session history, and local notifications. SwiftUI + SwiftData.", difficulty: "beginner", skills: ["SwiftUI", "SwiftData", "Notifications", "Timers"] },
+    { title: "Crypto Price Tracker", description: "Live crypto prices from CoinGecko API. Watchlist with persistence, price charts with Swift Charts, Combine publishers.", difficulty: "intermediate", skills: ["Swift", "SwiftUI", "Combine", "URLSession"] },
+    { title: "Budget & Finance App", description: "Track transactions by category, monthly budget goals, iCloud sync via CloudKit, App Store submission.", difficulty: "advanced", skills: ["SwiftUI", "SwiftData", "CloudKit", "App Store"] },
+  ],
   sections: [
     { id: "ios-swift", title: "Swift Language", icon: "🦅", topics: [
       { id: "ios-swift-basics", title: "Swift Fundamentals", description: "Optionals, closures, protocols, generics, error handling, ARC.", level: "foundation", resources: [{ label: "Swift.org Tour", url: "https://docs.swift.org/swift-book/GuidedTour/GuidedTour.html", type: "docs" }, { label: "100 Days of Swift", url: "https://www.hackingwithswift.com/100", type: "course" }] },
@@ -555,6 +628,11 @@ const mlEngineerRoadmap: CareerRoadmap = {
   jobTitles: ["ML Engineer", "AI Engineer", "Applied Scientist", "MLOps Engineer"],
   avgSalary: "Rp 18–45 jt/bulan",
   timeToJob: "18–30 months",
+  projects: [
+    { title: "House Price Predictor", description: "Train a regression model on public housing data. Feature engineering, cross-validation, SHAP explanations, deployed as a FastAPI endpoint.", difficulty: "beginner", skills: ["scikit-learn", "Pandas", "FastAPI", "SHAP"] },
+    { title: "Image Classifier API", description: "Fine-tune ResNet on a custom dataset (flowers, food, etc.). ONNX export, TorchServe or FastAPI serving, Dockerised.", difficulty: "intermediate", skills: ["PyTorch", "ONNX", "Docker", "FastAPI"] },
+    { title: "MLOps Pipeline", description: "End-to-end: data versioning (DVC), training (MLflow tracking), CI with GitHub Actions, model registry, automated retraining on drift.", difficulty: "advanced", skills: ["MLflow", "DVC", "GitHub Actions", "Evidently AI"] },
+  ],
   sections: [
     { id: "mle-foundations", title: "Foundations", icon: "📐", topics: [
       { id: "mle-python", title: "Python for ML", description: "NumPy, Pandas, virtual environments, type hints, profiling.", level: "foundation", resources: [{ label: "Python Data Science Handbook", url: "https://jakevdp.github.io/PythonDataScienceHandbook/", type: "book" }] },
@@ -590,6 +668,11 @@ const blockchainRoadmap: CareerRoadmap = {
   jobTitles: ["Blockchain Developer", "Smart Contract Engineer", "Web3 Developer", "DeFi Engineer"],
   avgSalary: "Rp 20–60 jt/bulan",
   timeToJob: "12–24 months",
+  projects: [
+    { title: "ERC-20 Token", description: "Deploy a custom ERC-20 token on Sepolia testnet. Minting, burning, transfer events. Verify on Etherscan.", difficulty: "beginner", skills: ["Solidity", "Hardhat", "OpenZeppelin", "Etherscan"] },
+    { title: "NFT Minting DApp", description: "IPFS-hosted metadata, ERC-721 contract, React + Wagmi frontend for minting and viewing owned NFTs.", difficulty: "intermediate", skills: ["Solidity", "IPFS", "Wagmi", "React"] },
+    { title: "DeFi Yield Vault", description: "Deposit ERC-20 tokens, earn simulated yield. Proxy upgradeable pattern, re-entrancy guard, Foundry tests with 95%+ coverage.", difficulty: "advanced", skills: ["Solidity", "Foundry", "OpenZeppelin", "DeFi"] },
+  ],
   sections: [
     { id: "bc-fundamentals", title: "Blockchain Fundamentals", icon: "📐", topics: [
       { id: "bc-how", title: "How Blockchains Work", description: "Distributed ledgers, consensus mechanisms (PoW, PoS), nodes, wallets.", level: "foundation", resources: [{ label: "Bitcoin Whitepaper", url: "https://bitcoin.org/bitcoin.pdf", type: "article" }, { label: "Ethereum.org Learn", url: "https://ethereum.org/en/learn/", type: "article" }] },
@@ -623,6 +706,11 @@ const gameDevRoadmap: CareerRoadmap = {
   jobTitles: ["Game Developer", "Unity Developer", "Gameplay Programmer", "Game Designer"],
   avgSalary: "Rp 8–30 jt/bulan",
   timeToJob: "12–24 months",
+  projects: [
+    { title: "2D Platformer", description: "Side-scrolling platformer with player movement, enemies, collectibles, and 3 levels. Unity 2D physics, tilemaps, ScriptableObjects.", difficulty: "beginner", skills: ["Unity", "C#", "2D Physics", "Tilemaps"] },
+    { title: "Top-Down Shooter", description: "Player shoots waves of enemies with different AI patterns. Object pooling, save system, leaderboard, WebGL build on itch.io.", difficulty: "intermediate", skills: ["Unity", "C#", "Object Pooling", "AI State Machine"] },
+    { title: "Multiplayer Puzzle Game", description: "2-player co-op puzzle game using Mirror Networking. Lobby, matchmaking, client-side prediction, deployed server.", difficulty: "advanced", skills: ["Unity", "Mirror", "C#", "Multiplayer"] },
+  ],
   sections: [
     { id: "gd-foundations", title: "Foundations", icon: "📐", topics: [
       { id: "gd-csharp", title: "C# Fundamentals", description: "OOP, inheritance, interfaces, delegates, events, async/await.", level: "foundation", resources: [{ label: "C# Docs", url: "https://learn.microsoft.com/en-us/dotnet/csharp/", type: "docs" }] },
@@ -657,6 +745,11 @@ const dataEngineerRoadmap: CareerRoadmap = {
   jobTitles: ["Data Engineer", "Analytics Engineer", "ETL Developer", "Big Data Engineer"],
   avgSalary: "Rp 15–35 jt/bulan",
   timeToJob: "10–18 months",
+  projects: [
+    { title: "ETL Pipeline with Airflow", description: "Pull data from a public API daily, transform with Pandas, load into Postgres. Airflow DAG, retries, email on failure.", difficulty: "beginner", skills: ["Airflow", "Python", "PostgreSQL", "Pandas"] },
+    { title: "dbt Analytics Project", description: "Take raw e-commerce data, model it in dbt — staging, intermediate, mart layers. Tests, docs, and a Metabase dashboard.", difficulty: "intermediate", skills: ["dbt", "SQL", "PostgreSQL", "Metabase"] },
+    { title: "Streaming Data Pipeline", description: "Kafka producer ingests events, Spark Streaming consumes and aggregates, results land in a Delta Lake table on S3.", difficulty: "advanced", skills: ["Kafka", "Spark", "Delta Lake", "S3"] },
+  ],
   sections: [
     { id: "de-foundations", title: "Foundations", icon: "📐", topics: [
       { id: "de-sql", title: "SQL Mastery", description: "Joins, CTEs, window functions, indexes, query optimization, performance.", level: "foundation", resources: [{ label: "Mode SQL Tutorial", url: "https://mode.com/sql-tutorial/", type: "course" }, { label: "PostgreSQL Exercises", url: "https://pgexercises.com", type: "article" }] },
@@ -693,6 +786,11 @@ const qaEngineerRoadmap: CareerRoadmap = {
   jobTitles: ["QA Engineer", "Test Automation Engineer", "SDET", "Quality Engineer"],
   avgSalary: "Rp 8–25 jt/bulan",
   timeToJob: "6–12 months",
+  projects: [
+    { title: "Automated UI Test Suite", description: "Write Playwright tests for a public web app (e.g. a todo app). Page Object Model, fixtures, CI run on every push.", difficulty: "beginner", skills: ["Playwright", "TypeScript", "Page Object Model", "GitHub Actions"] },
+    { title: "API Test Framework", description: "Build a Postman/Newman test suite for a REST API. Contract tests with Pact, HTML report generation, integrated in CI.", difficulty: "intermediate", skills: ["Postman", "Newman", "Pact", "CI/CD"] },
+    { title: "Performance Test Report", description: "Load test a web service with k6 — ramp-up scenarios, thresholds, p95 latency targets. Write a formal perf test report.", difficulty: "advanced", skills: ["k6", "Performance Testing", "Grafana", "Reporting"] },
+  ],
   sections: [
     { id: "qa-foundations", title: "Testing Fundamentals", icon: "📐", topics: [
       { id: "qa-types", title: "Types of Testing", description: "Unit, integration, E2E, regression, smoke, UAT, exploratory testing.", level: "foundation", resources: [{ label: "Testing Types (Atlassian)", url: "https://www.atlassian.com/continuous-delivery/software-testing/types-of-software-testing", type: "article" }] },
@@ -727,6 +825,11 @@ const sreRoadmap: CareerRoadmap = {
   jobTitles: ["Site Reliability Engineer", "Platform Engineer", "Infrastructure Engineer", "Production Engineer"],
   avgSalary: "Rp 18–45 jt/bulan",
   timeToJob: "18–36 months",
+  projects: [
+    { title: "Prometheus + Grafana Stack", description: "Instrument a Node.js app with custom metrics. Deploy Prometheus scraper and a Grafana dashboard with RED method panels and alerts.", difficulty: "intermediate", skills: ["Prometheus", "Grafana", "Node.js", "PromQL"] },
+    { title: "Incident Response Runbook", description: "Pick a real-world outage (e.g. a public post-mortem). Write a full runbook: detection, triage steps, rollback, and blameless post-mortem template.", difficulty: "intermediate", skills: ["Incident Management", "SLOs", "Documentation", "On-call"] },
+    { title: "Chaos Engineering Lab", description: "Use Litmus or chaos-mesh on a local k8s cluster. Inject pod failures, network latency, and CPU stress. Measure SLO impact and add circuit breakers.", difficulty: "advanced", skills: ["Kubernetes", "Chaos Engineering", "Litmus", "SLOs"] },
+  ],
   sections: [
     { id: "sre-foundations", title: "SRE Fundamentals", icon: "📐", topics: [
       { id: "sre-slo", title: "SLIs, SLOs & SLAs", description: "Error budgets, reliability targets, toil reduction, service-level objectives.", level: "foundation", resources: [{ label: "Google SRE Book", url: "https://sre.google/sre-book/table-of-contents/", type: "book" }] },
@@ -761,6 +864,11 @@ const dbaRoadmap: CareerRoadmap = {
   jobTitles: ["Database Administrator", "DBA", "Database Engineer", "Data Platform Engineer"],
   avgSalary: "Rp 12–30 jt/bulan",
   timeToJob: "12–18 months",
+  projects: [
+    { title: "Query Optimisation Case Study", description: "Take a slow Postgres query from a public dataset. Profile with EXPLAIN ANALYZE, add indexes, rewrite with CTEs, measure before/after.", difficulty: "beginner", skills: ["PostgreSQL", "EXPLAIN ANALYZE", "Indexing", "SQL"] },
+    { title: "HA Postgres Setup", description: "Set up primary + replica with Patroni and HAProxy on 3 local VMs. Simulate failover, measure RTO, document the runbook.", difficulty: "intermediate", skills: ["PostgreSQL", "Patroni", "HAProxy", "Replication"] },
+    { title: "Automated Backup & Restore", description: "Implement PITR with WAL archiving to S3, automated pg_basebackup, restore drills, and a Grafana alert when backup age > 24h.", difficulty: "advanced", skills: ["PostgreSQL", "WAL Archiving", "S3", "Monitoring"] },
+  ],
   sections: [
     { id: "dba-sql", title: "SQL Mastery", icon: "📝", topics: [
       { id: "dba-advanced-sql", title: "Advanced SQL", description: "CTEs, window functions, lateral joins, recursive queries, EXPLAIN ANALYZE.", level: "foundation", resources: [{ label: "Use The Index, Luke", url: "https://use-the-index-luke.com", type: "article" }, { label: "PostgreSQL Exercises", url: "https://pgexercises.com", type: "article" }] },
@@ -795,6 +903,11 @@ const embeddedRoadmap: CareerRoadmap = {
   jobTitles: ["Embedded Engineer", "Firmware Engineer", "IoT Developer", "Systems Programmer"],
   avgSalary: "Rp 10–30 jt/bulan",
   timeToJob: "18–36 months",
+  projects: [
+    { title: "Temperature Logger", description: "Read a DHT11/DHT22 sensor on Arduino, log data over UART to a PC, and visualise on a simple Python serial plotter.", difficulty: "beginner", skills: ["Arduino", "C", "UART", "Python"] },
+    { title: "IoT Door Sensor", description: "ESP32 detects door open/close via reed switch, publishes to MQTT broker, triggers a Node-RED dashboard alert and Telegram notification.", difficulty: "intermediate", skills: ["ESP32", "MQTT", "Node-RED", "C++"] },
+    { title: "RTOS Motor Controller", description: "FreeRTOS on STM32 — two tasks: PID speed control via PWM and UART command interface. Logic analyser to verify timing.", difficulty: "advanced", skills: ["STM32", "FreeRTOS", "C", "PWM", "PID"] },
+  ],
   sections: [
     { id: "emb-foundations", title: "Foundations", icon: "📐", topics: [
       { id: "emb-c", title: "C Programming", description: "Pointers, memory management, structs, bitwise ops, volatile keyword.", level: "foundation", resources: [{ label: "The C Programming Language (K&R)", url: "https://en.wikipedia.org/wiki/The_C_Programming_Language", type: "book" }] },
@@ -829,6 +942,11 @@ const technicalWriterRoadmap: CareerRoadmap = {
   jobTitles: ["Technical Writer", "Documentation Engineer", "Developer Advocate", "Content Engineer"],
   avgSalary: "Rp 8–25 jt/bulan",
   timeToJob: "6–12 months",
+  projects: [
+    { title: "API Reference Docs", description: "Document a public REST API (GitHub, Stripe, etc.) from scratch using OpenAPI 3.0. Publish with Redoc or Stoplight. Include code examples in 2 languages.", difficulty: "beginner", skills: ["OpenAPI", "Markdown", "Redoc", "REST APIs"] },
+    { title: "Docs-as-Code Site", description: "Build a full documentation site with Docusaurus. Version your docs in Git, set up CI to deploy on merge, include search and dark mode.", difficulty: "intermediate", skills: ["Docusaurus", "Markdown", "GitHub Actions", "Git"] },
+    { title: "Developer Tutorial Series", description: "Write a 5-part tutorial series for a real open-source library. Each part builds on the last, includes runnable code samples and a feedback survey.", difficulty: "advanced", skills: ["Technical Writing", "Code Samples", "SEO", "Developer Experience"] },
+  ],
   sections: [
     { id: "tw-writing", title: "Writing Craft", icon: "📝", topics: [
       { id: "tw-style", title: "Technical Style Guides", description: "Microsoft Writing Style Guide, Google Developer Docs Style — tone, voice, clarity.", level: "foundation", resources: [{ label: "Google Developer Documentation Style Guide", url: "https://developers.google.com/style", type: "docs" }, { label: "Microsoft Writing Style Guide", url: "https://learn.microsoft.com/en-us/style-guide/welcome/", type: "docs" }] },
@@ -863,6 +981,11 @@ const scrumMasterRoadmap: CareerRoadmap = {
   jobTitles: ["Scrum Master", "Agile Coach", "Agile Delivery Manager", "RTE"],
   avgSalary: "Rp 12–35 jt/bulan",
   timeToJob: "3–12 months",
+  projects: [
+    { title: "Sprint Retrospective Facilitation", description: "Facilitate a real (or simulated) retro using 3 different formats (Start/Stop/Continue, 4Ls, Sailboat). Document outcomes and action items.", difficulty: "beginner", skills: ["Facilitation", "Retrospectives", "Miro", "Team Dynamics"] },
+    { title: "Team Metrics Dashboard", description: "Build a dashboard tracking velocity, cycle time, and sprint burndown for a real or mock team. Present insights and improvement actions.", difficulty: "intermediate", skills: ["Agile Metrics", "Jira", "Excel/Sheets", "Data Storytelling"] },
+    { title: "Agile Transformation Plan", description: "Design a 3-month agile transformation roadmap for a fictional waterfall team. Stakeholder analysis, change management, training plan, success metrics.", difficulty: "advanced", skills: ["Change Management", "SAFe", "Coaching", "OKRs"] },
+  ],
   sections: [
     { id: "sm-agile", title: "Agile & Scrum", icon: "📐", topics: [
       { id: "sm-manifesto", title: "Agile Manifesto & Principles", description: "4 values, 12 principles, agile mindset vs process — understanding the why.", level: "foundation", resources: [{ label: "Agile Manifesto", url: "https://agilemanifesto.org", type: "article" }] },
@@ -900,6 +1023,11 @@ const aiEngineerRoadmap: CareerRoadmap = {
   jobTitles: ["AI Engineer", "LLM Engineer", "Generative AI Engineer", "AI Application Developer"],
   avgSalary: "Rp 20–55 jt/bulan",
   timeToJob: "6–18 months",
+  projects: [
+    { title: "AI Chatbot with Memory", description: "Build a chatbot using OpenAI GPT-4o with conversation memory (LangChain ConversationBufferMemory), deployed as a Next.js app.", difficulty: "beginner", skills: ["OpenAI API", "LangChain", "Next.js", "TypeScript"] },
+    { title: "RAG Document Q&A", description: "Upload PDFs, chunk and embed them into a vector DB (Qdrant). Ask questions and get answers grounded in the documents with source citations.", difficulty: "intermediate", skills: ["RAG", "Qdrant", "LangChain", "OpenAI Embeddings"] },
+    { title: "Autonomous Research Agent", description: "Multi-step agent that takes a research question, searches the web, reads pages, synthesises findings, and writes a structured report.", difficulty: "advanced", skills: ["LangGraph", "Tool Use", "Web Search", "Structured Output"] },
+  ],
   sections: [
     { id: "aie-foundations", title: "Foundations", icon: "📐", topics: [
       { id: "aie-python", title: "Python for AI", description: "Data types, async/await, REST calls, environment management, type hints.", level: "foundation", resources: [{ label: "Python Docs Tutorial", url: "https://docs.python.org/3/tutorial/", type: "docs" }] },
@@ -939,6 +1067,11 @@ const promptEngineerRoadmap: CareerRoadmap = {
   jobTitles: ["Prompt Engineer", "AI Content Strategist", "LLM Specialist", "Conversational AI Designer"],
   avgSalary: "Rp 12–35 jt/bulan",
   timeToJob: "3–9 months",
+  projects: [
+    { title: "Prompt Library", description: "Build a versioned library of 20+ prompts for common tasks (summarisation, classification, extraction). Document what works and why for each.", difficulty: "beginner", skills: ["Prompt Design", "Few-Shot", "OpenAI API", "Documentation"] },
+    { title: "Automated Prompt Eval Suite", description: "Use PromptFoo to A/B test 3 prompt variants for a classification task. Define LLM-as-judge scoring, track results, pick the winner.", difficulty: "intermediate", skills: ["PromptFoo", "LLM Evaluation", "Python", "A/B Testing"] },
+    { title: "Adversarial Red-Teaming Report", description: "Red-team a chatbot system prompt with 10+ jailbreak and injection attempts. Document each vector, success rate, and proposed mitigations.", difficulty: "advanced", skills: ["Red Teaming", "Prompt Injection", "Safety", "Reporting"] },
+  ],
   sections: [
     { id: "pe-fundamentals", title: "LLM Fundamentals", icon: "📐", topics: [
       { id: "pe-how-llms", title: "How LLMs Work", description: "Tokens, context windows, temperature, top-p, frequency/presence penalties.", level: "foundation", resources: [{ label: "OpenAI Tokenizer", url: "https://platform.openai.com/tokenizer", type: "article" }, { label: "Intro to LLMs (Karpathy)", url: "https://www.youtube.com/watch?v=zjkBMFhNj_g", type: "video" }] },
@@ -973,6 +1106,11 @@ const computerVisionRoadmap: CareerRoadmap = {
   jobTitles: ["Computer Vision Engineer", "CV Researcher", "Vision AI Engineer", "Perception Engineer"],
   avgSalary: "Rp 18–50 jt/bulan",
   timeToJob: "18–36 months",
+  projects: [
+    { title: "Face Mask Detector", description: "Train a binary classifier to detect face mask usage on a public dataset. OpenCV webcam integration, real-time inference, confusion matrix.", difficulty: "beginner", skills: ["Python", "OpenCV", "scikit-learn", "Transfer Learning"] },
+    { title: "Object Detection App", description: "Fine-tune YOLOv8 on a custom dataset (collect 200+ images, label with Roboflow). FastAPI endpoint + simple webcam demo.", difficulty: "intermediate", skills: ["YOLOv8", "Roboflow", "FastAPI", "PyTorch"] },
+    { title: "Semantic Segmentation Pipeline", description: "Segment objects in driving footage using Mask R-CNN or SAM. ONNX export, TensorRT optimisation, measure FPS on CPU vs GPU.", difficulty: "advanced", skills: ["Mask R-CNN", "SAM", "ONNX", "TensorRT"] },
+  ],
   sections: [
     { id: "cv-foundations", title: "Foundations", icon: "📐", topics: [
       { id: "cv-math", title: "Linear Algebra & Calculus", description: "Matrix ops, eigendecomposition, gradient descent — essential for CNNs.", level: "foundation", resources: [{ label: "3Blue1Brown Linear Algebra", url: "https://www.youtube.com/playlist?list=PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab", type: "video" }] },
@@ -1007,6 +1145,11 @@ const nlpEngineerRoadmap: CareerRoadmap = {
   jobTitles: ["NLP Engineer", "Computational Linguist", "Text Analytics Engineer", "Conversational AI Engineer"],
   avgSalary: "Rp 15–45 jt/bulan",
   timeToJob: "18–30 months",
+  projects: [
+    { title: "News Sentiment Dashboard", description: "Scrape headlines from RSS feeds, classify sentiment with a pre-trained HuggingFace model, visualise trends on a Streamlit dashboard.", difficulty: "beginner", skills: ["HuggingFace", "Python", "BeautifulSoup", "Streamlit"] },
+    { title: "Named Entity Recognition API", description: "Fine-tune a BERT model on a custom NER dataset (e.g. Indonesian news). FastAPI endpoint, evaluate with seqeval F1 score.", difficulty: "intermediate", skills: ["HuggingFace", "BERT", "FastAPI", "seqeval"] },
+    { title: "Fine-Tuned Summariser", description: "Fine-tune a seq2seq model (BART/mT5) on a domain-specific corpus. ROUGE evaluation, quantise with GGUF, serve with Ollama.", difficulty: "advanced", skills: ["BART", "PEFT", "ROUGE", "Ollama"] },
+  ],
   sections: [
     { id: "nlp-foundations", title: "Foundations", icon: "📐", topics: [
       { id: "nlp-linguistics", title: "Linguistics Basics", description: "Tokenization, morphology, POS tagging, parsing, named entities.", level: "foundation", resources: [{ label: "NLTK Book (free)", url: "https://www.nltk.org/book/", type: "book" }] },
@@ -1040,6 +1183,11 @@ const aiPMRoadmap: CareerRoadmap = {
   jobTitles: ["AI Product Manager", "ML Product Manager", "Head of AI Product", "Technical PM — AI"],
   avgSalary: "Rp 20–60 jt/bulan",
   timeToJob: "6–18 months",
+  projects: [
+    { title: "AI Feature PRD", description: "Write a full PRD for an AI-powered feature (e.g. smart reply, content moderation). Include model choice rationale, eval metrics, failure modes, and rollback plan.", difficulty: "beginner", skills: ["PRD Writing", "AI Literacy", "Metrics", "Risk Analysis"] },
+    { title: "LLM Eval Framework Design", description: "Design a qualitative + quantitative eval framework for a chatbot product. Define rubrics, build a 50-example test set, run with PromptFoo, present results.", difficulty: "intermediate", skills: ["LLM Evaluation", "PromptFoo", "Product Metrics", "Data Analysis"] },
+    { title: "Responsible AI Audit", description: "Audit an existing AI product for bias, fairness, and safety. Produce a written report with findings, severity ratings, and a prioritised mitigation roadmap.", difficulty: "advanced", skills: ["AI Ethics", "Fairness Metrics", "Risk Assessment", "Stakeholder Communication"] },
+  ],
   sections: [
     { id: "aipm-ai-literacy", title: "AI Literacy", icon: "🧠", topics: [
       { id: "aipm-ml-basics", title: "ML Concepts for PMs", description: "Supervised vs unsupervised, classification, regression, clustering — no math needed.", level: "foundation", resources: [{ label: "Google ML Crash Course", url: "https://developers.google.com/machine-learning/crash-course", type: "course" }] },

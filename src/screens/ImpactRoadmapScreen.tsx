@@ -39,6 +39,12 @@ const RESOURCE_ICONS: Record<string, string> = {
   article: "📄", video: "▶️", course: "🎓", docs: "📚", book: "📖",
 };
 
+const DIFF_META: Record<import("../data/careerRoadmaps").ProjectDifficulty, { label: string; color: string; bg: string }> = {
+  beginner:     { label: "Beginner",     color: "#1D9E75", bg: "#F0FBF7" },
+  intermediate: { label: "Intermediate", color: "#D97706", bg: "#FFFBEB" },
+  advanced:     { label: "Advanced",     color: "#D85A30", bg: "#FEF3EE" },
+};
+
 // ─── Main screen ─────────────────────────────────────────────────────────────
 
 export default function ImpactRoadmapScreen() {
@@ -259,6 +265,36 @@ function RoadmapDetail({ roadmap: rm, progress, colors, isDark, onClose, onStatu
                 <Text style={[S.jobTitleText, { color: rm.color }]}>{jt}</Text>
               </View>
             ))}
+          </View>
+
+          {/* Projects to build */}
+          <Text style={[S.sectionLabel, { color: colors.textMuted }]}>PROJECTS TO BUILD</Text>
+          {rm.projects.map((project, i) => {
+            const diffMeta = DIFF_META[project.difficulty];
+            return (
+              <View
+                key={i}
+                style={[S.projectCard, { backgroundColor: colors.bgCard, borderColor: colors.border }]}
+              >
+                <View style={S.projectCardTop}>
+                  <View style={{ flex: 1, gap: 4 }}>
+                    <Text style={[S.projectTitle, { color: colors.textPrimary }]}>{project.title}</Text>
+                    <Text style={[S.projectDesc, { color: colors.textMuted }]}>{project.description}</Text>
+                  </View>
+                  <View style={[S.diffBadge, { backgroundColor: diffMeta.bg }]}>
+                    <Text style={[S.diffBadgeText, { color: diffMeta.color }]}>{diffMeta.label}</Text>
+                  </View>
+                </View>
+                <View style={S.skillsRow}>
+                  {project.skills.map((skill) => (
+                    <View key={skill} style={[S.skillChip, { backgroundColor: rm.bg }]}>
+                      <Text style={[S.skillChipText, { color: rm.color }]}>{skill}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            );
+          })}
           </View>
 
           {/* Legend */}
@@ -502,6 +538,17 @@ const S = StyleSheet.create({
   jobTitleRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   jobTitleChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 99 },
   jobTitleText: { fontSize: 12, fontWeight: "600" },
+
+  // Projects
+  projectCard: { borderWidth: 1, borderRadius: 16, padding: 14, gap: 10 },
+  projectCardTop: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
+  projectTitle: { fontSize: 14, fontWeight: "700" },
+  projectDesc: { fontSize: 12, lineHeight: 18 },
+  diffBadge: { paddingHorizontal: 9, paddingVertical: 4, borderRadius: 99, flexShrink: 0 },
+  diffBadgeText: { fontSize: 10, fontWeight: "700" },
+  skillsRow: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
+  skillChip: { paddingHorizontal: 9, paddingVertical: 4, borderRadius: 99 },
+  skillChipText: { fontSize: 11, fontWeight: "600" },
 
   // Legend
   legendRow: { flexDirection: "row", gap: 16 },
