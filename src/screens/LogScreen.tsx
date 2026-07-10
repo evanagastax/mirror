@@ -72,6 +72,24 @@ export default function LogScreen() {
   const [category, setCategory] = useState<Category>("investment");
   const [note, setNote] = useState("");
 
+  // Format raw digits into Indonesian Rp format: 1500000 → "1.500.000"
+  function formatRp(raw: string): string {
+    const digits = raw.replace(/\D/g, "");
+    if (!digits) return "";
+    return parseInt(digits, 10).toLocaleString("id-ID");
+  }
+
+  // Strip formatting back to plain digits before submit
+  function parseAmount(formatted: string): number {
+    return parseFloat(formatted.replace(/\./g, "").replace(/,/g, ".")) || 0;
+  }
+
+  function handleAmountChange(text: string) {
+    // Only keep digits, reformat
+    const digits = text.replace(/\D/g, "");
+    setAmount(digits);
+  }
+
   const isLoading = createLog.isPending || createTransaction.isPending;
   const activePillar = PILLARS.find((p) => p.key === pillar)!;
 
@@ -79,7 +97,7 @@ export default function LogScreen() {
     try {
       if (pillar === "stewardship") {
         if (!amount) return Alert.alert("Enter an amount.");
-        await createTransaction.mutateAsync({ amount: parseFloat(amount), category, note: note || undefined });
+        await createTransaction.mutateAsync({ amount: parseAmount(amount), category, note: note || undefined });
       } else {
         let value = 0;
         let evidence_url: string | undefined;
@@ -413,14 +431,22 @@ export default function LogScreen() {
 
             {pillar === "stewardship" && <>
               <Field label="Amount (Rp)" colors={colors}>
-                <TextInput
-                  style={inputStyle}
-                  placeholder="500000"
-                  placeholderTextColor={colors.textMuted}
-                  keyboardType="number-pad"
-                  value={amount}
-                  onChangeText={setAmount}
-                />
+                <View style={[inputStyle, styles.amountWrap]}>
+                  <Text style={[styles.amountPrefix, { color: colors.textMuted }]}>Rp</Text>
+                  <TextInput
+                    style={[styles.amountInput, { color: colors.textPrimary }]}
+                    placeholder="0"
+                    placeholderTextColor={colors.textMuted}
+                    keyboardType="number-pad"
+                    value={formatRp(amount)}
+                    onChangeText={handleAmountChange}
+                  />
+                </View>
+                {amount ? (
+                  <Text style={[styles.amountPreview, { color: "#BA7517" }]}>
+                    Rp {formatRp(amount)}
+                  </Text>
+                ) : null}
               </Field>
               <Divider colors={colors} />
               <Field label="Category" colors={colors}>
@@ -574,4 +600,12 @@ const styles = StyleSheet.create({
     borderWidth: 1.5, alignItems: "center", justifyContent: "center",
   },
   effortBtnText: { fontSize: 13 },
+
+  // Stewardship amount
+  amountWrap: {
+    flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 0,
+  },
+  amountPrefix: { fontSize: 15, fontWeight: "700", paddingVertical: 12 },
+  amountInput: { flex: 1, fontSize: 22, fontWeight: "700", paddingVertical: 12 },
+  amountPreview: { fontSize: 12, fontWeight: "600", marginTop: 2 },
 });
