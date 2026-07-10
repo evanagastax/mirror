@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import {
   View, Text, ScrollView, Pressable,
   ActivityIndicator, StyleSheet, RefreshControl, Linking, Alert,
@@ -6,6 +6,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
+import { useFocusEffect } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuthStore } from "../store/authStore";
 import { useThemeStore } from "../store/themeStore";
 import { useLogs, useDeleteLog, Log } from "../hooks/useLogs";
@@ -110,6 +112,22 @@ export default function LogHistoryScreen() {
   const { data: streak }  = useStreak(userId);
 
   const [filter, setFilter] = useState<Filter>("all");
+
+  // Persist filter selection so it survives tab switches and app restarts
+  const FILTER_KEY = `activity_filter_${userId}`;
+
+  useFocusEffect(useCallback(() => {
+    AsyncStorage.getItem(FILTER_KEY).then((saved) => {
+      if (saved && ["all","soul","vessel","impact","stewardship"].includes(saved)) {
+        setFilter(saved as Filter);
+      }
+    });
+  }, [FILTER_KEY]));
+
+  function handleSetFilter(f: Filter) {
+    setFilter(f);
+    AsyncStorage.setItem(FILTER_KEY, f);
+  }
 
   const isLoading   = logsLoading || txLoading;
   const isError     = logsError   || txError;
@@ -218,7 +236,7 @@ export default function LogHistoryScreen() {
             return (
               <Pressable
                 key={f.key}
-                onPress={() => setFilter(f.key)}
+                onPress={() => handleSetFilter(f.key)}
                 style={[
                   S.filterPill,
                   { borderColor: colors.border },
