@@ -169,8 +169,14 @@ export default function CompassScreen() {
 
   const synergy = calculateSynergy(pillars);
   const rank = getRank(synergy);
-  const nextMilestone = [10, 25, 50, 100, 200, 400, 700].find((m) => m > synergy) ?? 700;
+  const RANK_MILESTONES = [0, 10, 25, 50, 100, 200, 400, 700];
+  const nextMilestone = RANK_MILESTONES.find((m) => m > synergy) ?? 700;
+  const prevMilestone = [...RANK_MILESTONES].reverse().find((m) => m <= synergy) ?? 0;
   const ptsToNext = nextMilestone - synergy;
+  const rankPct = nextMilestone === prevMilestone
+    ? 1
+    : (synergy - prevMilestone) / (nextMilestone - prevMilestone);
+  const nextRank = getRank(nextMilestone);
 
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: colors.bg }]} edges={["top"]}>
@@ -222,9 +228,18 @@ export default function CompassScreen() {
           <View style={styles.bannerRight}>
             <Text style={[styles.synergyLabel, { color: colors.textMuted }]}>SYNERGY</Text>
             <Text style={[styles.synergyValue, { color: colors.textPrimary }]}>{synergy}</Text>
-            <Text style={[styles.synergyHint, { color: colors.textDisabled }]}>
-              {ptsToNext > 0 ? `${ptsToNext} to next rank` : "Max rank"}
-            </Text>
+            {/* Rank progression bar */}
+            <View style={styles.rankProgressWrap}>
+              <View style={[styles.rankProgressTrack, { backgroundColor: colors.border }]}>
+                <View style={[styles.rankProgressFill, {
+                  width: `${Math.min(rankPct * 100, 100)}%` as any,
+                  backgroundColor: "#BA7517",
+                }]} />
+              </View>
+              <Text style={[styles.rankProgressHint, { color: colors.textDisabled }]}>
+                {ptsToNext > 0 ? `${ptsToNext} pts → ${nextRank}` : "Max rank 🏆"}
+              </Text>
+            </View>
             {streak && streak.loggedToday && (
               <View style={[styles.todayBadge, { backgroundColor: "#F0FBF7" }]}>
                 <Text style={[styles.todayBadgeText, { color: "#1D9E75" }]}>✓ Logged today</Text>
@@ -377,6 +392,12 @@ const styles = StyleSheet.create({
   synergyLabel: { fontSize: 9, fontWeight: "700", letterSpacing: 1.5, textTransform: "uppercase" },
   synergyValue: { fontSize: 44, fontWeight: "800", letterSpacing: -2, lineHeight: 50 },
   synergyHint: { fontSize: 10, marginTop: 2 },
+
+  // Rank progression
+  rankProgressWrap: { gap: 4, marginTop: 4, width: "100%" },
+  rankProgressTrack: { height: 5, borderRadius: 99, overflow: "hidden", width: "100%" },
+  rankProgressFill: { height: 5, borderRadius: 99 },
+  rankProgressHint: { fontSize: 9, fontWeight: "600" },
 
   // Section header
   sectionHeader: {
