@@ -6,36 +6,47 @@
  * Use `setSentryUser(id)` / `clearSentryUser()` to attach the auth user to events.
  *
  * DSN is read from EXPO_PUBLIC_SENTRY_DSN so it stays out of source code.
- * Sentry is silently disabled when the DSN is not set (e.g. local dev without
- * the variable, or in unit tests).
+ * Sentry is silently disabled when:
+ *   - The DSN env var is not set (local dev)
+ *   - Running on web (Sentry RN is a native-only SDK)
+ *   - Running in unit tests (module is mocked)
  */
 
-import * as Sentry from "@sentry/react-native";
+import { Platform } from "react-native";
+
+// @sentry/react-native is resolved to an empty module on web via metro.config.js,
+// so this dynamic import is safe. We type it loosely to avoid pulling in the
+// @sentry/react-native type definitions on web.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let Sentry: any = null;
 
 let _initialised = false;
 
 export function initSentry() {
+  // Sentry React Native SDK has no web support — skip entirely on web.
+  if (Platform.OS === "web") return;
+
   const dsn = process.env.EXPO_PUBLIC_SENTRY_DSN;
   if (!dsn) {
     // No DSN configured — skip initialisation.
-    // This is expected in local dev until the project is connected to Sentry.
+    // Expected in local dev until the project is connected to Sentry.
     return;
   }
 
+  // Lazy-require so the module isn't evaluated during the web bundle parse.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  Sentry = require("@sentry/react-native");
+
   Sentry.init({
     dsn,
-    // Send 100 % of errors but only 10 % of performance traces.
-    // Adjust tracesSampleRate upward once you have baseline data.
+    // Send 100% of errors, 10% of performance traces.
     tracesSampleRate: 0.1,
-    // Mask all text content in session replays to protect user data.
     _experiments: { replaysSessionSampleRate: 0, replaysOnErrorSampleRate: 0.5 },
-    // Ignore known non-fatal network noise
     ignoreErrors: [
       "Network request failed",
       "Load failed",
       "AbortError",
     ],
-    // Tag every event with the app environment
     environment: __DEV__ ? "development" : "production",
   });
 
@@ -44,18 +55,17 @@ export function initSentry() {
 
 /**
  * Report a caught exception.
- * Safe to call even if Sentry was not initialised.
+ * Safe to call even when Sentry is not initialised or on web.
  */
 export function captureError(
   error: unknown,
   context?: Record<string, unknown>
 ) {
-  if (!_initialised) {
-    // Still log to console in dev so nothing is silently swallowed
+  if (!_initialised || !Sentry) {
     if (__DEV__) console.error("[Sentry disabled]", error, context);
     return;
   }
-  Sentry.withScope((scope) => {
+  Sentry.withScope((scope: any) => {
     if (context) scope.setExtras(context);
     Sentry.captureException(error);
   });
@@ -63,10 +73,9 @@ export function captureError(
 
 /**
  * Attach the authenticated user ID to all subsequent Sentry events.
- * Call this after a successful sign-in.
  */
 export function setSentryUser(userId: string) {
-  if (!_initialised) return;
+  if (!_initialised || !Sentry) return;
   Sentry.setUser({ id: userId });
 }
 
@@ -74,6 +83,6 @@ export function setSentryUser(userId: string) {
  * Clear the user from Sentry scope on sign-out.
  */
 export function clearSentryUser() {
-  if (!_initialised) return;
+  if (!_initialised || !Sentry) return;
   Sentry.setUser(null);
 }

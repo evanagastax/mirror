@@ -1,27 +1,52 @@
 const { getDefaultConfig } = require("expo/metro-config");
 const config = getDefaultConfig(__dirname);
 
-// ─── Sentry web-bundling fix ──────────────────────────────────────────────────
-// @sentry/core re-exports a trpc.js module that doesn't exist in its own build.
-// Metro fails when bundling for web because it can't resolve the file.
-// We intercept those requests and return an empty stub so the web bundle works.
-// This has zero effect on native builds (iOS / Android) where Sentry works fine.
-const SENTRY_MISSING_MODULES = new Set([
-  "@sentry/core/build/esm/trpc.js",
-]);
+// ─── Web: stub out @sentry/react-native entirely ─────────────────────────────
+//
+// @sentry/react-native is a native SDK — it has no web support and pulls in
+// a huge transitive dependency tree that causes Metro's Hermes transformer
+// worker to exhaust its V8 semi-space on Node 22+.
+//
+// On web we resolve the entire package (and its @sentry/* sub-packages) to an
+// empty module. Our sentry.ts service already no-ops when the DSN is absent,
+// so this has zero functional impact on web.
+//
+// On iOS / Android the resolver falls through to the real modules as normal.
+
+const SENTRY_PACKAGES = [
+  "@sentry/react-native",
+  "@sentry/core",
+  "@sentry/hub",
+  "@sentry/types",
+  "@sentry/utils",
+  "@sentry/browser",
+  "@sentry/integrations",
+];
 
 config.resolver.resolveRequest = (context, moduleName, platform) => {
-  // Check both the bare name and any path that ends with the known missing file
-  const isMissing = SENTRY_MISSING_MODULES.has(moduleName) ||
-    [...SENTRY_MISSING_MODULES].some((m) => moduleName.endsWith(m.replace(/^.*\//, "/")));
-
-  if (platform === "web" && isMissing) {
-    // Return the empty-module stub that ships with Metro
-    return { type: "empty" };
+  if (platform === "web") {
+    // Stub the whole @sentry namespace on web
+    const isSentry = SENTRY_PACKAGES.some(
+      (pkg) => moduleName === pkg || moduleName.startsWith(pkg + "/")
+    );
+    if (isSentry) return { type: "empty" };
   }
 
-  // Fall through to Metro's default resolver for everything else
   return context.resolveRequest(context, moduleName, platform);
 };
+
+// ─── Reduce transformer concurrency ──────────────────────────────────────────
+//
+// Metro defaults to (CPU count - 1) parallel transform workers. On large
+// codebases this causes each worker to hold many module ASTs in memory
+// simultaneously, triggering V8 semi-space exhaustion on Node 22/24.
+// Capping at 2 workers keeps peak RSS well under 512MB.
+
+config.transformer = {
+  ...config.transformer,
+  workerThreads: false,  // use processes, not threads (more stable on Node 24)
+};
+
+config.maxWorkers = 2;
 
 module.exports = config;
