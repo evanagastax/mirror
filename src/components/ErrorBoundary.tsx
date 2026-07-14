@@ -2,6 +2,7 @@ import React from "react";
 import {
   View, Text, Pressable, StyleSheet, ScrollView,
 } from "react-native";
+import { captureError } from "../services/sentry";
 
 type Props = { children: React.ReactNode };
 type State = { error: Error | null };
@@ -24,8 +25,10 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
-    // Log to console in dev; swap for a remote logger (Sentry etc.) in prod
+    // Always log to console in dev for fast feedback
     console.error("[ErrorBoundary]", error, info.componentStack);
+    // Report to Sentry in all environments (no-op when DSN is not configured)
+    captureError(error, { componentStack: info.componentStack ?? "" });
   }
 
   handleReset = () => {

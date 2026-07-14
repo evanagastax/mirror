@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback } from "react";
 import {
   View, Text, ScrollView, Pressable,
-  ActivityIndicator, StyleSheet, RefreshControl, Linking, Alert,
+  ActivityIndicator, StyleSheet, RefreshControl, Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
@@ -10,53 +10,23 @@ import { useFocusEffect } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuthStore } from "../store/authStore";
 import { useThemeStore } from "../store/themeStore";
-import { useLogs, useDeleteLog, Log } from "../hooks/useLogs";
-import { useLedger, useDeleteTransaction, Transaction } from "../hooks/useLedger";
+import { useLogs, useDeleteLog } from "../hooks/useLogs";
+import { useLedger, useDeleteTransaction } from "../hooks/useLedger";
 import { useStreak } from "../hooks/useStreak";
+import { openSafeUrl } from "../utils/url";
+import { PILLAR_META_MAP, CAT_META, PILLAR_FILTERS, type PillarKey, type PillarFilter } from "../theme/pillars";
+import { formatDate, formatTime, formatRp } from "../utils/format";
+import type { Log, Transaction, Colors } from "../types";
+import { StatChip } from "../components/ui/StatChip";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-
-type Filter = "all" | "soul" | "vessel" | "impact" | "stewardship";
 
 /** Unified activity item — either a Log or a Transaction */
 type ActivityItem =
   | { kind: "log"; data: Log }
   | { kind: "transaction"; data: Transaction };
 
-// ─── Pillar / category meta ───────────────────────────────────────────────────
-
-const PILLAR_META = {
-  soul:        { color: "#1D9E75", bg: "#F0FBF7", icon: "✦", label: "Soul" },
-  vessel:      { color: "#D85A30", bg: "#FEF3EE", icon: "⬡", label: "Vessel" },
-  impact:      { color: "#378ADD", bg: "#F0F7FE", icon: "◈", label: "Impact" },
-  stewardship: { color: "#BA7517", bg: "#FEF9EE", icon: "◎", label: "Stewardship" },
-} as const;
-
-const CAT_META = {
-  investment:  { icon: "↑", color: "#1D9E75" },
-  consumption: { icon: "→", color: "#378ADD" },
-  leak:        { icon: "↓", color: "#D85A30" },
-} as const;
-
-const FILTERS: { key: Filter; label: string }[] = [
-  { key: "all",         label: "All" },
-  { key: "soul",        label: "Soul" },
-  { key: "vessel",      label: "Vessel" },
-  { key: "impact",      label: "Impact" },
-  { key: "stewardship", label: "Wealth" },
-];
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
-}
-function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
-}
-function formatRp(n: number) {
-  return "Rp " + Math.abs(n).toLocaleString("id-ID");
-}
 
 function getLogTitle(log: Log): string {
   const meta = log.metadata as any;
@@ -65,7 +35,7 @@ function getLogTitle(log: Log): string {
   if (log.pillar_type === "vessel" && meta?.exercise_name) return meta.exercise_name;
   if (log.pillar_type === "impact" && meta?.title)         return meta.title;
   if (log.pillar_type === "impact" && meta?.description)   return meta.description;
-  return PILLAR_META[log.pillar_type as keyof typeof PILLAR_META]?.label + " activity";
+  return PILLAR_META_MAP[log.pillar_type as PillarKey]?.label + " activity";
 }
 
 function getLogSubtitle(log: Log): string {
@@ -111,7 +81,7 @@ export default function LogHistoryScreen() {
   const deleteTransaction = useDeleteTransaction(userId ?? "");
   const { data: streak }  = useStreak(userId);
 
-  const [filter, setFilter] = useState<Filter>("all");
+  const [filter, setFilter] = useState<PillarFilter>("all");
 
   // Persist filter selection so it survives tab switches and app restarts
   const FILTER_KEY = `activity_filter_${userId}`;
@@ -119,12 +89,12 @@ export default function LogHistoryScreen() {
   useFocusEffect(useCallback(() => {
     AsyncStorage.getItem(FILTER_KEY).then((saved) => {
       if (saved && ["all","soul","vessel","impact","stewardship"].includes(saved)) {
-        setFilter(saved as Filter);
+        setFilter(saved as PillarFilter);
       }
     });
   }, [FILTER_KEY]));
 
-  function handleSetFilter(f: Filter) {
+  function handleSetFilter(f: PillarFilter) {
     setFilter(f);
     AsyncStorage.setItem(FILTER_KEY, f);
   }
@@ -231,7 +201,7 @@ export default function LogHistoryScreen() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={S.filterRow}
         >
-          {FILTERS.map((f) => {
+          {PILLAR_FILTERS.map((f) => {
             const active = filter === f.key;
             return (
               <Pressable
@@ -311,11 +281,11 @@ function LogRow({
   onDelete,
 }: {
   log: Log;
-  colors: ReturnType<typeof useThemeStore.getState>["colors"];
+  colors: Colors;
   last: boolean;
   onDelete: () => void;
 }) {
-  const meta = PILLAR_META[log.pillar_type as keyof typeof PILLAR_META];
+  const meta = PILLAR_META_MAP[log.pillar_type as PillarKey];
   if (!meta) return null;
 
   function handleLongPress() {
@@ -351,11 +321,11 @@ function LogRow({
       </View>
       <View style={S.rowRight}>
         <Text style={[S.rowTime, { color: colors.textDisabled }]}>{formatTime(log.created_at)}</Text>
-        {log.evidence_url && !log.evidence_url.startsWith("gh:") ? (
-          <Pressable onPress={() => Linking.openURL(log.evidence_url!)}>
+        {log.evidence_url && (
+          <Pressable onPress={() => openSafeUrl(log.evidence_url, "evidence link")}>
             <Text style={[S.rowEvidence, { color: meta.color }]}>↗</Text>
           </Pressable>
-        ) : null}      </View>
+        )}</View>
     </Pressable>
   );
 }
@@ -369,11 +339,11 @@ function TransactionRow({
   onDelete,
 }: {
   tx: Transaction;
-  colors: ReturnType<typeof useThemeStore.getState>["colors"];
+  colors: Colors;
   last: boolean;
   onDelete: () => void;
 }) {
-  const meta    = PILLAR_META.stewardship;
+  const meta    = PILLAR_META_MAP.stewardship;
   const catMeta = CAT_META[tx.category];
 
   function handleLongPress() {
@@ -413,19 +383,6 @@ function TransactionRow({
         <Text style={[S.rowTime, { color: colors.textDisabled }]}>{formatTime(tx.created_at)}</Text>
       </View>
     </Pressable>
-  );
-}
-
-// ─── Stat chip ────────────────────────────────────────────────────────────────
-
-function StatChip({ label, value, color, bg }: {
-  label: string; value: string; color: string; bg: string;
-}) {
-  return (
-    <View style={[S.statChip, { backgroundColor: bg }]}>
-      <Text style={[S.statLabel, { color }]}>{label}</Text>
-      <Text style={[S.statValue, { color }]} numberOfLines={1}>{value}</Text>
-    </View>
   );
 }
 

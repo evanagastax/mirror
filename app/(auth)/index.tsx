@@ -10,6 +10,13 @@ import { useThemeStore } from "../../src/store/themeStore";
 
 type Tab = "signin" | "signup" | "forgot";
 
+// Validates that a string looks like a real email address.
+// Checks for non-whitespace chars, an @, a domain part, and a TLD.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+function isValidEmail(v: string): boolean {
+  return EMAIL_RE.test(v.trim());
+}
+
 export default function AuthScreen() {
   const { isDark, colors, hydrate } = useThemeStore();
   const [tab,      setTab]      = useState<Tab>("signin");
@@ -25,7 +32,8 @@ export default function AuthScreen() {
   function goTab(t: Tab) { setTab(t); reset(); }
 
   async function handleSignIn() {
-    if (!email || !password) { Alert.alert("Fill in email and password."); return; }
+    if (!email.trim() || !password) { Alert.alert("Fill in email and password."); return; }
+    if (!isValidEmail(email)) { Alert.alert("Enter a valid email address."); return; }
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     setLoading(false);
@@ -33,8 +41,9 @@ export default function AuthScreen() {
   }
 
   async function handleSignUp() {
-    if (!email || !password) { Alert.alert("Fill in email and password."); return; }
-    if (password.length < 8) { Alert.alert("Password must be at least 8 characters."); return; }
+    if (!email.trim() || !password) { Alert.alert("Fill in email and password."); return; }
+    if (!isValidEmail(email)) { Alert.alert("Enter a valid email address."); return; }
+    if (password.length < 10) { Alert.alert("Password must be at least 10 characters."); return; }
     setLoading(true);
     const { data, error } = await supabase.auth.signUp({ email: email.trim(), password });
     if (error) { setLoading(false); Alert.alert("Sign up failed", error.message); return; }
@@ -63,7 +72,8 @@ export default function AuthScreen() {
   }
 
   async function handleForgot() {
-    if (!email) { Alert.alert("Enter your email first."); return; }
+    if (!email.trim()) { Alert.alert("Enter your email first."); return; }
+    if (!isValidEmail(email)) { Alert.alert("Enter a valid email address."); return; }
     setLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim());
     setLoading(false);
@@ -123,7 +133,7 @@ export default function AuthScreen() {
             {tab !== "forgot" && (
               <FieldWrap label="Password" colors={colors}>
                 <TextInput style={inp}
-                  placeholder={tab === "signup" ? "At least 8 characters" : "••••••••"}
+                  placeholder={tab === "signup" ? "At least 10 characters" : "••••••••"}
                   placeholderTextColor={colors.textMuted}
                   secureTextEntry value={password} onChangeText={setPassword} />
               </FieldWrap>

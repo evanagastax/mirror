@@ -12,6 +12,11 @@ import {
 import { clearStaleExerciseCache } from "../src/utils/offlineCache";
 import { ErrorBoundary } from "../src/components/ErrorBoundary";
 import { OfflineBanner } from "../src/components/OfflineBanner";
+import { initSentry, setSentryUser, clearSentryUser } from "../src/services/sentry";
+
+// Initialise Sentry before anything else renders.
+// Safe to call multiple times — subsequent calls are no-ops once initialised.
+initSentry();
 
 const queryClient = new QueryClient();
 
@@ -30,10 +35,13 @@ export default function RootLayout() {
     setupAndroidChannels();
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUserId(session?.user.id ?? undefined);
-      setHydrated(); // mark session restored — guards can now redirect safely
+      const uid = session?.user.id ?? undefined;
+      setUserId(uid);
+      setHydrated();
+      // Attach user to Sentry on initial session restore
+      if (uid) setSentryUser(uid);
       // Apply notification schedule once we know auth state
-      if (session?.user.id) {
+      if (uid) {
         loadNotifSettings().then((settings) => {
           // Prayer times not available at this point — only schedule
           // reminder + streak. Prayer times get rescheduled from SoulScreen
@@ -45,7 +53,11 @@ export default function RootLayout() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
-        setUserId(session?.user.id ?? undefined);
+        const uid = session?.user.id ?? undefined;
+        setUserId(uid);
+        // Keep Sentry's user context in sync so crash reports are identifiable
+        if (uid) setSentryUser(uid);
+        else      clearSentryUser();
       }
     );
 

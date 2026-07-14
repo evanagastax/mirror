@@ -1,23 +1,13 @@
 import { useRef, useState, useCallback } from "react";
 import { XPToastData } from "../components/XPToast";
+import { PILLAR_META, type PillarKey } from "../theme/pillars";
 
-type PillarScores = {
-  soul: number;
-  vessel: number;
-  impact: number;
-  stewardship: number;
-};
+type PillarScores = Record<PillarKey, number>;
 
-const PILLAR_META: Record<keyof PillarScores, {
-  label: string; color: string; bg: string; icon: string;
-}> = {
-  soul:        { label: "Soul",        color: "#1D9E75", bg: "#F0FBF7", icon: "✦" },
-  vessel:      { label: "Vessel",      color: "#D85A30", bg: "#FEF3EE", icon: "⬡" },
-  impact:      { label: "Impact",      color: "#378ADD", bg: "#F0F7FE", icon: "◈" },
-  stewardship: { label: "Stewardship", color: "#BA7517", bg: "#FEF9EE", icon: "◎" },
-};
-
-let _nextId = 1;
+const META: Record<PillarKey, { label: string; color: string; bg: string; icon: string }> =
+  Object.fromEntries(
+    PILLAR_META.map((p) => [p.key, { label: p.label, color: p.color, bg: p.bg, icon: p.icon }])
+  ) as any;
 
 /**
  * Tracks pillar scores between renders.
@@ -29,8 +19,15 @@ let _nextId = 1;
  */
 export function useXPToast() {
   const [toasts, setToasts] = useState<XPToastData[]>([]);
-  // previous scores ref — persists across renders without causing re-renders itself
+
+  // Persists previous scores across renders without triggering re-renders.
   const prevScores = useRef<PillarScores | null>(null);
+
+  // Per-instance, ever-increasing ID counter. Keeping it in a ref means:
+  //   - IDs are unique within this hook instance across its entire lifetime
+  //   - Multiple concurrent hook instances (e.g. in tests) never share a counter
+  //   - No module-level mutable state that leaks across hot reloads or test runs
+  const nextId = useRef(0);
 
   const trackScores = useCallback((current: PillarScores | null | undefined) => {
     if (!current) return;
@@ -38,12 +35,12 @@ export function useXPToast() {
     const prev = prevScores.current;
     if (prev) {
       const newToasts: XPToastData[] = [];
-      (Object.keys(PILLAR_META) as (keyof PillarScores)[]).forEach((key) => {
+      (Object.keys(META) as PillarKey[]).forEach((key) => {
         const delta = current[key] - prev[key];
         if (delta > 0) {
-          const meta = PILLAR_META[key];
+          const meta = META[key];
           newToasts.push({
-            id:    _nextId++,
+            id:    ++nextId.current,
             label: `+${delta} XP`,
             color: meta.color,
             bg:    meta.bg,
@@ -52,7 +49,6 @@ export function useXPToast() {
         }
       });
       if (newToasts.length > 0) {
-        // Stagger multiple toasts slightly so they don't stack on top of each other
         setToasts((prev) => [...prev, ...newToasts]);
       }
     }

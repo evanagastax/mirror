@@ -21,7 +21,9 @@
           "color": "#1D9E75",
           "sounds": []
         }
-      ]
+      ],
+      "expo-secure-store",
+      "@sentry/react-native"
     ],
     "ios": {
       "supportsTablet": true

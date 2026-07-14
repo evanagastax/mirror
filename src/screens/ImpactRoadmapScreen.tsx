@@ -295,7 +295,6 @@ function RoadmapDetail({ roadmap: rm, progress, colors, isDark, onClose, onStatu
               </View>
             );
           })}
-          </View>
 
           {/* Legend */}
           <View style={S.legendRow}>

@@ -10,8 +10,13 @@ import { useRouter } from "expo-router";
 import { useAuthStore } from "../store/authStore";
 import { useThemeStore } from "../store/themeStore";
 import { useCreateLog, useCreateTransaction } from "../hooks/useCreateLog";
+import { isSafeUrl } from "../utils/url";
+import { PILLAR_META, CAT_META } from "../theme/pillars";
+import type { PillarKey } from "../theme/pillars";
+import type { Colors } from "../types";
+import { Divider } from "../components/ui/Divider";
 
-type Pillar = "soul" | "vessel" | "impact" | "stewardship";
+type Pillar = PillarKey;
 type Category = "investment" | "consumption" | "leak";
 type ImpactCategory = "code" | "design" | "write" | "manage" | "learn" | "other";
 
@@ -24,28 +29,13 @@ const IMPACT_CATEGORIES: { key: ImpactCategory; label: string; icon: string; hin
   { key: "other",  label: "Other",   icon: "⚡", hint: "Anything else" },
 ];
 
-const PILLARS: { key: Pillar; label: string; color: string; bg: string; icon: string; hint: string }[] = [
-  { key: "soul",        label: "Soul",        color: "#1D9E75", bg: "#F0FBF7", icon: "✦", hint: "Prayer, meditation, gratitude" },
-  { key: "vessel",      label: "Vessel",      color: "#D85A30", bg: "#FEF3EE", icon: "⬡", hint: "Workouts, runs, recovery" },
-  { key: "impact",      label: "Impact",      color: "#378ADD", bg: "#F0F7FE", icon: "◈", hint: "Work shipped, tasks closed" },
-  { key: "stewardship", label: "Stewardship", color: "#BA7517", bg: "#FEF9EE", icon: "◎", hint: "Investments, expenses, leaks" },
-];
+const PILLARS = PILLAR_META.map((p) => ({ ...p }));
 
-const CATEGORIES: { key: Category; label: string; icon: string }[] = [
-  { key: "investment",  label: "Investment",  icon: "↑" },
-  { key: "consumption", label: "Consumption", icon: "→" },
-  { key: "leak",        label: "Leak",        icon: "↓" },
-];
-
-/** Accepts http:// and https:// URLs only. */
-function isValidUrl(url: string): boolean {
-  try {
-    const parsed = new URL(url.trim());
-    return parsed.protocol === "https:" || parsed.protocol === "http:";
-  } catch {
-    return false;
-  }
-}
+const CATEGORIES = Object.entries(CAT_META).map(([key, meta]) => ({
+  key: key as Category,
+  label: meta.label,
+  icon: meta.icon,
+}));
 
 export default function LogScreen() {
   const router = useRouter();
@@ -106,7 +96,7 @@ export default function LogScreen() {
         if (pillar === "soul") {
           if (!soulMinutes) return Alert.alert("Enter duration.");
           value = parseInt(soulMinutes, 10);
-          if (soulEvidence && !isValidUrl(soulEvidence)) {
+          if (soulEvidence && !isSafeUrl(soulEvidence)) {
             return Alert.alert("Invalid URL", "Evidence link must start with https://");
           }
           evidence_url = soulEvidence || undefined;
@@ -128,7 +118,7 @@ export default function LogScreen() {
           if (!impactDescription.trim()) return Alert.alert("Enter a title for what you did.");
           if (!impactEffort) return Alert.alert("Enter effort score.");
           value = Math.min(10, Math.max(1, parseInt(impactEffort, 10)));
-          if (impactEvidence && !isValidUrl(impactEvidence)) {
+          if (impactEvidence && !isSafeUrl(impactEvidence)) {
             return Alert.alert("Invalid URL", "Evidence link must start with https://");
           }
           evidence_url = impactEvidence || undefined;
@@ -240,7 +230,7 @@ export default function LogScreen() {
                   onChangeText={setSoulActivity}
                 />
               </Field>
-              <Divider colors={colors} />
+              <Divider color={colors.border} />
               <Field label="Duration (minutes)" colors={colors}>
                 <TextInput
                   style={inputStyle}
@@ -251,7 +241,7 @@ export default function LogScreen() {
                   onChangeText={setSoulMinutes}
                 />
               </Field>
-              <Divider colors={colors} />
+              <Divider color={colors.border} />
               <Field label="Evidence link (optional)" colors={colors}>
                 <TextInput
                   style={inputStyle}
@@ -274,7 +264,7 @@ export default function LogScreen() {
                   onChangeText={setVesselType}
                 />
               </Field>
-              <Divider colors={colors} />
+              <Divider color={colors.border} />
               <Field label="Type" colors={colors}>
                 <View style={styles.catRow}>
                   {(["strength", "cardio"] as const).map((m) => {
@@ -297,7 +287,7 @@ export default function LogScreen() {
                   })}
                 </View>
               </Field>
-              <Divider colors={colors} />
+              <Divider color={colors.border} />
               {vesselMode === "strength" ? <>
                 <Field label="Sets · Reps · Weight (kg)" colors={colors}>
                   <View style={styles.triRow}>
@@ -362,7 +352,7 @@ export default function LogScreen() {
                   onChangeText={setImpactDescription}
                 />
               </Field>
-              <Divider colors={colors} />
+              <Divider color={colors.border} />
               <Field label="Activity type" colors={colors}>
                 <View style={styles.catGrid}>
                   {IMPACT_CATEGORIES.map((c) => {
@@ -389,7 +379,7 @@ export default function LogScreen() {
                   })}
                 </View>
               </Field>
-              <Divider colors={colors} />
+              <Divider color={colors.border} />
               <Field label="Effort score (1–10)" colors={colors}>
                 <View style={styles.effortRow}>
                   {["1","2","3","4","5","6","7","8","9","10"].map((n) => {
@@ -415,7 +405,7 @@ export default function LogScreen() {
                   })}
                 </View>
               </Field>
-              <Divider colors={colors} />
+              <Divider color={colors.border} />
               <Field label="Evidence link (optional)" colors={colors}>
                 <TextInput
                   style={inputStyle}
@@ -448,7 +438,7 @@ export default function LogScreen() {
                   </Text>
                 ) : null}
               </Field>
-              <Divider colors={colors} />
+              <Divider color={colors.border} />
               <Field label="Category" colors={colors}>
                 <View style={styles.catRow}>
                   {CATEGORIES.map((c) => {
@@ -474,7 +464,7 @@ export default function LogScreen() {
                   })}
                 </View>
               </Field>
-              <Divider colors={colors} />
+              <Divider color={colors.border} />
               <Field label="Note" colors={colors}>
                 <TextInput
                   style={inputStyle}
@@ -495,7 +485,7 @@ export default function LogScreen() {
 function Field({ label, children, colors }: {
   label: string;
   children: React.ReactNode;
-  colors: ReturnType<typeof useThemeStore.getState>["colors"];
+  colors: Colors;
 }) {
   return (
     <View style={styles.fieldWrap}>
@@ -505,9 +495,7 @@ function Field({ label, children, colors }: {
   );
 }
 
-function Divider({ colors }: { colors: ReturnType<typeof useThemeStore.getState>["colors"] }) {
-  return <View style={[styles.fieldDivider, { backgroundColor: colors.border }]} />;
-}
+// Divider is imported from ../components/ui/Divider
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
