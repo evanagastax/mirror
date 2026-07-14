@@ -8,18 +8,21 @@
       "developmentClient": true,
       "distribution": "internal",
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",
+        "artifactPath": "android/app/build/outputs/apk/**/*.apk"
       }
     },
     "preview": {
       "distribution": "internal",
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",
+        "artifactPath": "android/app/build/outputs/apk/**/*.apk"
       }
     },
     "production": {
       "android": {
-        "buildType": "app-bundle"
+        "buildType": "app-bundle",
+        "artifactPath": "android/app/build/outputs/bundle/**/*.aab"
       }
     }
   },

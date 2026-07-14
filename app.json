@@ -23,7 +23,8 @@
         }
       ],
       "expo-secure-store",
-      "@sentry/react-native"
+      "@sentry/react-native",
+      ["./plugins/withApkName", { "baseName": "mirror" }]
     ],
     "ios": {
       "supportsTablet": true
