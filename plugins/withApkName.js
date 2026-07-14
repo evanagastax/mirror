@@ -1,13 +1,12 @@
 /**
  * Expo config plugin — sets the Android APK/AAB output filename.
  *
- * Adds `archivesBaseName = "mirror"` to android/app/build.gradle so that
- * Gradle names the output files:
- *   APK:  mirror-release.apk  (or mirror-debug.apk)
- *   AAB:  mirror-release.aab
+ * AGP 8+ removed archivesBaseName from inside the android { } block.
+ * It must now be set at the project level (outside android { }).
  *
- * This runs automatically during `expo prebuild` and during every
- * EAS build (cloud or local) because EAS runs prebuild before compiling.
+ * Result:
+ *   APK:  mirror-release.apk  /  mirror-debug.apk
+ *   AAB:  mirror-release.aab
  */
 
 const { withAppBuildGradle } = require("@expo/config-plugins");
@@ -18,19 +17,16 @@ const { withAppBuildGradle } = require("@expo/config-plugins");
  */
 function withApkName(config, { baseName = "mirror" } = {}) {
   return withAppBuildGradle(config, (mod) => {
-    const gradle = mod.modResults.contents;
+    let gradle = mod.modResults.contents;
 
-    // Avoid adding the setting twice if prebuild runs multiple times
+    // Avoid inserting twice if prebuild runs multiple times
     if (gradle.includes("archivesBaseName")) {
       return mod;
     }
 
-    // Insert archivesBaseName inside the android { } block, right after
-    // the opening brace. Works for both Groovy and KTS gradle files.
-    mod.modResults.contents = gradle.replace(
-      /android\s*\{/,
-      `android {\n    archivesBaseName = "${baseName}"`
-    );
+    // In AGP 8+, archivesBaseName must live at the top level of build.gradle,
+    // NOT inside the android { } block. Prepend it before the first block.
+    mod.modResults.contents = `base.archivesName.set("${baseName}")\n` + gradle;
 
     return mod;
   });
