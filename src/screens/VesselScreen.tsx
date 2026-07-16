@@ -534,7 +534,7 @@ function LogModal({ exercise, visible, userId, plan, onAddedToPlan, onClose, col
       await createLog.mutateAsync({ pillar_type: "vessel", value, metadata: meta });
       reset(); onClose();
       Alert.alert("Logged! 💪", `${cap(exercise.name)} added to Vessel.`);
-    } catch (e: any) { Alert.alert("Error", e.message ?? "Try again."); }
+    } catch (e: unknown) { Alert.alert("Error", e instanceof Error ? e.message : "Try again."); }
   }
 
   async function handleAddToPlan() {
@@ -551,8 +551,8 @@ function LogModal({ exercise, visible, userId, plan, onAddedToPlan, onClose, col
         onAddedToPlan(updated);
         Alert.alert("Added to plan ✓", `${cap(exercise.name)} added to ${plan.days[planDayIdx]?.template.label ?? "your plan"}.`);
       }
-    } catch (e: any) {
-      Alert.alert("Couldn't add to plan", e.message ?? "Try again.");
+    } catch (e: unknown) {
+      Alert.alert("Couldn't add to plan", e instanceof Error ? e.message : "Try again.");
     } finally {
       setAddingToPlan(false);
     }

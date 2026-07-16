@@ -104,8 +104,8 @@ export default function VesselProfileScreen() {
       Alert.alert("Profile saved ✓", "Your fitness profile has been updated.", [
         { text: "OK", onPress: () => router.back() },
       ]);
-    } catch (e: any) {
-      Alert.alert("Save failed", e.message ?? "Couldn't save your profile. Try again.");
+    } catch (e: unknown) {
+      Alert.alert("Save failed", e instanceof Error ? e.message : "Couldn't save your profile. Try again.");
     } finally {
       setSaving(false);
     }

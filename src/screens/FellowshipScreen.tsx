@@ -103,9 +103,10 @@ export default function ProfileScreen() {
   async function handleExport() {
     try {
       await exportUserData(userId);
-    } catch (e: any) {
-      if (e?.message !== "User did not share") {
-        Alert.alert("Export failed", e?.message ?? "Could not export data.");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Could not export data.";
+      if (msg !== "User did not share") {
+        Alert.alert("Export failed", msg);
       }
     }
   }

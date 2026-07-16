@@ -133,11 +133,11 @@ export default function LogScreen() {
         await createLog.mutateAsync({ pillar_type: pillar, value, evidence_url, metadata });
       }
       router.back();
-    } catch (e: any) {
+    } catch (e: unknown) {
       // Supabase wraps Postgres trigger errors in e.message.
       // Surface them directly so rate-limit and constraint messages
       // are readable (e.g. "Rate limit: maximum 100 logs per day reached.")
-      const raw: string = e?.message ?? "";
+      const raw = e instanceof Error ? e.message : "";
       const isRateLimit = raw.toLowerCase().includes("rate limit");
       const isConstraint =
         raw.toLowerCase().includes("check constraint") ||

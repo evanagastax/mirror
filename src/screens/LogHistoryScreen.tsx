@@ -33,17 +33,17 @@ type ActivityItem =
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getLogTitle(log: Log): string {
-  const meta = log.metadata as any;
-  if (log.pillar_type === "soul"   && meta?.activity)      return meta.activity;
-  if (log.pillar_type === "vessel" && meta?.exercise_type) return meta.exercise_type;
-  if (log.pillar_type === "vessel" && meta?.exercise_name) return meta.exercise_name;
-  if (log.pillar_type === "impact" && meta?.title)         return meta.title;
-  if (log.pillar_type === "impact" && meta?.description)   return meta.description;
+  const meta = log.metadata as Record<string, unknown> | null;
+  if (log.pillar_type === "soul"   && meta?.activity)      return String(meta.activity);
+  if (log.pillar_type === "vessel" && meta?.exercise_type) return String(meta.exercise_type);
+  if (log.pillar_type === "vessel" && meta?.exercise_name) return String(meta.exercise_name);
+  if (log.pillar_type === "impact" && meta?.title)         return String(meta.title);
+  if (log.pillar_type === "impact" && meta?.description)   return String(meta.description);
   return PILLAR_META_MAP[log.pillar_type as PillarKey]?.label + " activity";
 }
 
 function getLogSubtitle(log: Log): string {
-  const meta = log.metadata as any;
+  const meta = log.metadata as Record<string, unknown> | null;
   if (log.pillar_type === "soul")   return `${log.value} min`;
   if (log.pillar_type === "vessel") {
     if (meta?.type === "cardio") return `${log.value} min cardio${meta?.distance_km ? ` · ${meta.distance_km} km` : ""}`;

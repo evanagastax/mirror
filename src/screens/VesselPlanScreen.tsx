@@ -159,8 +159,8 @@ export default function VesselPlanScreen() {
         "Plan generated ✓",
         `Your ${days}-day workout plan is ready. ${planDays.filter(d => d.exercises.length > 0).length} of ${days} days have exercises loaded.`
       );
-    } catch (e: any) {
-      Alert.alert("Couldn't generate plan", "Make sure you've browsed exercises at least once so they're cached. " + (e.message ?? ""));
+    } catch (e: unknown) {
+      Alert.alert("Couldn't generate plan", "Make sure you've browsed exercises at least once so they're cached. " + (e instanceof Error ? e.message : ""));
     } finally {
       setGenerating(false);
     }

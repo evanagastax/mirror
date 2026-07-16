@@ -138,9 +138,9 @@ export default function ImpactScreen() {
 }
 
 function ImpactRow({ log, colors, last }: { log: Log; colors: Colors; last: boolean }) {
-  const meta  = log.metadata as any;
+  const meta  = log.metadata as Record<string, unknown> | null;
   // prefer explicit title, fall back to description, then a generic label
-  const title = meta?.title || meta?.description || "Impact activity";
+  const title = String(meta?.title || meta?.description || "Impact activity");
   const catIcon  = meta?.category_icon as string | undefined;
   const catLabel = meta?.category as string | undefined;
   const pct   = Math.min(log.value / 10, 1);

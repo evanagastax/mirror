@@ -57,8 +57,8 @@ export default function StewardshipBudgetScreen() {
       Alert.alert("Budget saved ✓", "Your monthly budget goals have been updated.", [
         { text: "OK", onPress: () => router.back() },
       ]);
-    } catch (e: any) {
-      Alert.alert("Save failed", e.message ?? "Couldn't save your budget goals. Try again.");
+    } catch (e: unknown) {
+      Alert.alert("Save failed", e instanceof Error ? e.message : "Couldn't save your budget goals. Try again.");
     } finally {
       setSaving(false);
     }

@@ -4,10 +4,9 @@ import { PILLAR_META, type PillarKey } from "../theme/pillars";
 
 type PillarScores = Record<PillarKey, number>;
 
-const META: Record<PillarKey, { label: string; color: string; bg: string; icon: string }> =
-  Object.fromEntries(
-    PILLAR_META.map((p) => [p.key, { label: p.label, color: p.color, bg: p.bg, icon: p.icon }])
-  ) as any;
+const META = Object.fromEntries(
+  PILLAR_META.map((p) => [p.key, { label: p.label, color: p.color, bg: p.bg, icon: p.icon }])
+) as Record<PillarKey, { label: string; color: string; bg: string; icon: string }>;
 
 /**
  * Tracks pillar scores between renders.

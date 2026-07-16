@@ -80,8 +80,8 @@ export default function NotificationSettingsScreen() {
     try {
       await saveNotifSettings(settings);
       await applyNotificationSettings(settings);
-    } catch (e: any) {
-      Alert.alert("Error", e.message ?? "Couldn't save notifications.");
+    } catch (e: unknown) {
+      Alert.alert("Error", e instanceof Error ? e.message : "Couldn't save notifications.");
       setSaving(false);
       return;
     }
