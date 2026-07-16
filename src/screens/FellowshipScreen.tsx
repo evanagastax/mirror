@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
   View, Text, ScrollView, Pressable,
-  StyleSheet, ActivityIndicator, TextInput, Alert, Switch, Share,
+  StyleSheet, TextInput, Alert, Switch, Share,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
@@ -18,6 +18,7 @@ import { useLedger } from "../hooks/useLedger";
 import { useStreak } from "../hooks/useStreak";
 import { computeBadges } from "../services/badges";
 import { BadgeGrid } from "../components/BadgeGrid";
+import { FellowshipSkeleton } from "../components/skeletons";
 
 type Privacy = { vessel: boolean; soul: boolean; impact: boolean };
 
@@ -155,9 +156,9 @@ export default function ProfileScreen() {
     return (
       <SafeAreaView style={[styles.flex, { backgroundColor: colors.bg }]} edges={["top"]}>
         <StatusBar style={isDark ? "light" : "dark"} />
-        <View style={styles.center}>
-          <ActivityIndicator color={colors.textPrimary} size="large" />
-        </View>
+        <ScrollView style={styles.flex} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          <FellowshipSkeleton />
+        </ScrollView>
       </SafeAreaView>
     );
   }

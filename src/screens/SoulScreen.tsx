@@ -22,6 +22,7 @@ import { loadPrayerLocation } from "../utils/prayerLocation";
 import { useLogs } from "../hooks/useLogs";
 import { buildPillarTrend } from "../services/pillarTrend";
 import { PillarTrendChart } from "../components/PillarTrendChart";
+import { SoulSkeleton } from "../components/skeletons";
 import {
   loadPlan, savePlan, deletePlan, buildPlan, updateMilestone,
   planProgress, HafalanPlan, HafalanMilestone, MilestoneStatus,
@@ -153,12 +154,7 @@ function DailyTab({ colors, userId }: { colors: Colors; userId: string }) {
   useEffect(() => { load(); }, [load]);
 
   if (loading) {
-    return (
-      <View style={S.center}>
-        <ActivityIndicator color={SOUL_COLOR} size="large" />
-        <Text style={[S.loadingText, { color: colors.textMuted }]}>Loading daily content…</Text>
-      </View>
-    );
+    return <SoulSkeleton />;
   }
 
   return (

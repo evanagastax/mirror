@@ -17,6 +17,7 @@ import { PILLAR_META_MAP, type PillarKey } from "../theme/pillars";
 import type { Goal, GoalStatus, Colors } from "../types";
 import { Snackbar } from "../components/Snackbar";
 import { useUndoableDelete } from "../hooks/useUndoableDelete";
+import { RoadmapSkeleton } from "../components/skeletons";
 
 type Filter = "all" | PillarKey | "todo" | "in_progress" | "done";
 
@@ -104,7 +105,9 @@ export default function RoadmapScreen() {
     return (
       <SafeAreaView style={[S.root, { backgroundColor: colors.bg }]} edges={["top"]}>
         <StatusBar style={isDark ? "light" : "dark"} />
-        <View style={S.center}><ActivityIndicator color={colors.textPrimary} size="large" /></View>
+        <ScrollView style={S.flex} contentContainerStyle={S.listContent} showsVerticalScrollIndicator={false}>
+          <RoadmapSkeleton />
+        </ScrollView>
       </SafeAreaView>
     );
   }
