@@ -11,19 +11,14 @@ import { useAuthStore } from "../store/authStore";
 import { useThemeStore } from "../store/themeStore";
 import {
   useGoals, useAddGoal, useUpdateGoalStatus,
-  useDeleteGoal, Goal, GoalStatus,
+  useDeleteGoal,
 } from "../hooks/useGoals";
+import { PILLAR_META_MAP, type PillarKey } from "../theme/pillars";
+import type { Goal, GoalStatus, Colors } from "../types";
 
-type Pillar = "soul" | "vessel" | "impact" | "stewardship";
-type Filter = "all" | Pillar | "todo" | "in_progress" | "done";
-type C = ReturnType<typeof useThemeStore.getState>["colors"];
+type Filter = "all" | PillarKey | "todo" | "in_progress" | "done";
 
-const PILLARS: { key: Pillar; label: string; color: string; bg: string; icon: string }[] = [
-  { key: "soul",        label: "Soul",        color: "#1D9E75", bg: "#F0FBF7", icon: "✦" },
-  { key: "vessel",      label: "Vessel",      color: "#D85A30", bg: "#FEF3EE", icon: "⬡" },
-  { key: "impact",      label: "Impact",      color: "#378ADD", bg: "#F0F7FE", icon: "◈" },
-  { key: "stewardship", label: "Stewardship", color: "#BA7517", bg: "#FEF9EE", icon: "◎" },
-];
+const PILLARS = Object.values(PILLAR_META_MAP);
 
 const STATUS_META: Record<GoalStatus, { label: string; color: string; bg: string; icon: string }> = {
   todo:        { label: "Todo",        color: "#888",    bg: "#f5f5f5", icon: "○" },
@@ -38,7 +33,7 @@ function nextStatus(s: GoalStatus): GoalStatus {
   return STATUS_ORDER[(i + 1) % STATUS_ORDER.length];
 }
 
-function pillarFor(key: Pillar) {
+function pillarFor(key: PillarKey) {
   return PILLARS.find((p) => p.key === key)!;
 }
 
@@ -52,7 +47,7 @@ export default function RoadmapScreen() {
   const deleteGoal = useDeleteGoal(userId);
 
   const [filter,     setFilter]     = useState<Filter>("all");
-  const [sheetPillar, setSheet]     = useState<Pillar | null>(null);
+  const [sheetPillar, setSheet]     = useState<PillarKey | null>(null);
   const [newTitle,   setNewTitle]   = useState("");
   const [statusMenu, setStatusMenu] = useState<string | null>(null); // goal id
 
@@ -316,7 +311,7 @@ export default function RoadmapScreen() {
 
 function GoalRow({ goal, pillar: p, colors, last, onTap, onLongPress, onDelete,
   statusMenuOpen, onStatusSelect, onMenuClose }: {
-  goal: Goal; pillar: typeof PILLARS[0]; colors: C; last: boolean;
+  goal: Goal; pillar: typeof PILLARS[0]; colors: Colors; last: boolean;
   onTap: () => void; onLongPress: () => void; onDelete: () => void;
   statusMenuOpen: boolean;
   onStatusSelect: (s: GoalStatus) => void;

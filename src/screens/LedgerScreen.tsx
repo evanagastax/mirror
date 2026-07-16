@@ -8,7 +8,7 @@ import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
 import { useAuthStore } from "../store/authStore";
 import { useThemeStore } from "../store/themeStore";
-import { useLedger, summarizeLedger, Transaction } from "../hooks/useLedger";
+import { useLedger, summarizeLedger } from "../hooks/useLedger";
 import { usePillars } from "../hooks/usePillars";
 import { scoreToLevel } from "../utils/pillarLevel";
 import { loadBudget, BudgetGoals } from "../services/stewardshipBudget";
@@ -17,18 +17,15 @@ import { FinancialHealthScore } from "../components/Stewardship/FinancialHealthS
 import { BudgetGoalsSection } from "../components/Stewardship/BudgetGoalsSection";
 import { MonthlyTrendChart } from "../components/Stewardship/MonthlyTrendChart";
 import { ZakatCalculator } from "../components/Stewardship/ZakatCalculator";
+import { PILLAR_COLORS, CAT_META } from "../theme/pillars";
+import { formatDate, formatTime, formatRp } from "../utils/format";
+import type { Transaction, Colors } from "../types";
+import { StatChip } from "../components/ui/StatChip";
 
-const GOLD    = "#BA7517";
-const GOLD_BG = "#FEF9EE";
+const GOLD    = PILLAR_COLORS.stewardship.primary;
+const GOLD_BG = PILLAR_COLORS.stewardship.bg;
 
 type Filter = "all" | "investment" | "consumption" | "leak";
-type C = ReturnType<typeof useThemeStore.getState>["colors"];
-
-const CAT_META = {
-  investment:  { color: "#1D9E75", bg: "#F0FBF7", icon: "↑", label: "Investment" },
-  consumption: { color: "#378ADD", bg: "#F0F7FE", icon: "→", label: "Consumption" },
-  leak:        { color: "#D85A30", bg: "#FEF3EE", icon: "↓", label: "Leak" },
-} as const;
 
 const FILTERS: { key: Filter; label: string }[] = [
   { key: "all",         label: "All" },
@@ -37,15 +34,6 @@ const FILTERS: { key: Filter; label: string }[] = [
   { key: "leak",        label: "Leak" },
 ];
 
-function formatRp(n: number) {
-  return "Rp " + Math.abs(n).toLocaleString("id-ID");
-}
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
-}
-function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
-}
 function groupByDate(txs: Transaction[]) {
   const groups: Record<string, Transaction[]> = {};
   for (const t of txs) {
@@ -271,7 +259,7 @@ export default function LedgerScreen() {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function TxRow({ tx, colors, last }: { tx: Transaction; colors: C; last: boolean }) {
+function TxRow({ tx, colors, last }: { tx: Transaction; colors: Colors; last: boolean }) {
   const meta = CAT_META[tx.category];
   return (
     <View style={[S.row, !last && { borderBottomColor: colors.border, borderBottomWidth: 1 }]}>
@@ -290,17 +278,6 @@ function TxRow({ tx, colors, last }: { tx: Transaction; colors: C; last: boolean
         </View>
       </View>
       <Text style={[S.rowAmount, { color: meta.color }]}>{formatRp(tx.amount)}</Text>
-    </View>
-  );
-}
-
-function StatChip({ label, value, color, bg }: {
-  label: string; value: string; color: string; bg: string;
-}) {
-  return (
-    <View style={[S.statChip, { backgroundColor: bg }]}>
-      <Text style={[S.statLabel, { color }]}>{label}</Text>
-      <Text style={[S.statValue, { color }]} numberOfLines={1} adjustsFontSizeToFit>{value}</Text>
     </View>
   );
 }

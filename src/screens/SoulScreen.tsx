@@ -27,13 +27,16 @@ import { SalahTracker } from "../components/Soul/SalahTracker";
 import {
   loadNotifSettings, schedulePrayerNotifications,
 } from "../services/notificationService";
+import { captureError } from "../services/sentry";
+
+import { PILLAR_COLORS } from "../theme/pillars";
+import type { Colors } from "../types";
 
 type Tab = "daily" | "dua" | "dzikir" | "asmaul" | "quran" | "hafalan";
 type Lang = "id" | "en";
-type C = ReturnType<typeof useThemeStore.getState>["colors"];
 
-const SOUL_COLOR = "#1D9E75";
-const SOUL_BG    = "#F0FBF7";
+const SOUL_COLOR = PILLAR_COLORS.soul.primary;
+const SOUL_BG    = PILLAR_COLORS.soul.bg;
 
 const PRAYER_ICONS: Record<string, string> = {
   Fajr: "🌙", Sunrise: "🌅", Dhuhr: "☀️",
@@ -109,7 +112,7 @@ export default function SoulScreen() {
 
 // ─── Daily Tab ───────────────────────────────────────────────────────────────
 
-function DailyTab({ colors, userId }: { colors: C; userId: string }) {
+function DailyTab({ colors, userId }: { colors: Colors; userId: string }) {
   const [lang, setLang] = useState<Lang>("id");
   const [ayah, setAyah] = useState<any>(null);
   const [prayerTimes, setPrayerTimes] = useState<any>(null);
@@ -131,11 +134,11 @@ function DailyTab({ colors, userId }: { colors: C; userId: string }) {
       if (timesResult.data) {
         loadNotifSettings().then((s) => {
           if (s.prayerEnabled) {
-            schedulePrayerNotifications(timesResult.data).catch(console.warn);
+            schedulePrayerNotifications(timesResult.data).catch((e) => captureError(e, { context: "schedulePrayerNotifications" }));
           }
         });
       }
-    } catch (e) { console.warn("Daily load error:", e); }
+    } catch (e) { captureError(e, { context: "Daily load error" }); }
     finally { setLoading(false); setRefreshing(false); }
   }, []);
 
@@ -201,7 +204,7 @@ function DailyTab({ colors, userId }: { colors: C; userId: string }) {
 
 // ─── Dua Tab ─────────────────────────────────────────────────────────────────
 
-function DuaTab({ colors }: { colors: C }) {
+function DuaTab({ colors }: { colors: Colors }) {
   const [lang, setLang] = useState<Lang>("id");
   const [selectedCategory, setSelectedCategory] = useState<DuaCategory | null>(null);
   const [selectedDua, setSelectedDua] = useState<Dua | null>(null);
@@ -284,7 +287,7 @@ function DuaTab({ colors }: { colors: C }) {
 
 // ─── Dzikir Tab ──────────────────────────────────────────────────────────────
 
-function DzikirTab({ colors }: { colors: C }) {
+function DzikirTab({ colors }: { colors: Colors }) {
   const [lang, setLang] = useState<Lang>("id");
   const [selectedCategory, setSelectedCategory] = useState<DzikirCategory | null>(null);
   const [selectedDzikir, setSelectedDzikir] = useState<Dzikir | null>(null);
@@ -403,7 +406,7 @@ function DzikirTab({ colors }: { colors: C }) {
 
 // ─── Asmaul Husna Tab ────────────────────────────────────────────────────────
 
-function AsmaulHusnaTab({ colors }: { colors: C }) {
+function AsmaulHusnaTab({ colors }: { colors: Colors }) {
   const [lang, setLang] = useState<Lang>("id");
   const [selected, setSelected] = useState<AsmaulHusna | null>(null);
 
@@ -464,7 +467,7 @@ function AsmaulHusnaTab({ colors }: { colors: C }) {
 
 // ─── Quran Tab ───────────────────────────────────────────────────────────────
 
-function QuranTab({ colors }: { colors: C }) {
+function QuranTab({ colors }: { colors: Colors }) {
   const [surahs, setSurahs] = useState<Surah[]>([]);
   const [loading, setLoading] = useState(true);
   const [fromCache, setFromCache] = useState(false);
@@ -474,7 +477,7 @@ function QuranTab({ colors }: { colors: C }) {
   useEffect(() => {
     fetchSurahList()
       .then((r) => { setSurahs(r.data); setFromCache(r.fromCache); })
-      .catch(console.warn)
+      .catch((e) => captureError(e, { context: "fetchSurahList" }))
       .finally(() => setLoading(false));
   }, []);
 
@@ -543,7 +546,7 @@ function QuranTab({ colors }: { colors: C }) {
 
 // ─── Surah Reader Modal ──────────────────────────────────────────────────────
 
-function SurahReaderModal({ surahNumber, onClose, colors }: { surahNumber: number; onClose: () => void; colors: C }) {
+function SurahReaderModal({ surahNumber, onClose, colors }: { surahNumber: number; onClose: () => void; colors: Colors }) {
   const [lang, setLang] = useState<Lang>("id");
   const [showTafsir, setShowTafsir] = useState(false);
   const [ayahs, setAyahs] = useState<Ayah[]>([]);
@@ -565,7 +568,7 @@ function SurahReaderModal({ surahNumber, onClose, colors }: { surahNumber: numbe
           teksEnglish: enR.data[a.nomorAyat] ?? "",
           tafsir: tafsirR.data[a.nomorAyat] ?? "",
         })));
-      } catch (e) { console.warn("Surah load error:", e); }
+      } catch (e) { captureError(e, { context: "Surah load error" }); }
       finally { setLoading(false); }
     }
     load();
@@ -639,7 +642,7 @@ const MILESTONE_META: Record<MilestoneStatus, { label: string; color: string; bg
   done:       { label: "Hafal ✓",    color: "#1D9E75", bg: "#F0FBF7", icon: "●" },
 };
 
-function HafalanTab({ colors, userId }: { colors: C; userId: string }) {
+function HafalanTab({ colors, userId }: { colors: Colors; userId: string }) {
   const [plan,        setPlan]        = useState<HafalanPlan | null>(null);
   const [loading,     setLoading]     = useState(true);
   const [showPicker,  setShowPicker]  = useState(false);
@@ -670,7 +673,7 @@ function HafalanTab({ colors, userId }: { colors: C; userId: string }) {
     setSurahLoading(true);
     fetchSurahList()
       .then((r) => setSurahs(r.data))
-      .catch(console.warn)
+      .catch((e) => captureError(e, { context: "fetchSurahList picker" }))
       .finally(() => setSurahLoading(false));
   }, [showPicker]);
 
@@ -684,7 +687,7 @@ function HafalanTab({ colors, userId }: { colors: C; userId: string }) {
           (a) => a.nomorAyat >= detailOpen.from && a.nomorAyat <= detailOpen.to
         ));
       })
-      .catch(console.warn)
+      .catch((e) => captureError(e, { context: "fetchSurahDetail" }))
       .finally(() => setAyahLoading(false));
   }, [detailOpen?.id]);
 
@@ -1211,7 +1214,7 @@ function HafalanTab({ colors, userId }: { colors: C; userId: string }) {
 
 // ─── Shared components ───────────────────────────────────────────────────────
 
-function LangToggle({ lang, setLang, colors }: { lang: Lang; setLang: (l: Lang) => void; colors: C }) {
+function LangToggle({ lang, setLang, colors }: { lang: Lang; setLang: (l: Lang) => void; colors: Colors }) {
   return (
     <View style={[S.langRow, { backgroundColor: colors.bgSubtle, borderRadius: 10 }]}>
       <Pressable
@@ -1237,7 +1240,7 @@ function SectionCard({
   badge?: string;
   badgeColor?: string;
   children: React.ReactNode;
-  colors: C;
+  colors: Colors;
 }) {
   return (
     <View style={[S.sectionCard, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>

@@ -8,7 +8,7 @@
  * Key: salah_tracker_<userId>
  */
 
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { createUserStore } from "../utils/storage";
 import { supabase } from "../api/supabase";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -44,9 +44,7 @@ export type SalahRecord = {
 
 // ─── Storage ──────────────────────────────────────────────────────────────────
 
-function storageKey(userId: string) {
-  return `salah_tracker_${userId}`;
-}
+const store = createUserStore<SalahRecord>("salah_tracker");
 
 function todayISO(): string {
   const d = new Date();
@@ -55,18 +53,13 @@ function todayISO(): string {
 
 /** Load today's record, resetting if the stored date is in the past. */
 export async function loadTodaySalah(userId: string): Promise<SalahRecord> {
-  try {
-    const raw = await AsyncStorage.getItem(storageKey(userId));
-    if (raw) {
-      const stored: SalahRecord = JSON.parse(raw);
-      if (stored.date === todayISO()) return stored;
-    }
-  } catch { /* fall through to fresh record */ }
+  const stored = await store.load(userId);
+  if (stored && stored.date === todayISO()) return stored;
   return { date: todayISO(), completed: {}, bonusAwarded: false };
 }
 
 async function saveSalah(userId: string, record: SalahRecord): Promise<void> {
-  await AsyncStorage.setItem(storageKey(userId), JSON.stringify(record));
+  return store.save(userId, record);
 }
 
 // ─── Prayer window helpers ───────────────────────────────────────────────────

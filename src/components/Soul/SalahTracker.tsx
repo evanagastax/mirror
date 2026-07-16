@@ -9,9 +9,11 @@ import {
   isPrayerAvailable, getPrayerStatus,
 } from "../../services/salahTracker";
 import { useQueryClient } from "@tanstack/react-query";
+import { invalidateCore } from "../../hooks/invalidate";
+import { PILLAR_COLORS } from "../../theme/pillars";
 
-const SOUL_COLOR = "#1D9E75";
-const SOUL_BG    = "#F0FBF7";
+const SOUL_COLOR = PILLAR_COLORS.soul.primary;
+const SOUL_BG    = PILLAR_COLORS.soul.bg;
 const SOUL_DARK  = "#0B7A5C";
 
 type C = {
@@ -48,9 +50,7 @@ export function SalahTracker({
     try {
       const updated = await togglePrayer(userId, prayer, record);
       setRecord(updated);
-      queryClient.invalidateQueries({ queryKey: ["pillars", userId] });
-      queryClient.invalidateQueries({ queryKey: ["logs",    userId] });
-      queryClient.invalidateQueries({ queryKey: ["streak",  userId] });
+      invalidateCore(queryClient, userId);
     } finally {
       setPending(null);
     }

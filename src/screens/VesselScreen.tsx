@@ -19,9 +19,11 @@ import { OfflineBanner } from "../components/OfflineBanner";
 import { loadProfile, VesselProfile, GOAL_META } from "../services/vesselProfile";
 import { calcBmi, bmiCategory, BMI_META, calcBmr, calcTdee, targetCalories, estimateSetCalories, recommendedVolume } from "../services/vesselCalc";
 import { loadSavedPlan, addExerciseToPlanDay, SavedPlan } from "../services/vesselPlan";
+import { PILLAR_COLORS } from "../theme/pillars";
+import type { Colors } from "../types";
 
-const VESSEL_COLOR = "#D85A30";
-const VESSEL_BG    = "#FEF3EE";
+const VESSEL_COLOR = PILLAR_COLORS.vessel.primary;
+const VESSEL_BG    = PILLAR_COLORS.vessel.bg;
 
 const PART_META: Record<string, { emoji: string; label: string; desc: string }> = {
   chest:          { emoji: "💪", label: "Chest",       desc: "Pecs, push movements" },
@@ -60,7 +62,7 @@ const EQUIP_FILTERS: { label: string; icon: string; apiValue: string }[] = [
 const GRID_PARTS = BODY_PARTS as readonly string[];
 
 type SetEntry = { sets: string; reps: string; weight: string };
-type C = ReturnType<typeof useThemeStore.getState>["colors"];
+// type C removed — use Colors from ../types
 
 function cap(s: string) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
@@ -152,7 +154,7 @@ export default function VesselScreen() {
 // ─── Category menu (default view) ────────────────────────────────────────────
 
 function CategoryMenu({ colors, onSelect, profile, router }: {
-  colors: C;
+  colors: Colors;
   onSelect: (part: string) => void;
   profile: VesselProfile | null;
   router: ReturnType<typeof useRouter>;
@@ -243,7 +245,7 @@ function CategoryMenu({ colors, onSelect, profile, router }: {
 // ─── Exercise list (drill-down view) ─────────────────────────────────────────
 
 function ExerciseList({ bodyPart, userId, colors, isDark }: {
-  bodyPart: string; userId: string; colors: C; isDark: boolean;
+  bodyPart: string; userId: string; colors: Colors; isDark: boolean;
 }) {
   const [search,          setSearch]          = useState("");
   const [debounced,       setDebounced]       = useState("");
@@ -414,7 +416,7 @@ function ExerciseList({ bodyPart, userId, colors, isDark }: {
 // ─── Exercise card ────────────────────────────────────────────────────────────
 
 function ExerciseCard({ exercise, onPress, colors }: {
-  exercise: Exercise; onPress: () => void; colors: C;
+  exercise: Exercise; onPress: () => void; colors: Colors;
 }) {
   return (
     <Pressable
@@ -455,7 +457,7 @@ function LogModal({ exercise, visible, userId, plan, onAddedToPlan, onClose, col
   exercise: Exercise; visible: boolean; userId: string;
   plan: SavedPlan | null;
   onAddedToPlan: (updated: SavedPlan) => void;
-  onClose: () => void; colors: C; isDark: boolean;
+  onClose: () => void; colors: Colors; isDark: boolean;
 }) {
   const createLog = useCreateLog(userId);
   const isCardio  = exercise.bodyParts.includes("cardio") ||

@@ -1,15 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../api/supabase";
-
-export type StreakResult = {
-  current: number;   // current consecutive day streak
-  longest: number;   // all-time longest streak
-  lastLogDate: string | null;
-  loggedToday: boolean;
-};
+import type { StreakResult } from "../types";
+import { qk } from "./queryKeys";
+import { MS_PER_DAY } from "../utils/format";
 
 async function fetchStreak(userId: string): Promise<StreakResult> {
-  // Fetch both logs (soul/vessel/impact) and transactions (stewardship) in parallel
   const [logsRes, txRes] = await Promise.all([
     supabase
       .from("logs")
@@ -32,15 +27,13 @@ async function fetchStreak(userId: string): Promise<StreakResult> {
     return { current: 0, longest: 0, lastLogDate: null, loggedToday: false };
   }
 
-  // Collect unique calendar dates (local timezone)
   const dates = Array.from(
     new Set(allTimestamps.map((ts) => new Date(ts).toLocaleDateString("en-CA")))
-  ).sort((a, b) => b.localeCompare(a)); // descending
+  ).sort((a, b) => b.localeCompare(a));
 
   const today     = new Date().toLocaleDateString("en-CA");
-  const yesterday = new Date(Date.now() - 86400000).toLocaleDateString("en-CA");
+  const yesterday = new Date(Date.now() - MS_PER_DAY).toLocaleDateString("en-CA");
 
-  // Current streak — must start from today or yesterday to be active
   let current = 0;
   if (dates[0] === today || dates[0] === yesterday) {
     let prev = dates[0];
@@ -48,19 +41,18 @@ async function fetchStreak(userId: string): Promise<StreakResult> {
     for (let i = 1; i < dates.length; i++) {
       const prevDate = new Date(prev);
       const curDate  = new Date(dates[i]);
-      const diff     = (prevDate.getTime() - curDate.getTime()) / 86400000;
+      const diff     = (prevDate.getTime() - curDate.getTime()) / MS_PER_DAY;
       if (diff === 1) { current++; prev = dates[i]; }
       else break;
     }
   }
 
-  // Longest streak — scan all dates
   let longest = 1;
   let run     = 1;
   for (let i = 1; i < dates.length; i++) {
     const prevDate = new Date(dates[i - 1]);
     const curDate  = new Date(dates[i]);
-    const diff     = (prevDate.getTime() - curDate.getTime()) / 86400000;
+    const diff     = (prevDate.getTime() - curDate.getTime()) / MS_PER_DAY;
     if (diff === 1) { run++; if (run > longest) longest = run; }
     else run = 1;
   }
@@ -75,7 +67,7 @@ async function fetchStreak(userId: string): Promise<StreakResult> {
 
 export function useStreak(userId: string | undefined) {
   return useQuery({
-    queryKey: ["streak", userId],
+    queryKey: qk.streak(userId as string),
     queryFn:  () => fetchStreak(userId!),
     enabled:  !!userId,
     staleTime: 60_000,

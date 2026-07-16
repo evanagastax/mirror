@@ -1,20 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../api/supabase";
-
-export type Transaction = {
-  id: string;
-  amount: number;
-  category: "investment" | "consumption" | "leak";
-  note: string | null;
-  created_at: string;
-};
-
-export type LedgerSummary = {
-  totalInvestment: number;
-  totalConsumption: number;
-  totalLeak: number;
-  netScore: number;
-};
+import type { Transaction, LedgerSummary } from "../types";
+import { qk } from "./queryKeys";
+import { invalidateLedger } from "./invalidate";
 
 async function fetchTransactions(userId: string): Promise<Transaction[]> {
   const { data, error } = await supabase
@@ -29,7 +17,7 @@ async function fetchTransactions(userId: string): Promise<Transaction[]> {
 
 export function useLedger(userId: string | undefined) {
   return useQuery({
-    queryKey: ["ledger", userId],
+    queryKey: qk.ledger(userId as string),
     queryFn: () => fetchTransactions(userId as string),
     enabled: !!userId,
     staleTime: 1000 * 30,
@@ -43,11 +31,7 @@ export function useDeleteTransaction(userId: string) {
       const { error } = await supabase.from("transactions").delete().eq("id", id).eq("user_id", userId);
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ledger",  userId] });
-      queryClient.invalidateQueries({ queryKey: ["pillars", userId] });
-      queryClient.invalidateQueries({ queryKey: ["streak",  userId] });
-    },
+    onSuccess: () => invalidateLedger(queryClient, userId),
   });
 }
 

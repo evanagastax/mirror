@@ -3,8 +3,8 @@
  * Shared between VesselScreen (add exercise) and VesselPlanScreen (generate/view).
  */
 
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Exercise } from "./exerciseDb";
+import { createUserStore } from "../utils/storage";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -29,28 +29,18 @@ export type SavedPlan = {
 
 // ─── Storage ──────────────────────────────────────────────────────────────────
 
-export function planKey(userId: string) {
-  return `vessel_plan_${userId}`;
-}
+const store = createUserStore<SavedPlan>("vessel_plan");
 
 export async function loadSavedPlan(userId: string): Promise<SavedPlan | null> {
-  try {
-    const raw = await AsyncStorage.getItem(planKey(userId));
-    return raw ? (JSON.parse(raw) as SavedPlan) : null;
-  } catch {
-    return null;
-  }
+  return store.load(userId);
 }
 
-export async function savePlanToStorage(
-  userId: string,
-  plan: SavedPlan
-): Promise<void> {
-  await AsyncStorage.setItem(planKey(userId), JSON.stringify(plan));
+export async function savePlanToStorage(userId: string, plan: SavedPlan): Promise<void> {
+  return store.save(userId, plan);
 }
 
 export async function deleteSavedPlan(userId: string): Promise<void> {
-  await AsyncStorage.removeItem(planKey(userId));
+  return store.remove(userId);
 }
 
 /**

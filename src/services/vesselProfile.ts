@@ -8,7 +8,7 @@
  * Key: vessel_profile_<userId>
  */
 
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { createUserStore } from "../utils/storage";
 
 export type Sex = "male" | "female";
 
@@ -64,24 +64,13 @@ export type VesselProfile = {
   updatedAt: string;
 };
 
-function storageKey(userId: string) {
-  return `vessel_profile_${userId}`;
-}
+const store = createUserStore<VesselProfile>("vessel_profile");
 
 export async function loadProfile(userId: string): Promise<VesselProfile | null> {
-  try {
-    const raw = await AsyncStorage.getItem(storageKey(userId));
-    return raw ? (JSON.parse(raw) as VesselProfile) : null;
-  } catch {
-    return null;
-  }
+  return store.load(userId);
 }
 
 export async function saveProfile(userId: string, profile: VesselProfile): Promise<void> {
   const updated = { ...profile, updatedAt: new Date().toISOString() };
-  await AsyncStorage.setItem(storageKey(userId), JSON.stringify(updated));
-}
-
-export async function deleteProfile(userId: string): Promise<void> {
-  await AsyncStorage.removeItem(storageKey(userId));
+  return store.save(userId, updated);
 }

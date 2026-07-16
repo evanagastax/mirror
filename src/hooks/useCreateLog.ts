@@ -1,20 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../api/supabase";
-
-export type NewLog = {
-  user_id: string;
-  pillar_type: "soul" | "vessel" | "impact";
-  value: number;
-  evidence_url?: string;
-  metadata?: Record<string, unknown>;
-};
-
-export type NewTransaction = {
-  user_id: string;
-  amount: number;
-  category: "investment" | "consumption" | "leak";
-  note?: string;
-};
+import type { NewLog, NewTransaction } from "../types";
+import { invalidateCore, invalidateLedger } from "./invalidate";
 
 async function insertLog(payload: NewLog) {
   const { error } = await supabase.from("logs").insert(payload);
@@ -26,30 +13,20 @@ async function insertTransaction(payload: NewTransaction) {
   if (error) throw error;
 }
 
-// Hook for soul / vessel / impact logs
 export function useCreateLog(userId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: Omit<NewLog, "user_id">) =>
       insertLog({ ...payload, user_id: userId }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["pillars", userId] });
-      queryClient.invalidateQueries({ queryKey: ["logs",    userId] });
-      queryClient.invalidateQueries({ queryKey: ["streak",  userId] });
-    },
+    onSuccess: () => invalidateCore(queryClient, userId),
   });
 }
 
-// Hook for stewardship transactions
 export function useCreateTransaction(userId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: Omit<NewTransaction, "user_id">) =>
       insertTransaction({ ...payload, user_id: userId }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["pillars", userId] });
-      queryClient.invalidateQueries({ queryKey: ["ledger",  userId] });
-      queryClient.invalidateQueries({ queryKey: ["streak",  userId] });
-    },
+    onSuccess: () => invalidateLedger(queryClient, userId),
   });
 }

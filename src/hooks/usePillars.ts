@@ -1,13 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../api/supabase";
-
-export type Pillars = {
-  soul: number;
-  vessel: number;
-  impact: number;
-  stewardship: number;
-  updated_at: string;
-};
+import type { Pillars } from "../types";
+import { qk } from "./queryKeys";
 
 async function fetchPillars(userId: string): Promise<Pillars> {
   const { data, error } = await supabase
@@ -22,10 +16,9 @@ async function fetchPillars(userId: string): Promise<Pillars> {
 
 export function usePillars(userId: string | undefined) {
   return useQuery({
-    queryKey: ["pillars", userId],
+    queryKey: qk.pillars(userId as string),
     queryFn: () => fetchPillars(userId as string),
     enabled: !!userId,
-    // Refetch every 10 seconds so rings update after logging
     refetchInterval: 10000,
     staleTime: 0,
   });

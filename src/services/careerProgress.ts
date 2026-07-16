@@ -4,7 +4,7 @@
  * Key: career_progress_<userId>
  */
 
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { createUserStore } from "../utils/storage";
 import { CareerRoadmap, allTopicIds } from "../data/careerRoadmaps";
 
 export type TopicStatus = "todo" | "in_progress" | "done";
@@ -19,17 +19,14 @@ export type RoadmapProgress = {
 
 export type AllProgress = Record<string, RoadmapProgress>;
 
-function key(userId: string) { return `career_progress_${userId}`; }
+const store = createUserStore<AllProgress>("career_progress", {});
 
 export async function loadAllProgress(userId: string): Promise<AllProgress> {
-  try {
-    const raw = await AsyncStorage.getItem(key(userId));
-    return raw ? JSON.parse(raw) : {};
-  } catch { return {}; }
+  return (await store.load(userId)) ?? {};
 }
 
 export async function saveAllProgress(userId: string, data: AllProgress): Promise<void> {
-  await AsyncStorage.setItem(key(userId), JSON.stringify(data));
+  return store.save(userId, data);
 }
 
 export function initRoadmapProgress(roadmap: CareerRoadmap): RoadmapProgress {

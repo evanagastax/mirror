@@ -5,7 +5,7 @@
  * Key: stewardship_budget_<userId>
  */
 
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { createUserStore } from "../utils/storage";
 
 export type BudgetGoals = {
   /** Max monthly spend on consumption (Rp) — 0 = no limit */
@@ -27,17 +27,10 @@ export const DEFAULT_BUDGET: BudgetGoals = {
   updatedAt: new Date().toISOString(),
 };
 
-function key(userId: string) {
-  return `stewardship_budget_${userId}`;
-}
+const store = createUserStore<BudgetGoals>("stewardship_budget");
 
 export async function loadBudget(userId: string): Promise<BudgetGoals> {
-  try {
-    const raw = await AsyncStorage.getItem(key(userId));
-    return raw ? (JSON.parse(raw) as BudgetGoals) : { ...DEFAULT_BUDGET };
-  } catch {
-    return { ...DEFAULT_BUDGET };
-  }
+  return (await store.load(userId)) ?? { ...DEFAULT_BUDGET };
 }
 
 export async function saveBudget(
@@ -45,5 +38,5 @@ export async function saveBudget(
   budget: Omit<BudgetGoals, "updatedAt">
 ): Promise<void> {
   const data: BudgetGoals = { ...budget, updatedAt: new Date().toISOString() };
-  await AsyncStorage.setItem(key(userId), JSON.stringify(data));
+  return store.save(userId, data);
 }

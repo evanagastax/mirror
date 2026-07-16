@@ -1,28 +1,24 @@
 import React, { useState } from "react";
 import {
   View, Text, ScrollView, Pressable,
-  ActivityIndicator, StyleSheet, RefreshControl, Linking,
+  ActivityIndicator, StyleSheet, RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
 import { useAuthStore } from "../store/authStore";
 import { useThemeStore } from "../store/themeStore";
-import { useLogs, Log } from "../hooks/useLogs";
+import { useLogs } from "../hooks/useLogs";
 import { usePillars } from "../hooks/usePillars";
 import { scoreToLevel } from "../utils/pillarLevel";
+import { PILLAR_COLORS } from "../theme/pillars";
+import { openSafeUrl } from "../utils/url";
+import { formatDate, formatTime } from "../utils/format";
+import type { Log, Colors } from "../types";
+import { StatChip } from "../components/ui/StatChip";
 
-const COLOR = "#378ADD";
-const BG    = "#F0F7FE";
-
-type C = ReturnType<typeof useThemeStore.getState>["colors"];
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
-}
-function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
-}
+const COLOR = PILLAR_COLORS.impact.primary;
+const BG    = PILLAR_COLORS.impact.bg;
 
 function groupByDate(logs: Log[]) {
   const groups: Record<string, Log[]> = {};
@@ -142,7 +138,7 @@ export default function ImpactScreen() {
   );
 }
 
-function ImpactRow({ log, colors, last }: { log: Log; colors: C; last: boolean }) {
+function ImpactRow({ log, colors, last }: { log: Log; colors: Colors; last: boolean }) {
   const meta  = log.metadata as any;
   // prefer explicit title, fall back to description, then a generic label
   const title = meta?.title || meta?.description || "Impact activity";
@@ -176,7 +172,7 @@ function ImpactRow({ log, colors, last }: { log: Log; colors: C; last: boolean }
       <View style={S.rowRight}>
         <Text style={[S.rowTime, { color: colors.textDisabled }]}>{formatTime(log.created_at)}</Text>
         {log.evidence_url ? (
-          <Pressable onPress={() => Linking.openURL(log.evidence_url!)}>
+          <Pressable onPress={() => openSafeUrl(log.evidence_url, "evidence link")}>
             <Text style={[S.rowLink, { color: COLOR }]}>↗</Text>
           </Pressable>
         ) : null}
@@ -185,18 +181,11 @@ function ImpactRow({ log, colors, last }: { log: Log; colors: C; last: boolean }
   );
 }
 
-function StatChip({ label, value, color, bg }: { label: string; value: string; color: string; bg: string }) {
-  return (
-    <View style={[S.statChip, { backgroundColor: bg }]}>
-      <Text style={[S.statLabel, { color }]}>{label}</Text>
-      <Text style={[S.statValue, { color }]}>{value}</Text>
-    </View>
-  );
-}
+// ─── Sub-components ───────────────────────────────────────────────────────────
 
 function ActionCard({ icon, label, sub, color, bg, onPress, colors }: {
   icon: string; label: string; sub: string; color: string; bg: string;
-  onPress: () => void; colors: C;
+  onPress: () => void; colors: Colors;
 }) {
   return (
     <Pressable

@@ -3,7 +3,7 @@
  * Pure functions — no side effects, no async.
  */
 
-import { Transaction } from "../hooks/useLedger";
+import type { Transaction } from "../types";
 
 // ─── Monthly trend ─────────────────────────────────────────────────────────────
 

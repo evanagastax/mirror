@@ -13,11 +13,11 @@ import {
   requestNotificationPermission, getNotificationPermissionStatus,
   cancelAllNotifications, notificationsAvailable,
 } from "../services/notificationService";
+import { PILLAR_COLORS } from "../theme/pillars";
+import type { Colors } from "../types";
 
-const ACCENT = "#1D9E75";
-const ACCENT_BG = "#F0FBF7";
-
-type C = ReturnType<typeof useThemeStore.getState>["colors"];
+const ACCENT    = PILLAR_COLORS.soul.primary;
+const ACCENT_BG = PILLAR_COLORS.soul.bg;
 
 export default function NotificationSettingsScreen() {
   const router             = useRouter();
@@ -295,7 +295,7 @@ export default function NotificationSettingsScreen() {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function SectionLabel({ label, colors }: { label: string; colors: C }) {
+function SectionLabel({ label, colors }: { label: string; colors: Colors }) {
   return (
     <Text style={[S.sectionLabel, { color: colors.textMuted }]}>{label}</Text>
   );
@@ -303,7 +303,7 @@ function SectionLabel({ label, colors }: { label: string; colors: C }) {
 
 function SettingRow({ icon, iconBg, title, description, value, onToggle, colors }: {
   icon: string; iconBg: string; title: string; description: string;
-  value: boolean; onToggle: (v: boolean) => void; colors: C;
+  value: boolean; onToggle: (v: boolean) => void; colors: Colors;
 }) {
   return (
     <View style={S.settingRow}>
@@ -331,7 +331,7 @@ function TimeSelector({ hour, minute, onHourChange, onMinuteChange, color, color
   hour: number; minute: number;
   onHourChange: (h: number) => void;
   onMinuteChange: (m: number) => void;
-  color: string; colors: C;
+  color: string; colors: Colors;
 }) {
   function fmt(n: number) { return String(n).padStart(2, "0"); }
   function formatHour(h: number) {

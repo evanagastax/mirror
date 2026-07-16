@@ -20,9 +20,11 @@ import {
   recommendedVolume,
 } from "../services/vesselCalc";
 
-const VESSEL_COLOR = "#D85A30";
-const VESSEL_BG    = "#FEF3EE";
-type C = ReturnType<typeof useThemeStore.getState>["colors"];
+import { PILLAR_COLORS } from "../theme/pillars";
+import type { Colors } from "../types";
+
+const VESSEL_COLOR = PILLAR_COLORS.vessel.primary;
+const VESSEL_BG    = PILLAR_COLORS.vessel.bg;
 
 const ALL_EQUIPMENT = Object.keys(EQUIPMENT_META) as EquipmentKey[];
 
@@ -319,19 +321,19 @@ export default function VesselProfileScreen() {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function SectionLabel({ label, colors }: { label: string; colors: C }) {
+function SectionLabel({ label, colors }: { label: string; colors: Colors }) {
   return (
     <Text style={[S.sectionLabel, { color: colors.textMuted }]}>{label}</Text>
   );
 }
 
-function Divider({ colors }: { colors: C }) {
+function Divider({ colors }: { colors: Colors }) {
   return <View style={[S.divider, { backgroundColor: colors.border }]} />;
 }
 
 function NumberField({ label, value, onChangeText, placeholder, decimal, colors }: {
   label: string; value: string; onChangeText: (v: string) => void;
-  placeholder: string; decimal?: boolean; colors: C;
+  placeholder: string; decimal?: boolean; colors: Colors;
 }) {
   return (
     <View style={S.numField}>

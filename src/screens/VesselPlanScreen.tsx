@@ -20,9 +20,11 @@ import {
   loadSavedPlan, savePlanToStorage, deleteSavedPlan,
 } from "../services/vesselPlan";
 
-const VESSEL_COLOR = "#D85A30";
-const VESSEL_BG    = "#FEF3EE";
-type C = ReturnType<typeof useThemeStore.getState>["colors"];
+import { PILLAR_COLORS } from "../theme/pillars";
+import type { Colors } from "../types";
+
+const VESSEL_COLOR = PILLAR_COLORS.vessel.primary;
+const VESSEL_BG    = PILLAR_COLORS.vessel.bg;
 
 // ─── Day split templates ──────────────────────────────────────────────────────
 
@@ -340,7 +342,7 @@ export default function VesselPlanScreen() {
 // ─── Day detail ───────────────────────────────────────────────────────────────
 
 function DayDetail({ day, dayIndex, profile, colors, onMarkComplete }: {
-  day: PlanDay; dayIndex: number; profile: VesselProfile; colors: C;
+  day: PlanDay; dayIndex: number; profile: VesselProfile; colors: Colors;
   onMarkComplete: () => void;
 }) {
   const vol = recommendedVolume(profile.goal);
@@ -400,7 +402,7 @@ function DayDetail({ day, dayIndex, profile, colors, onMarkComplete }: {
 }
 
 function PlanExerciseCard({ exercise: ex, index, profile, colors }: {
-  exercise: Exercise; index: number; profile: VesselProfile; colors: C;
+  exercise: Exercise; index: number; profile: VesselProfile; colors: Colors;
 }) {
   const vol  = recommendedVolume(profile.goal);
   const kcal = estimateSetCalories(ex.bodyParts, profile.weight, vol.sets);
@@ -477,7 +479,7 @@ function SumStat({ label, value, sub, color }: { label: string; value: string; s
   );
 }
 
-function VBStat({ label, value, colors }: { label: string; value: string; colors: C }) {
+function VBStat({ label, value, colors }: { label: string; value: string; colors: Colors }) {
   return (
     <View style={S.vbStat}>
       <Text style={[S.vbStatValue, { color: colors.textPrimary }]}>{value}</Text>

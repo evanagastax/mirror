@@ -1,14 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../api/supabase";
-
-export type Log = {
-  id: string;
-  pillar_type: "soul" | "vessel" | "impact";
-  value: number;
-  evidence_url: string | null;
-  metadata: Record<string, unknown> | null;
-  created_at: string;
-};
+import type { Log } from "../types";
+import { qk } from "./queryKeys";
+import { invalidateCore } from "./invalidate";
 
 async function fetchLogs(userId: string): Promise<Log[]> {
   const { data, error } = await supabase
@@ -23,7 +17,7 @@ async function fetchLogs(userId: string): Promise<Log[]> {
 
 export function useLogs(userId: string | undefined) {
   return useQuery({
-    queryKey: ["logs", userId],
+    queryKey: qk.logs(userId as string),
     queryFn: () => fetchLogs(userId as string),
     enabled: !!userId,
     staleTime: 1000 * 30,
@@ -37,10 +31,6 @@ export function useDeleteLog(userId: string) {
       const { error } = await supabase.from("logs").delete().eq("id", id).eq("user_id", userId);
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["logs",    userId] });
-      queryClient.invalidateQueries({ queryKey: ["pillars", userId] });
-      queryClient.invalidateQueries({ queryKey: ["streak",  userId] });
-    },
+    onSuccess: () => invalidateCore(queryClient, userId),
   });
 }

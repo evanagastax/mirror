@@ -9,11 +9,11 @@ import { useRouter } from "expo-router";
 import { useAuthStore } from "../store/authStore";
 import { useThemeStore } from "../store/themeStore";
 import { loadBudget, saveBudget, BudgetGoals } from "../services/stewardshipBudget";
+import { PILLAR_COLORS } from "../theme/pillars";
+import type { Colors } from "../types";
 
-const GOLD    = "#BA7517";
-const GOLD_BG = "#FEF9EE";
-
-type C = ReturnType<typeof useThemeStore.getState>["colors"];
+const GOLD    = PILLAR_COLORS.stewardship.primary;
+const GOLD_BG = PILLAR_COLORS.stewardship.bg;
 
 function parseRp(s: string): number {
   return parseFloat(s.replace(/\D/g, "")) || 0;
@@ -183,7 +183,7 @@ function GoalCard({
   icon: string; color: string; bg: string;
   label: string; description: string;
   value: string; onChange: (v: string) => void;
-  placeholder: string; colors: C;
+  placeholder: string; colors: Colors;
 }) {
   return (
     <View style={[S.goalCard, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>

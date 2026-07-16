@@ -4,13 +4,12 @@ import {
   StyleSheet, ActivityIndicator, Animated,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { PILLAR_META } from "../theme/pillars";
 
-const PILLARS = [
-  { key: "soul",        icon: "✦", label: "Soul",        sub: "Prayer, mindfulness & spirit",  color: "#1D9E75", bg: "#F0FBF7" },
-  { key: "vessel",      icon: "⬡", label: "Vessel",      sub: "Fitness, diet & body",           color: "#D85A30", bg: "#FEF3EE" },
-  { key: "impact",      icon: "◈", label: "Impact",      sub: "Career, skills & output",        color: "#378ADD", bg: "#F0F7FE" },
-  { key: "stewardship", icon: "◎", label: "Stewardship", sub: "Wealth, saving & spending",      color: "#BA7517", bg: "#FEF9EE" },
-] as const;
+const PILLARS = PILLAR_META.map((p) => ({
+  ...p,
+  sub: p.hint,
+}));
 
 type PillarKey = typeof PILLARS[number]["key"];
 

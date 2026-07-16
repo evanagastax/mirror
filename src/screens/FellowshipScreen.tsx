@@ -11,15 +11,9 @@ import { useAuthStore } from "../store/authStore";
 import { useThemeStore } from "../store/themeStore";
 import { usePillars } from "../hooks/usePillars";
 import { useGoals } from "../hooks/useGoals";
+import { PILLAR_META, type PillarKey } from "../theme/pillars";
 
 type Privacy = { vessel: boolean; soul: boolean; impact: boolean };
-
-const PILLAR_META = [
-  { key: "soul" as const,        label: "Soul",        color: "#1D9E75", bg: "#F0FBF7", icon: "✦" },
-  { key: "vessel" as const,      label: "Vessel",      color: "#D85A30", bg: "#FEF3EE", icon: "⬡" },
-  { key: "impact" as const,      label: "Impact",      color: "#378ADD", bg: "#F0F7FE", icon: "◈" },
-  { key: "stewardship" as const, label: "Stewardship", color: "#BA7517", bg: "#FAEEDA", icon: "◎" },
-];
 
 export default function ProfileScreen() {
   const userId = useAuthStore((s) => s.userId)!;
@@ -31,7 +25,7 @@ export default function ProfileScreen() {
   const [username, setUsername] = useState("");
   const [editingUsername, setEditingUsername] = useState(false);
   const [newUsername, setNewUsername] = useState("");
-  const [privacy, setPrivacy] = useState<Privacy>({ gym: false, spirit: false, impact: false });
+  const [privacy, setPrivacy] = useState<Privacy>({ vessel: false, soul: false, impact: false });
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);

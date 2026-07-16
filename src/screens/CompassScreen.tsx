@@ -21,47 +21,21 @@ import { useXPToast } from "../hooks/useXPToast";
 import { XPToastContainer } from "../components/XPToast";
 import { OnboardingModal } from "../components/OnboardingModal";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { PILLAR_META, type PillarKey } from "../theme/pillars";
 
 // ─── pillar config ────────────────────────────────────────────────────────────
 
-const PILLARS = [
-  {
-    key: "soul" as const,
-    label: "Soul",
-    subtitle: "Spirit & Devotion",
-    color: "#1D9E75",
-    bg: "#F0FBF7",
-    icon: "✦",
-    route: "/soul",
-  },
-  {
-    key: "vessel" as const,
-    label: "Vessel",
-    subtitle: "Body & Strength",
-    color: "#D85A30",
-    bg: "#FEF3EE",
-    icon: "⬡",
-    route: "/(app)/vessel",
-  },
-  {
-    key: "impact" as const,
-    label: "Impact",
-    subtitle: "Work & Output",
-    color: "#378ADD",
-    bg: "#F0F7FE",
-    icon: "◈",
-    route: "/(app)/impact",
-  },
-  {
-    key: "stewardship" as const,
-    label: "Stewardship",
-    subtitle: "Wealth & Resources",
-    color: "#BA7517",
-    bg: "#FEF9EE",
-    icon: "◎",
-    route: "/(app)/ledger",
-  },
-] as const;
+const PILLARS = PILLAR_META.map((p) => ({
+  ...p,
+  subtitle: p.key === "soul" ? "Spirit & Devotion"
+    : p.key === "vessel" ? "Body & Strength"
+    : p.key === "impact" ? "Work & Output"
+    : "Wealth & Resources",
+  route: p.key === "soul" ? "/soul"
+    : p.key === "vessel" ? "/(app)/vessel"
+    : p.key === "impact" ? "/(app)/impact"
+    : "/(app)/ledger",
+}));
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 

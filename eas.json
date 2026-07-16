@@ -9,20 +9,20 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk",
-        "artifactPath": "android/app/build/outputs/apk/**/*.apk"
+        "applicationArchivePath": "android/app/build/outputs/apk/**/*.apk"
       }
     },
     "preview": {
       "distribution": "internal",
       "android": {
         "buildType": "apk",
-        "artifactPath": "android/app/build/outputs/apk/**/*.apk"
+        "applicationArchivePath": "android/app/build/outputs/apk/**/*.apk"
       }
     },
     "production": {
       "android": {
         "buildType": "app-bundle",
-        "artifactPath": "android/app/build/outputs/bundle/**/*.aab"
+        "applicationArchivePath": "android/app/build/outputs/bundle/**/*.aab"
       }
     }
   },

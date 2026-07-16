@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { BudgetGoals } from "../../services/stewardshipBudget";
-import { Transaction } from "../../hooks/useLedger";
+import type { Transaction } from "../../types";
 import { currentMonthTransactions } from "../../services/stewardshipStats";
 
 const GOLD = "#BA7517";

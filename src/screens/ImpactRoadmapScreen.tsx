@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View, Text, ScrollView, Pressable, StyleSheet,
   ActivityIndicator, Linking, Modal,
@@ -18,9 +18,11 @@ import {
   AllProgress, TopicStatus,
 } from "../services/careerProgress";
 
-const IMPACT_COLOR = "#378ADD";
-const IMPACT_BG    = "#F0F7FE";
-type C = ReturnType<typeof useThemeStore.getState>["colors"];
+import { PILLAR_COLORS } from "../theme/pillars";
+import type { Colors } from "../types";
+
+const IMPACT_COLOR = PILLAR_COLORS.impact.primary;
+const IMPACT_BG    = PILLAR_COLORS.impact.bg;
 
 const LEVEL_META: Record<TopicLevel, { label: string; color: string; bg: string }> = {
   foundation: { label: "Foundation", color: "#1D9E75", bg: "#F0FBF7" },
@@ -192,7 +194,7 @@ export default function ImpactRoadmapScreen() {
 function RoadmapDetail({ roadmap: rm, progress, colors, isDark, onClose, onStatusChange, onReset }: {
   roadmap: CareerRoadmap;
   progress: import("../services/careerProgress").RoadmapProgress | undefined;
-  colors: C; isDark: boolean;
+  colors: Colors; isDark: boolean;
   onClose: () => void;
   onStatusChange: (topicId: string, status: TopicStatus) => void;
   onReset: () => void;
@@ -400,7 +402,7 @@ function RoadmapDetail({ roadmap: rm, progress, colors, isDark, onClose, onStatu
 // ─── Topic detail bottom sheet ────────────────────────────────────────────────
 
 function TopicSheet({ topic, status, colors, isDark, onClose, onStatusChange }: {
-  topic: Topic; status: TopicStatus; colors: C; isDark: boolean;
+  topic: Topic; status: TopicStatus; colors: Colors; isDark: boolean;
   onClose: () => void;
   onStatusChange: (s: TopicStatus) => void;
 }) {
