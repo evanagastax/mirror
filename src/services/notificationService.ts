@@ -24,17 +24,19 @@ import { Platform } from "react-native";
 
 let Notifications: typeof import("expo-notifications") | null = null;
 try {
-  Notifications = require("expo-notifications");
-  Notifications!.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldPlaySound: true,
-      shouldSetBadge: false,
-      shouldShowBanner: true,
-      shouldShowList: true,
-    }),
-  });
+  // Skip on web — expo-notifications stubs exist but methods throw at runtime
+  if (Platform.OS !== "web") {
+    Notifications = require("expo-notifications");
+    Notifications!.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+        shouldShowBanner: true,
+        shouldShowList: true,
+      }),
+    });
+  }
 } catch {
-  // expo-notifications not available in this environment (e.g. Expo Go Android SDK 53+)
   Notifications = null;
 }
 
