@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import {
   View, Text, ScrollView, Pressable,
-  ActivityIndicator, StyleSheet, RefreshControl,
+  StyleSheet, RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
@@ -21,6 +21,7 @@ import { PILLAR_COLORS, CAT_META } from "../theme/pillars";
 import { formatDate, formatTime, formatRp } from "../utils/format";
 import type { Transaction, Colors } from "../types";
 import { StatChip } from "../components/ui/StatChip";
+import { LedgerSkeleton } from "../components/skeletons";
 
 const GOLD    = PILLAR_COLORS.stewardship.primary;
 const GOLD_BG = PILLAR_COLORS.stewardship.bg;
@@ -70,7 +71,9 @@ export default function LedgerScreen() {
     return (
       <SafeAreaView style={[S.root, { backgroundColor: colors.bg }]} edges={["top"]}>
         <StatusBar style={isDark ? "light" : "dark"} />
-        <View style={S.center}><ActivityIndicator color={GOLD} size="large" /></View>
+        <ScrollView style={S.flex} contentContainerStyle={S.content} showsVerticalScrollIndicator={false}>
+          <LedgerSkeleton />
+        </ScrollView>
       </SafeAreaView>
     );
   }

@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback } from "react";
 import {
   View, Text, ScrollView, Pressable,
-  ActivityIndicator, StyleSheet, RefreshControl, Alert,
+  StyleSheet, RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
@@ -18,6 +18,10 @@ import { PILLAR_META_MAP, CAT_META, PILLAR_FILTERS, type PillarKey, type PillarF
 import { formatDate, formatTime, formatRp } from "../utils/format";
 import type { Log, Transaction, Colors } from "../types";
 import { StatChip } from "../components/ui/StatChip";
+import { LogHistorySkeleton } from "../components/skeletons";
+import { Snackbar } from "../components/Snackbar";
+import { useUndoableDelete } from "../hooks/useUndoableDelete";
+import { DATE_RANGES, dateRangeBounds, type DateRange } from "../utils/dateRange";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -75,16 +79,26 @@ export default function LogHistoryScreen() {
   const userId             = useAuthStore((s) => s.userId);
   const { isDark, colors } = useThemeStore();
 
-  const { data: logs,         isLoading: logsLoading,   isError: logsError,   refetch: refetchLogs,   isRefetching: logsRefetching }   = useLogs(userId);
-  const { data: transactions, isLoading: txLoading,     isError: txError,     refetch: refetchTx,     isRefetching: txRefetching }     = useLedger(userId);
+  const [filter, setFilter] = useState<PillarFilter>("all");
+  const [dateRange, setDateRange] = useState<DateRange>("all");
+  const dateBounds = useMemo(() => dateRangeBounds(dateRange), [dateRange]);
+
+  const { data: logs,         isLoading: logsLoading,   isError: logsError,   refetch: refetchLogs,   isRefetching: logsRefetching }   = useLogs(userId, dateBounds);
+  const { data: transactions, isLoading: txLoading,     isError: txError,     refetch: refetchTx,     isRefetching: txRefetching }     = useLedger(userId, dateBounds);
   const deleteLog         = useDeleteLog(userId ?? "");
   const deleteTransaction = useDeleteTransaction(userId ?? "");
   const { data: streak }  = useStreak(userId);
 
-  const [filter, setFilter] = useState<PillarFilter>("all");
+  const { requestDelete: requestLogDelete, snackbar: logSnackbar, dismissSnackbar: dismissLogSnackbar } =
+    useUndoableDelete({ onDelete: (id) => deleteLog.mutate(id) });
+  const { requestDelete: requestTxDelete, snackbar: txSnackbar, dismissSnackbar: dismissTxSnackbar } =
+    useUndoableDelete({ onDelete: (id) => deleteTransaction.mutate(id) });
+  const snackbar = logSnackbar ?? txSnackbar;
+  const dismissSnackbar = logSnackbar ? dismissLogSnackbar : dismissTxSnackbar;
 
   // Persist filter selection so it survives tab switches and app restarts
   const FILTER_KEY = `activity_filter_${userId}`;
+  const DATE_KEY = `activity_date_${userId}`;
 
   useFocusEffect(useCallback(() => {
     AsyncStorage.getItem(FILTER_KEY).then((saved) => {
@@ -92,11 +106,21 @@ export default function LogHistoryScreen() {
         setFilter(saved as PillarFilter);
       }
     });
-  }, [FILTER_KEY]));
+    AsyncStorage.getItem(DATE_KEY).then((saved) => {
+      if (saved && DATE_RANGES.some((r) => r.key === saved)) {
+        setDateRange(saved as DateRange);
+      }
+    });
+  }, [FILTER_KEY, DATE_KEY]));
 
   function handleSetFilter(f: PillarFilter) {
     setFilter(f);
     AsyncStorage.setItem(FILTER_KEY, f);
+  }
+
+  function handleSetDateRange(r: DateRange) {
+    setDateRange(r);
+    AsyncStorage.setItem(DATE_KEY, r);
   }
 
   const isLoading   = logsLoading || txLoading;
@@ -140,9 +164,9 @@ export default function LogHistoryScreen() {
     return (
       <SafeAreaView style={[S.flex, { backgroundColor: colors.bg }]} edges={["top"]}>
         <StatusBar style={isDark ? "light" : "dark"} />
-        <View style={S.center}>
-          <ActivityIndicator color={colors.textPrimary} size="large" />
-        </View>
+        <ScrollView style={S.flex} contentContainerStyle={S.content} showsVerticalScrollIndicator={false}>
+          <LogHistorySkeleton />
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -227,6 +251,38 @@ export default function LogHistoryScreen() {
           })}
         </ScrollView>
 
+        {/* ── Date range pills ── */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={S.dateRow}
+        >
+          {DATE_RANGES.map((r) => {
+            const active = dateRange === r.key;
+            return (
+              <Pressable
+                key={r.key}
+                onPress={() => handleSetDateRange(r.key)}
+                style={[
+                  S.datePill,
+                  { borderColor: colors.border },
+                  active && { backgroundColor: colors.textPrimary, borderColor: colors.textPrimary },
+                ]}
+              >
+                <Text
+                  style={[
+                    S.dateText,
+                    { color: colors.textMuted },
+                    active && { color: colors.bg, fontWeight: "700" },
+                  ]}
+                >
+                  {r.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+
         {/* ── Activity list ── */}
         {grouped.length === 0 ? (
           <View style={S.emptyWrap}>
@@ -251,7 +307,7 @@ export default function LogHistoryScreen() {
                       log={item.data}
                       colors={colors}
                       last={idx === dayItems.length - 1}
-                      onDelete={() => deleteLog.mutate(item.data.id)}
+                      onDelete={() => requestLogDelete(item.data.id, `Deleted "${getLogTitle(item.data)}"`)}
                     />
                   ) : (
                     <TransactionRow
@@ -259,7 +315,7 @@ export default function LogHistoryScreen() {
                       tx={item.data}
                       colors={colors}
                       last={idx === dayItems.length - 1}
-                      onDelete={() => deleteTransaction.mutate(item.data.id)}
+                      onDelete={() => requestTxDelete(item.data.id, `Deleted "${item.data.note ?? item.data.category}"`)}
                     />
                   )
                 )}
@@ -268,6 +324,14 @@ export default function LogHistoryScreen() {
           ))
         )}
       </ScrollView>
+      {snackbar && (
+        <Snackbar
+          message={snackbar.message}
+          action="Undo"
+          onAction={snackbar.onUndo}
+          onDismiss={dismissSnackbar}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -289,14 +353,7 @@ function LogRow({
   if (!meta) return null;
 
   function handleLongPress() {
-    Alert.alert(
-      "Delete entry?",
-      `Remove "${getLogTitle(log)}" from your activity log? This cannot be undone.`,
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "Delete", style: "destructive", onPress: onDelete },
-      ]
-    );
+    onDelete();
   }
 
   return (
@@ -347,14 +404,7 @@ function TransactionRow({
   const catMeta = CAT_META[tx.category];
 
   function handleLongPress() {
-    Alert.alert(
-      "Delete transaction?",
-      `Remove "${tx.note ?? tx.category}" (${formatRp(tx.amount)})? This cannot be undone.`,
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "Delete", style: "destructive", onPress: onDelete },
-      ]
-    );
+    onDelete();
   }
 
   return (
@@ -414,9 +464,14 @@ const S = StyleSheet.create({
   statValue: { fontSize: 13, fontWeight: "700" },
 
   // Filters
-  filterRow: { gap: 8, paddingBottom: 16 },
+  filterRow: { gap: 8, paddingBottom: 12 },
   filterPill: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 99, borderWidth: 1 },
   filterText: { fontSize: 13 },
+
+  // Date range
+  dateRow: { gap: 8, paddingBottom: 16 },
+  datePill: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 99, borderWidth: 1 },
+  dateText: { fontSize: 12 },
 
   // Empty
   emptyWrap: { alignItems: "center", paddingVertical: 60, gap: 6 },

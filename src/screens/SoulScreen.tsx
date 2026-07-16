@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   View, Text, ScrollView, Pressable, ActivityIndicator,
   StyleSheet, FlatList, Modal, TextInput, RefreshControl, Alert,
@@ -18,6 +18,10 @@ import {
   DuaCategory, Dua, DzikirCategory, Dzikir, AsmaulHusna,
 } from "../services/duaData";
 import { OfflineBanner } from "../components/OfflineBanner";
+import { loadPrayerLocation } from "../utils/prayerLocation";
+import { useLogs } from "../hooks/useLogs";
+import { buildPillarTrend } from "../services/pillarTrend";
+import { PillarTrendChart } from "../components/PillarTrendChart";
 import {
   loadPlan, savePlan, deletePlan, buildPlan, updateMilestone,
   planProgress, HafalanPlan, HafalanMilestone, MilestoneStatus,
@@ -120,12 +124,15 @@ function DailyTab({ colors, userId }: { colors: Colors; userId: string }) {
   const [refreshing, setRefreshing] = useState(false);
   const [fromCache, setFromCache] = useState(false);
   const dua = getDailyDua();
+  const { data: logs } = useLogs(userId);
+  const soulTrend = useMemo(() => buildPillarTrend(logs ?? [], "soul", 6), [logs]);
 
   const load = useCallback(async () => {
     try {
+      const loc = await loadPrayerLocation();
       const [ayahResult, timesResult] = await Promise.all([
         fetchDailyAyah(),
-        fetchPrayerTimes(-7.9666, 112.6326),
+        fetchPrayerTimes(loc.latitude, loc.longitude),
       ]);
       setAyah(ayahResult.data);
       setPrayerTimes(timesResult.data);
@@ -198,6 +205,17 @@ function DailyTab({ colors, userId }: { colors: Colors; userId: string }) {
           {lang === "id" ? dua.translation_id : dua.translation_en}
         </Text>
       </SectionCard>
+
+      {/* Soul Trend */}
+      {soulTrend.some((b) => b.total > 0) && (
+        <PillarTrendChart
+          data={soulTrend}
+          color={SOUL_COLOR}
+          title="Soul Trend"
+          unit="min"
+          colors={colors}
+        />
+      )}
     </ScrollView>
   );
 }

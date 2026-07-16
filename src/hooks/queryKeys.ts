@@ -7,8 +7,8 @@
 
 export const qk = {
   pillars:  (uid: string)               => ["pillars", uid] as const,
-  logs:     (uid: string)               => ["logs", uid] as const,
-  ledger:   (uid: string)               => ["ledger", uid] as const,
+  logs:     (uid: string, filters?: Record<string, unknown>) => ["logs", uid, filters ?? {}] as const,
+  ledger:   (uid: string, filters?: Record<string, unknown>) => ["ledger", uid, filters ?? {}] as const,
   streak:   (uid: string)               => ["streak", uid] as const,
   goals:    (uid: string)               => ["goals", uid] as const,
   exercises: (filters: Record<string, unknown>) => ["exercises", filters] as const,

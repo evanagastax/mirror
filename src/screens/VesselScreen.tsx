@@ -2,7 +2,7 @@ import React, { useState, useCallback, useMemo, useRef, useEffect } from "react"
 import {
   View, Text, ScrollView, FlatList, Pressable, TextInput,
   ActivityIndicator, Modal, Alert, StyleSheet, Image,
-  RefreshControl, KeyboardAvoidingView, Platform,
+  RefreshControl, KeyboardAvoidingView, Platform, InteractionManager,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
@@ -17,6 +17,9 @@ import { scoreToLevel } from "../utils/pillarLevel";
 import { Exercise, BODY_PARTS, prefetchAllExercises } from "../services/exerciseDb";
 import { OfflineBanner } from "../components/OfflineBanner";
 import { loadProfile, VesselProfile, GOAL_META } from "../services/vesselProfile";
+import { useLogs } from "../hooks/useLogs";
+import { buildPillarTrend } from "../services/pillarTrend";
+import { PillarTrendChart } from "../components/PillarTrendChart";
 import { calcBmi, bmiCategory, BMI_META, calcBmr, calcTdee, targetCalories, estimateSetCalories, recommendedVolume } from "../services/vesselCalc";
 import { loadSavedPlan, addExerciseToPlanDay, SavedPlan } from "../services/vesselPlan";
 import { PILLAR_COLORS } from "../theme/pillars";
@@ -79,9 +82,11 @@ export default function VesselScreen() {
   const [profile, setProfile] = useState<VesselProfile | null>(null);
 
   useEffect(() => {
-    // Kick off full library download in the background so it's ready
-    // before the user taps any muscle group
-    prefetchAllExercises().catch(() => {});
+    // Delay until screen transition animation completes
+    const task = InteractionManager.runAfterInteractions(() => {
+      prefetchAllExercises().catch(() => {});
+    });
+    return () => task.cancel();
   }, []);
 
   // Reload profile every time this screen comes into focus so changes
@@ -145,6 +150,7 @@ export default function VesselScreen() {
             onSelect={setActiveCategory}
             profile={profile}
             router={router}
+            userId={userId ?? ""}
           />
       }
     </SafeAreaView>
@@ -153,11 +159,12 @@ export default function VesselScreen() {
 
 // ─── Category menu (default view) ────────────────────────────────────────────
 
-function CategoryMenu({ colors, onSelect, profile, router }: {
+function CategoryMenu({ colors, onSelect, profile, router, userId }: {
   colors: Colors;
   onSelect: (part: string) => void;
   profile: VesselProfile | null;
   router: ReturnType<typeof useRouter>;
+  userId: string;
 }) {
   const bmi    = profile ? calcBmi(profile.weight, profile.height) : null;
   const bmiCat = bmi ? bmiCategory(bmi) : null;
@@ -165,6 +172,8 @@ function CategoryMenu({ colors, onSelect, profile, router }: {
   const bmr    = profile ? calcBmr(profile) : null;
   const tdee   = bmr ? calcTdee(bmr, profile!.daysPerWeek) : null;
   const target = tdee ? targetCalories(tdee, profile!.goal) : null;
+  const { data: logs } = useLogs(userId);
+  const vesselTrend = useMemo(() => buildPillarTrend(logs ?? [], "vessel", 6), [logs]);
 
   return (
     <ScrollView contentContainerStyle={S.menuContent} showsVerticalScrollIndicator={false}>
@@ -212,6 +221,17 @@ function CategoryMenu({ colors, onSelect, profile, router }: {
           <View style={[S.stripDiv, { backgroundColor: bmiM.color + "30" }]} />
           <StripStat label="Goal"        value={GOAL_META[profile.goal].icon + " " + GOAL_META[profile.goal].label} color={bmiM.color} />
         </View>
+      )}
+
+      {/* ── Vessel Trend ── */}
+      {vesselTrend.some((b) => b.total > 0) && (
+        <PillarTrendChart
+          data={vesselTrend}
+          color={VESSEL_COLOR}
+          title="Vessel Trend"
+          unit="vol"
+          colors={colors}
+        />
       )}
 
       {/* ── Muscle group grid ── */}

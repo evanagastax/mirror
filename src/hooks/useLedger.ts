@@ -4,21 +4,25 @@ import type { Transaction, LedgerSummary } from "../types";
 import { qk } from "./queryKeys";
 import { invalidateLedger } from "./invalidate";
 
-async function fetchTransactions(userId: string): Promise<Transaction[]> {
-  const { data, error } = await supabase
+async function fetchTransactions(userId: string, filters?: { from?: string; to?: string }): Promise<Transaction[]> {
+  let query = supabase
     .from("transactions")
     .select("id, amount, category, note, created_at")
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
 
+  if (filters?.from) query = query.gte("created_at", filters.from);
+  if (filters?.to)   query = query.lte("created_at", filters.to);
+
+  const { data, error } = await query;
   if (error) throw error;
   return data as Transaction[];
 }
 
-export function useLedger(userId: string | undefined) {
+export function useLedger(userId: string | undefined, filters?: { from?: string; to?: string }) {
   return useQuery({
-    queryKey: qk.ledger(userId as string),
-    queryFn: () => fetchTransactions(userId as string),
+    queryKey: qk.ledger(userId as string, filters),
+    queryFn: () => fetchTransactions(userId as string, filters),
     enabled: !!userId,
     staleTime: 1000 * 30,
   });

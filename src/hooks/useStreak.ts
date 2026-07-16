@@ -5,15 +5,18 @@ import { qk } from "./queryKeys";
 import { MS_PER_DAY } from "../utils/format";
 
 async function fetchStreak(userId: string): Promise<StreakResult> {
+  const since = new Date(Date.now() - 90 * MS_PER_DAY).toISOString();
   const [logsRes, txRes] = await Promise.all([
     supabase
       .from("logs")
       .select("created_at")
-      .eq("user_id", userId),
+      .eq("user_id", userId)
+      .gte("created_at", since),
     supabase
       .from("transactions")
       .select("created_at")
-      .eq("user_id", userId),
+      .eq("user_id", userId)
+      .gte("created_at", since),
   ]);
 
   if (logsRes.error) throw logsRes.error;

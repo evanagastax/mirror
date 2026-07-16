@@ -5,7 +5,7 @@ import {
   ScrollView,
   Pressable,
   StyleSheet,
-  ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
@@ -22,6 +22,7 @@ import { XPToastContainer } from "../components/XPToast";
 import { OnboardingModal } from "../components/OnboardingModal";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { PILLAR_META, type PillarKey } from "../theme/pillars";
+import { CompassSkeleton } from "../components/skeletons";
 
 // ─── pillar config ────────────────────────────────────────────────────────────
 
@@ -56,7 +57,7 @@ export default function CompassScreen() {
   const router = useRouter();
   const userId = useAuthStore((s) => s.userId);
   const { isDark, colors } = useThemeStore();
-  const { data: pillars, isLoading, isError, refetch } = usePillars(userId);
+  const { data: pillars, isLoading, isError, refetch, isRefetching } = usePillars(userId);
   const { data: streak } = useStreak(userId);
   const { toasts, removeToast, trackScores } = useXPToast();
 
@@ -120,9 +121,9 @@ export default function CompassScreen() {
     return (
       <SafeAreaView style={[styles.flex, { backgroundColor: colors.bg }]} edges={["top"]}>
         <StatusBar style={isDark ? "light" : "dark"} />
-        <View style={styles.center}>
-          <ActivityIndicator color={colors.textPrimary} size="large" />
-        </View>
+        <ScrollView style={styles.flex} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          <CompassSkeleton />
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -167,6 +168,9 @@ export default function CompassScreen() {
         style={styles.flex}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.textPrimary} />
+        }
       >
         {/* ── Top bar ── */}
         <View style={styles.topBar}>

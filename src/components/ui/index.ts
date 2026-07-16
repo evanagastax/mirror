@@ -7,3 +7,4 @@
 export { StatChip } from "./StatChip";
 export { Divider } from "./Divider";
 export { SectionLabel } from "./SectionLabel";
+export { Skeleton } from "./Skeleton";

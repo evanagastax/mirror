@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   View, Text, ScrollView, Pressable,
-  StyleSheet, ActivityIndicator, TextInput, Alert, Switch,
+  StyleSheet, ActivityIndicator, TextInput, Alert, Switch, Share,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
@@ -12,6 +12,12 @@ import { useThemeStore } from "../store/themeStore";
 import { usePillars } from "../hooks/usePillars";
 import { useGoals } from "../hooks/useGoals";
 import { PILLAR_META, type PillarKey } from "../theme/pillars";
+import { exportUserData } from "../services/exportData";
+import { useLogs } from "../hooks/useLogs";
+import { useLedger } from "../hooks/useLedger";
+import { useStreak } from "../hooks/useStreak";
+import { computeBadges } from "../services/badges";
+import { BadgeGrid } from "../components/BadgeGrid";
 
 type Privacy = { vessel: boolean; soul: boolean; impact: boolean };
 
@@ -19,6 +25,10 @@ export default function ProfileScreen() {
   const userId = useAuthStore((s) => s.userId)!;
   const { data: pillars } = usePillars(userId);
   const { data: goals } = useGoals(userId);
+  const { data: logs } = useLogs(userId);
+  const { data: transactions } = useLedger(userId);
+  const { data: streak } = useStreak(userId);
+  const badges = useMemo(() => computeBadges(pillars, logs, transactions, streak), [pillars, logs, transactions, streak]);
   const { isDark, colors, toggle: toggleTheme } = useThemeStore();
   const router = useRouter();
 
@@ -89,6 +99,52 @@ export default function ProfileScreen() {
       { text: "Sign out", style: "destructive", onPress: () => supabase.auth.signOut() },
     ]);
   }
+
+  async function handleExport() {
+    try {
+      await exportUserData(userId);
+    } catch (e: any) {
+      if (e?.message !== "User did not share") {
+        Alert.alert("Export failed", e?.message ?? "Could not export data.");
+      }
+    }
+  }
+
+  async function handleShareProgress() {
+    const synergy = pillars
+      ? pillars.soul + pillars.vessel + pillars.impact + pillars.stewardship
+      : 0;
+    const earnedBadges = badges.filter((b) => b.earned).length;
+    const text = [
+      `🪞 The Mirror — Know Thyself`,
+      ``,
+      `Synergy: ${synergy}`,
+      `Soul: ${pillars?.soul ?? 0} · Vessel: ${pillars?.vessel ?? 0}`,
+      `Impact: ${pillars?.impact ?? 0} · Stewardship: ${pillars?.stewardship ?? 0}`,
+      `Streak: ${streak?.current ?? 0} days`,
+      `Badges: ${earnedBadges}/${badges.length}`,
+      `Goals: ${doneGoals}/${totalGoals} done`,
+      ``,
+      `#TheMirror #KnowThyself`,
+    ].join("\n");
+    try {
+      await Share.share({ message: text });
+    } catch {}
+  }
+
+  // Daily challenge based on weakest pillar
+  const weakestPillar = pillars
+    ? (Object.entries(pillars)
+        .filter(([k]) => k !== "updated_at")
+        .sort(([, a], [, b]) => (a as number) - (b as number))[0] as [string, number] | undefined)
+    : null;
+  const challengeMap: Record<string, string> = {
+    soul: "🕌 Pray all 5 prayers on time today",
+    vessel: "💪 Do a 30-minute workout today",
+    impact: "🎯 Complete one meaningful task today",
+    stewardship: "💰 Track all your spending today",
+  };
+  const dailyChallenge = weakestPillar ? challengeMap[weakestPillar[0]] ?? "📝 Log one activity today" : "📝 Log one activity today";
 
   const totalGoals   = (goals ?? []).length;
   const doneGoals    = (goals ?? []).filter((g) => g.status === "done").length;
@@ -213,6 +269,39 @@ export default function ProfileScreen() {
           })}
         </View>
 
+        {/* ── Badges ── */}
+        <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>ACHIEVEMENTS</Text>
+        <View style={[styles.badgesCard, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
+          <BadgeGrid badges={badges} colors={colors} />
+        </View>
+
+        {/* ── Daily Challenge ── */}
+        <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>DAILY CHALLENGE</Text>
+        <View style={[styles.challengeCard, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
+          <Text style={[styles.challengeText, { color: colors.textPrimary }]}>{dailyChallenge}</Text>
+          <Text style={[styles.challengeHint, { color: colors.textMuted }]}>
+            Based on your weakest pillar ({weakestPillar?.[0] ?? "none"})
+          </Text>
+        </View>
+
+        {/* ── Share ── */}
+        <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>FELLOWSHIP</Text>
+        <Pressable
+          onPress={handleShareProgress}
+          style={[styles.settingCard, { backgroundColor: colors.bgCard, borderColor: colors.border }]}
+          android_ripple={{ color: colors.bgSubtle }}
+        >
+          <View style={styles.settingRow}>
+            <View style={styles.settingInfo}>
+              <Text style={[styles.settingTitle, { color: colors.textPrimary }]}>📤 Share your progress</Text>
+              <Text style={[styles.settingDesc, { color: colors.textMuted }]}>
+                Share your stats with friends
+              </Text>
+            </View>
+            <Text style={[styles.settingArrow, { color: colors.textDisabled }]}>›</Text>
+          </View>
+        </Pressable>
+
         {/* ── Appearance ── */}
         <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>APPEARANCE</Text>
         <View style={[styles.settingCard, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
@@ -246,6 +335,24 @@ export default function ProfileScreen() {
               <Text style={[styles.settingTitle, { color: colors.textPrimary }]}>🔔 Notification settings</Text>
               <Text style={[styles.settingDesc, { color: colors.textMuted }]}>
                 Prayer alerts, daily reminder, streak warnings
+              </Text>
+            </View>
+            <Text style={[styles.settingArrow, { color: colors.textDisabled }]}>›</Text>
+          </View>
+        </Pressable>
+
+        {/* ── Data ── */}
+        <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>DATA</Text>
+        <Pressable
+          onPress={handleExport}
+          style={[styles.settingCard, { backgroundColor: colors.bgCard, borderColor: colors.border }]}
+          android_ripple={{ color: colors.bgSubtle }}
+        >
+          <View style={styles.settingRow}>
+            <View style={styles.settingInfo}>
+              <Text style={[styles.settingTitle, { color: colors.textPrimary }]}>📤 Export data</Text>
+              <Text style={[styles.settingDesc, { color: colors.textMuted }]}>
+                Download your logs, transactions, and goals as JSON
               </Text>
             </View>
             <Text style={[styles.settingArrow, { color: colors.textDisabled }]}>›</Text>
@@ -383,6 +490,14 @@ const styles = StyleSheet.create({
   pillarLabel: { fontSize: 10, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5 },
   pillarValue: { fontSize: 22, fontWeight: "800" },
   pillarLock: { fontSize: 16, opacity: 0.5 },
+
+  // Badges
+  badgesCard: { borderWidth: 1, borderRadius: 14, padding: 16, marginBottom: 24 },
+
+  // Daily challenge
+  challengeCard: { borderWidth: 1, borderRadius: 14, padding: 16, marginBottom: 24, gap: 4 },
+  challengeText: { fontSize: 15, fontWeight: "600" },
+  challengeHint: { fontSize: 12 },
 
   // Setting cards
   settingCard: { borderWidth: 1, borderRadius: 14, overflow: "hidden", marginBottom: 24 },

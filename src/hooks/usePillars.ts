@@ -19,7 +19,6 @@ export function usePillars(userId: string | undefined) {
     queryKey: qk.pillars(userId as string),
     queryFn: () => fetchPillars(userId as string),
     enabled: !!userId,
-    refetchInterval: 10000,
-    staleTime: 0,
+    staleTime: 60_000,
   });
 }

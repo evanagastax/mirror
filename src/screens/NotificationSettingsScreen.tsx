@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
   View, Text, ScrollView, Pressable, Switch,
-  StyleSheet, ActivityIndicator, Alert, Platform,
+  StyleSheet, ActivityIndicator, Alert, Platform, TextInput,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
@@ -15,6 +15,10 @@ import {
 } from "../services/notificationService";
 import { PILLAR_COLORS } from "../theme/pillars";
 import type { Colors } from "../types";
+import {
+  loadPrayerLocation, savePrayerLocation, geocodeCity,
+  type PrayerLocation,
+} from "../utils/prayerLocation";
 
 const ACCENT    = PILLAR_COLORS.soul.primary;
 const ACCENT_BG = PILLAR_COLORS.soul.bg;
@@ -27,14 +31,20 @@ export default function NotificationSettingsScreen() {
   const [saving,      setSaving]      = useState(false);
   const [permission,  setPermission]  = useState<string>("undetermined");
   const [settings,    setSettings]    = useState<NotifSettings>({ ...DEFAULT_NOTIF_SETTINGS });
+  const [location,    setLocation]    = useState<PrayerLocation | null>(null);
+  const [cityInput,   setCityInput]   = useState("");
+  const [searching,   setSearching]   = useState(false);
 
   const load = useCallback(async () => {
-    const [s, perm] = await Promise.all([
+    const [s, perm, loc] = await Promise.all([
       loadNotifSettings(),
       getNotificationPermissionStatus(),
+      loadPrayerLocation(),
     ]);
     setSettings(s);
     setPermission(perm);
+    setLocation(loc);
+    setCityInput(loc.label);
     setLoading(false);
   }, []);
 
@@ -102,6 +112,22 @@ export default function NotificationSettingsScreen() {
 
   function update<K extends keyof NotifSettings>(key: K, value: NotifSettings[K]) {
     setSettings((prev) => ({ ...prev, [key]: value }));
+  }
+
+  async function handleCitySearch() {
+    const q = cityInput.trim();
+    if (!q) return;
+    setSearching(true);
+    const result = await geocodeCity(q);
+    setSearching(false);
+    if (result) {
+      setLocation(result);
+      setCityInput(result.label);
+      await savePrayerLocation(result);
+      Alert.alert("Location updated", `Prayer times will use ${result.label} (${result.latitude.toFixed(2)}, ${result.longitude.toFixed(2)}).`);
+    } else {
+      Alert.alert("Not found", `Could not find "${q}". Try a different city name.`);
+    }
   }
 
   if (loading) {
@@ -196,7 +222,7 @@ export default function NotificationSettingsScreen() {
             icon="🕌"
             iconBg={ACCENT_BG}
             title="Prayer time alerts"
-            description="Get notified at each of the 5 daily prayer times. Times are based on your location in Malang."
+            description={`Get notified at each of the 5 daily prayer times. Location: ${location?.label ?? "Malang"}.`}
             value={settings.prayerEnabled}
             onToggle={(v) => update("prayerEnabled", v)}
             colors={colors}
@@ -209,6 +235,41 @@ export default function NotificationSettingsScreen() {
               </Text>
             </View>
           )}
+        </View>
+
+        {/* Location for prayer times */}
+        <SectionLabel label="LOCATION" colors={colors} />
+        <View style={[S.card, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
+          <View style={S.locRow}>
+            <View style={S.locInfo}>
+              <Text style={[S.locLabel, { color: colors.textMuted }]}>Prayer times location</Text>
+              <Text style={[S.locValue, { color: colors.textPrimary }]}>
+                {location?.label ?? "Malang"} ({location?.latitude.toFixed(2)}, {location?.longitude.toFixed(2)})
+              </Text>
+            </View>
+          </View>
+          <View style={[S.locSearch, { borderTopColor: colors.border }]}>
+            <TextInput
+              style={[S.locInput, { color: colors.textPrimary, borderColor: colors.border }]}
+              placeholder="Search city…"
+              placeholderTextColor={colors.textMuted}
+              value={cityInput}
+              onChangeText={setCityInput}
+              onSubmitEditing={handleCitySearch}
+              returnKeyType="search"
+            />
+            <Pressable
+              onPress={handleCitySearch}
+              style={[S.locBtn, { backgroundColor: ACCENT }]}
+              disabled={searching}
+            >
+              {searching ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <Text style={S.locBtnText}>Search</Text>
+              )}
+            </Pressable>
+          </View>
         </View>
 
         {/* Daily reminder */}
@@ -434,6 +495,15 @@ const S = StyleSheet.create({
 
   infoRow: { padding: 12 },
   infoText: { fontSize: 12, lineHeight: 18 },
+
+  locRow: { padding: 16 },
+  locInfo: { gap: 2 },
+  locLabel: { fontSize: 11, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.8 },
+  locValue: { fontSize: 14, fontWeight: "600" },
+  locSearch: { flexDirection: "row", gap: 8, padding: 12, paddingTop: 0 },
+  locInput: { flex: 1, borderWidth: 1, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, fontSize: 14 },
+  locBtn: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  locBtnText: { color: "#fff", fontSize: 14, fontWeight: "700" },
 
   disableBtn: { borderWidth: 1, borderRadius: 12, paddingVertical: 13, alignItems: "center" },
   disableBtnText: { fontSize: 14, fontWeight: "600" },

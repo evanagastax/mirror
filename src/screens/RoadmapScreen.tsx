@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import {
   View, Text, ScrollView, Pressable, TextInput,
-  ActivityIndicator, Alert, StyleSheet, Modal,
+  ActivityIndicator, StyleSheet, Modal,
   KeyboardAvoidingView, Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -15,6 +15,8 @@ import {
 } from "../hooks/useGoals";
 import { PILLAR_META_MAP, type PillarKey } from "../theme/pillars";
 import type { Goal, GoalStatus, Colors } from "../types";
+import { Snackbar } from "../components/Snackbar";
+import { useUndoableDelete } from "../hooks/useUndoableDelete";
 
 type Filter = "all" | PillarKey | "todo" | "in_progress" | "done";
 
@@ -45,6 +47,9 @@ export default function RoadmapScreen() {
   const addGoal    = useAddGoal(userId);
   const updateStatus = useUpdateGoalStatus(userId);
   const deleteGoal = useDeleteGoal(userId);
+
+  const { requestDelete, snackbar, dismissSnackbar } =
+    useUndoableDelete({ onDelete: (id) => deleteGoal.mutate(id) });
 
   const [filter,     setFilter]     = useState<Filter>("all");
   const [sheetPillar, setSheet]     = useState<PillarKey | null>(null);
@@ -92,10 +97,7 @@ export default function RoadmapScreen() {
   }
 
   function handleDelete(goal: Goal) {
-    Alert.alert("Delete goal?", `"${goal.title}"`, [
-      { text: "Cancel", style: "cancel" },
-      { text: "Delete", style: "destructive", onPress: () => deleteGoal.mutate(goal.id) },
-    ]);
+    requestDelete(goal.id, `Deleted "${goal.title}"`);
   }
 
   if (isLoading) {
@@ -303,6 +305,14 @@ export default function RoadmapScreen() {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+      {snackbar && (
+        <Snackbar
+          message={snackbar.message}
+          action="Undo"
+          onAction={snackbar.onUndo}
+          onDismiss={dismissSnackbar}
+        />
+      )}
     </SafeAreaView>
   );
 }

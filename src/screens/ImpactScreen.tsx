@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import {
   View, Text, ScrollView, Pressable,
-  ActivityIndicator, StyleSheet, RefreshControl,
+  StyleSheet, RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
@@ -16,6 +16,7 @@ import { openSafeUrl } from "../utils/url";
 import { formatDate, formatTime } from "../utils/format";
 import type { Log, Colors } from "../types";
 import { StatChip } from "../components/ui/StatChip";
+import { Skeleton } from "../components/ui/Skeleton";
 
 const COLOR = PILLAR_COLORS.impact.primary;
 const BG    = PILLAR_COLORS.impact.bg;
@@ -104,9 +105,7 @@ export default function ImpactScreen() {
         </View>
 
         {isLoading ? (
-          <View style={S.center}>
-            <ActivityIndicator color={COLOR} size="large" />
-          </View>
+          <ImpactListSkeleton colors={colors} />
         ) : isError ? (
           <View style={S.center}>
             <Text style={[S.stateText, { color: colors.textMuted }]}>Couldn't load logs.</Text>
@@ -199,6 +198,33 @@ function ActionCard({ icon, label, sub, color, bg, onPress, colors }: {
       <Text style={[S.actionLabel, { color: colors.textPrimary }]}>{label}</Text>
       <Text style={[S.actionSub, { color: colors.textMuted }]}>{sub}</Text>
     </Pressable>
+  );
+}
+
+function ImpactListSkeleton({ colors }: { colors: Colors }) {
+  return (
+    <>
+      {[0, 1].map((g) => (
+        <View key={g} style={S.group}>
+          <Skeleton width={100} height={11} borderRadius={4} style={{ marginBottom: 8 }} />
+          <View style={[S.groupCard, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
+            {[0, 1, 2].map((r) => (
+              <View key={r} style={S.row}>
+                <Skeleton width={36} height={36} borderRadius={18} />
+                <View style={S.rowInfo}>
+                  <Skeleton width={130} height={14} borderRadius={6} />
+                  <View style={S.rowMeta}>
+                    <Skeleton width={55} height={18} borderRadius={99} />
+                    <Skeleton width={50} height={4} borderRadius={99} />
+                  </View>
+                </View>
+                <Skeleton width={40} height={11} borderRadius={4} />
+              </View>
+            ))}
+          </View>
+        </View>
+      ))}
+    </>
   );
 }
 
