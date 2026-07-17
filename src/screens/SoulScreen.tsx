@@ -31,6 +31,8 @@ import {
 } from "../services/hafalanStore";
 import { SalahTracker } from "../components/Soul/SalahTracker";
 import { HafalanTab } from "../components/Soul/HafalanTab";
+import { DailyTab } from "../components/Soul/DailyTab";
+import { LangToggle, SectionCard } from "../components/Soul/SoulShared";
 import {
   loadNotifSettings, schedulePrayerNotifications,
 } from "../services/notificationService";
@@ -119,107 +121,6 @@ export default function SoulScreen() {
       {tab === "quran"   && <QuranTab  colors={colors} />}
       {tab === "hafalan" && <HafalanTab colors={colors} userId={userId} />}
     </SafeAreaView>
-  );
-}
-
-// ─── Daily Tab ───────────────────────────────────────────────────────────────
-
-function DailyTab({ colors, userId }: { colors: Colors; userId: string }) {
-  const [lang, setLang] = useState<Lang>("id");
-  const [ayah, setAyah] = useState<any>(null);
-  const [prayerTimes, setPrayerTimes] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [fromCache, setFromCache] = useState(false);
-  const dua = getDailyDua();
-  const { data: logs } = useLogs(userId);
-  const soulTrend = useMemo(() => buildPillarTrend(logs ?? [], "soul", 6), [logs]);
-
-  const load = useCallback(async () => {
-    try {
-      const loc = await loadPrayerLocation();
-      const [ayahResult, timesResult] = await Promise.all([
-        fetchDailyAyah(),
-        fetchPrayerTimes(loc.latitude, loc.longitude),
-      ]);
-      setAyah(ayahResult.data);
-      setPrayerTimes(timesResult.data);
-      setFromCache(ayahResult.fromCache || timesResult.fromCache);
-      // Reschedule prayer notifications with fresh times (silent — no-op if disabled)
-      if (timesResult.data) {
-        loadNotifSettings().then((s) => {
-          if (s.prayerEnabled) {
-            schedulePrayerNotifications(timesResult.data).catch((e) => captureError(e, { context: "schedulePrayerNotifications" }));
-          }
-        });
-      }
-    } catch (e) { captureError(e, { context: "Daily load error" }); }
-    finally { setLoading(false); setRefreshing(false); }
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
-
-  if (loading) {
-    return <SoulSkeleton />;
-  }
-
-  return (
-    <ScrollView
-      contentContainerStyle={S.tabContent}
-      showsVerticalScrollIndicator={false}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={SOUL_COLOR} />}
-    >
-      {fromCache && <OfflineBanner />}
-      <SalahTracker userId={userId} colors={colors} prayerTimes={prayerTimes} />
-      <LangToggle lang={lang} setLang={setLang} colors={colors} />
-
-      {/* Prayer times */}
-      {prayerTimes && (
-        <SectionCard title="🕌 Waktu Sholat" colors={colors}>
-          <View style={S.prayerGrid}>
-            {Object.entries(prayerTimes).map(([name, time]) => (
-              <View key={name} style={[S.prayerItem, { backgroundColor: SOUL_BG }]}>
-                <Text style={S.prayerEmoji}>{PRAYER_ICONS[name] ?? "🕐"}</Text>
-                <Text style={S.prayerName}>{name}</Text>
-                <Text style={[S.prayerTime, { color: colors.textPrimary }]}>{time as string}</Text>
-              </View>
-            ))}
-          </View>
-        </SectionCard>
-      )}
-
-      {/* Daily Ayah */}
-      {ayah && (
-        <SectionCard title="📖 Ayah Hari Ini" badge={`${ayah.surahName} : ${ayah.ayahNumber}`} colors={colors}>
-          <Text style={[S.arabicText, { color: colors.textPrimary }]}>{ayah.arabic}</Text>
-          <View style={[S.divider, { backgroundColor: colors.border }]} />
-          <Text style={[S.translationText, { color: colors.textSecondary }]}>
-            {lang === "id" ? ayah.translation_id : ayah.translation_en}
-          </Text>
-        </SectionCard>
-      )}
-
-      {/* Daily Dua */}
-      <SectionCard title="🤲 Doa Hari Ini" badge={dua.source} badgeColor="#BA7517" colors={colors}>
-        <Text style={[S.arabicText, { color: colors.textPrimary }]}>{dua.arabic}</Text>
-        <Text style={[S.latinText, { color: colors.textMuted }]}>{dua.transliteration}</Text>
-        <View style={[S.divider, { backgroundColor: colors.border }]} />
-        <Text style={[S.translationText, { color: colors.textSecondary }]}>
-          {lang === "id" ? dua.translation_id : dua.translation_en}
-        </Text>
-      </SectionCard>
-
-      {/* Soul Trend */}
-      {soulTrend.some((b) => b.total > 0) && (
-        <PillarTrendChart
-          data={soulTrend}
-          color={SOUL_COLOR}
-          title="Soul Trend"
-          unit="min"
-          colors={colors}
-        />
-      )}
-    </ScrollView>
   );
 }
 
@@ -325,9 +226,9 @@ function DzikirTab({ colors }: { colors: Colors }) {
         <LangToggle lang={lang} setLang={setLang} colors={colors} />
 
         <View style={[S.arabicCard, { backgroundColor: SOUL_BG }]}>
-          <Text style={[S.arabicCardMain, { color: "#1a1a1a" }]}>{selectedDzikir.arabic}</Text>
-          <Text style={[S.arabicCardLatin, { color: "#666" }]}>{selectedDzikir.transliteration}</Text>
-          <View style={[S.divider, { backgroundColor: "#c8ede2" }]} />
+          <Text style={[S.arabicCardMain, { color: colors.textPrimary }]}>{selectedDzikir.arabic}</Text>
+          <Text style={[S.arabicCardLatin, { color: colors.textMuted }]}>{selectedDzikir.transliteration}</Text>
+          <View style={[S.divider, { backgroundColor: colors.border }]} />
           <Text style={[S.translationText, { color: colors.textSecondary }]}>
             {lang === "id" ? selectedDzikir.translation_id : selectedDzikir.translation_en}
           </Text>
@@ -650,51 +551,6 @@ function SurahReaderModal({ surahNumber, onClose, colors }: { surahNumber: numbe
         )}
       </SafeAreaView>
     </Modal>
-  );
-}
-
-// ─── Shared components ───────────────────────────────────────────────────────
-
-function LangToggle({ lang, setLang, colors }: { lang: Lang; setLang: (l: Lang) => void; colors: Colors }) {
-  return (
-    <View style={[S.langRow, { backgroundColor: colors.bgSubtle, borderRadius: 10 }]}>
-      <Pressable
-        style={[S.langBtn, lang === "id" && S.langBtnActive]}
-        onPress={() => setLang("id")}
-      >
-        <Text style={[S.langBtnText, lang === "id" && S.langBtnTextActive]}>🇮🇩 Indonesia</Text>
-      </Pressable>
-      <Pressable
-        style={[S.langBtn, lang === "en" && S.langBtnActive]}
-        onPress={() => setLang("en")}
-      >
-        <Text style={[S.langBtnText, lang === "en" && S.langBtnTextActive]}>🇬🇧 English</Text>
-      </Pressable>
-    </View>
-  );
-}
-
-function SectionCard({
-  title, badge, badgeColor = SOUL_COLOR, children, colors,
-}: {
-  title: string;
-  badge?: string;
-  badgeColor?: string;
-  children: React.ReactNode;
-  colors: Colors;
-}) {
-  return (
-    <View style={[S.sectionCard, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
-      <View style={S.sectionCardTop}>
-        <Text style={[S.sectionCardTitle, { color: colors.textPrimary }]}>{title}</Text>
-        {badge ? (
-          <View style={[S.sectionCardBadge, { backgroundColor: badgeColor + "18" }]}>
-            <Text style={[S.sectionCardBadgeText, { color: badgeColor }]}>{badge}</Text>
-          </View>
-        ) : null}
-      </View>
-      {children}
-    </View>
   );
 }
 

@@ -154,7 +154,7 @@ export function HafalanTab({ colors, userId }: { colors: Colors; userId: string 
       <ScrollView contentContainerStyle={[S.tabContent, { alignItems: "center" }]} showsVerticalScrollIndicator={false}>
         <View style={[S.hafalanHero, { backgroundColor: SOUL_BG }]}>
           <Text style={S.hafalanHeroEmoji}>🧠</Text>
-          <Text style={[S.hafalanHeroTitle, { color: "#1a1a1a" }]}>Hafalan Al-Qur'an</Text>
+          <Text style={[S.hafalanHeroTitle, { color: colors.textPrimary }]}>Hafalan Al-Qur'an</Text>
           <Text style={[S.hafalanHeroSub, { color: "#666" }]}>
             Pilih surah dan tentukan berapa ayat per sesi. Kami akan membuat timeline hafalan untukmu.
           </Text>
@@ -267,8 +267,8 @@ export function HafalanTab({ colors, userId }: { colors: Colors; userId: string 
       <View style={[S.hafalanHeader, { backgroundColor: SOUL_BG }]}>
         <View style={S.hafalanHeaderTop}>
           <View style={{ flex: 1 }}>
-            <Text style={[S.hafalanSurahName, { color: "#1a1a1a" }]}>{plan.surahName}</Text>
-            <Text style={[S.hafalanSurahMeta, { color: "#666" }]}>
+            <Text style={[S.hafalanSurahName, { color: colors.textPrimary }]}>{plan.surahName}</Text>
+            <Text style={[S.hafalanSurahMeta, { color: colors.textMuted }]}>
               {plan.totalAyat} ayat · {plan.milestones.length} sesi · {plan.chunkSize} ayat/sesi
             </Text>
           </View>

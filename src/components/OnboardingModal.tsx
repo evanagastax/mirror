@@ -5,6 +5,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { PILLAR_META } from "../theme/pillars";
+import { useThemeStore } from "../store/themeStore";
 
 const PILLARS = PILLAR_META.map((p) => ({
   ...p,
@@ -19,6 +20,7 @@ type Props = {
 };
 
 export function OnboardingModal({ visible, onDone }: Props) {
+  const { colors } = useThemeStore();
   const [step,        setStep]        = useState<1 | 2>(1);
   const [username,    setUsername]    = useState("");
   const [focus,       setFocus]       = useState<PillarKey | null>(null);
@@ -55,8 +57,8 @@ export function OnboardingModal({ visible, onDone }: Props) {
             {step === 1 ? (
               <>
                 <Text style={S.emoji}>👋</Text>
-                <Text style={S.title}>Welcome to The Mirror</Text>
-                <Text style={S.sub}>
+                <Text style={[S.title, { color: colors.textPrimary }]}>Welcome to The Mirror</Text>
+                <Text style={[S.sub, { color: colors.textMuted }]}>
                   Track your Soul, Vessel, Impact and Stewardship — all in one place.
                   First, what should we call you?
                 </Text>
@@ -92,8 +94,8 @@ export function OnboardingModal({ visible, onDone }: Props) {
             ) : (
               <>
                 <Text style={S.emoji}>🎯</Text>
-                <Text style={S.title}>Pick your focus pillar</Text>
-                <Text style={S.sub}>
+                <Text style={[S.title, { color: colors.textPrimary }]}>Pick your focus pillar</Text>
+                <Text style={[S.sub, { color: colors.textMuted }]}>
                   Which area do you most want to grow right now?
                   You can log everything, but this sets your default.
                 </Text>
@@ -112,10 +114,10 @@ export function OnboardingModal({ visible, onDone }: Props) {
                         onPress={() => setFocus(p.key)}
                       >
                         <Text style={[S.pillarIcon, { color: p.color }]}>{p.icon}</Text>
-                        <Text style={[S.pillarLabel, { color: selected ? p.color : "#1a1a1a" }]}>
+                        <Text style={[S.pillarLabel, { color: selected ? p.color : colors.textPrimary }]}>
                           {p.label}
                         </Text>
-                        <Text style={[S.pillarSub, { color: selected ? p.color : "#888" }]}>
+                        <Text style={[S.pillarSub, { color: selected ? p.color : colors.textMuted }]}>
                           {p.sub}
                         </Text>
                         {selected && (
@@ -175,8 +177,8 @@ const S = StyleSheet.create({
   dotActive: { backgroundColor: "#1D9E75", width: 18 },
 
   emoji: { fontSize: 36, textAlign: "center" },
-  title: { fontSize: 22, fontWeight: "800", color: "#1a1a1a", textAlign: "center", letterSpacing: -0.5 },
-  sub: { fontSize: 14, color: "#666", textAlign: "center", lineHeight: 21 },
+  title: { fontSize: 22, fontWeight: "800", textAlign: "center", letterSpacing: -0.5 },
+  sub: { fontSize: 14, textAlign: "center", lineHeight: 21 },
 
   inputWrap: { gap: 6 },
   inputLabel: { fontSize: 10, fontWeight: "700", letterSpacing: 1.5, color: "#999", textTransform: "uppercase" },
