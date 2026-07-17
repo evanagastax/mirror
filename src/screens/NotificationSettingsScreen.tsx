@@ -19,6 +19,7 @@ import {
   loadPrayerLocation, savePrayerLocation, geocodeCity,
   type PrayerLocation,
 } from "../utils/prayerLocation";
+import { useLangStore } from "../store/langStore";
 
 const ACCENT    = PILLAR_COLORS.soul.primary;
 const ACCENT_BG = PILLAR_COLORS.soul.bg;
@@ -26,6 +27,7 @@ const ACCENT_BG = PILLAR_COLORS.soul.bg;
 export default function NotificationSettingsScreen() {
   const router             = useRouter();
   const { isDark, colors } = useThemeStore();
+  const { t, lang }        = useLangStore();
 
   const [loading,     setLoading]     = useState(true);
   const [saving,      setSaving]      = useState(false);
@@ -86,7 +88,7 @@ export default function NotificationSettingsScreen() {
       return;
     }
     setSaving(false);
-    Alert.alert("Settings saved ✓", "Your notification preferences have been updated.", [
+    Alert.alert(t.settingsSaved, lang === "id" ? "Preferensi notifikasi telah diperbarui." : "Your notification preferences have been updated.", [
       { text: "OK", onPress: goBack },
     ]);
   }
@@ -147,7 +149,7 @@ export default function NotificationSettingsScreen() {
           <Pressable onPress={goBack} hitSlop={12}>
             <Text style={[S.back, { color: colors.textMuted }]}>←</Text>
           </Pressable>
-          <Text style={[S.headerTitle, { color: colors.textPrimary }]}>Notifications</Text>
+          <Text style={[S.headerTitle, { color: colors.textPrimary }]}>{t.notifications}</Text>
           <View style={{ width: 24 }} />
         </View>
         <View style={S.center}>
@@ -176,8 +178,8 @@ export default function NotificationSettingsScreen() {
           <Text style={[S.back, { color: colors.textMuted }]}>←</Text>
         </Pressable>
         <View style={S.headerCenter}>
-          <Text style={[S.headerTitle, { color: colors.textPrimary }]}>Notifications</Text>
-          <Text style={[S.headerSub, { color: colors.textMuted }]}>Reminders & alerts</Text>
+          <Text style={[S.headerTitle, { color: colors.textPrimary }]}>{t.notifications}</Text>
+          <Text style={[S.headerSub, { color: colors.textMuted }]}>{lang === "id" ? "Pengingat & peringatan" : "Reminders & alerts"}</Text>
         </View>
         <Pressable
           onPress={handleSave}
@@ -186,7 +188,7 @@ export default function NotificationSettingsScreen() {
         >
           {saving
             ? <ActivityIndicator color="#fff" size="small" />
-            : <Text style={S.saveBtnText}>Save</Text>}
+            : <Text style={S.saveBtnText}>{t.save}</Text>}
         </Pressable>
       </View>
 
@@ -221,8 +223,8 @@ export default function NotificationSettingsScreen() {
           <SettingRow
             icon="🕌"
             iconBg={ACCENT_BG}
-            title="Prayer time alerts"
-            description={`Get notified at each of the 5 daily prayer times. Location: ${location?.label ?? "Malang"}.`}
+            title={t.prayerAlerts}
+            description={`${t.prayerDesc} ${lang === "id" ? "Lokasi" : "Location"}: ${location?.label ?? "Malang"}.`}
             value={settings.prayerEnabled}
             onToggle={(v) => update("prayerEnabled", v)}
             colors={colors}
@@ -278,8 +280,8 @@ export default function NotificationSettingsScreen() {
           <SettingRow
             icon="📔"
             iconBg="#F0F7FE"
-            title="Daily log reminder"
-            description="A nudge to log your Soul, Vessel, Impact, and Stewardship for the day."
+            title={t.dailyReminder}
+            description={t.reminderDesc}
             value={settings.reminderEnabled}
             onToggle={(v) => update("reminderEnabled", v)}
             colors={colors}
@@ -308,8 +310,8 @@ export default function NotificationSettingsScreen() {
           <SettingRow
             icon="🔥"
             iconBg="#FEF3EE"
-            title="Streak at-risk warning"
-            description="Alerts you in the evening if you haven't logged anything yet today."
+            title={t.streakWarning}
+            description={t.streakDesc}
             value={settings.streakEnabled}
             onToggle={(v) => update("streakEnabled", v)}
             colors={colors}

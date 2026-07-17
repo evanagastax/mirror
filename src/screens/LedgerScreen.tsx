@@ -22,6 +22,7 @@ import { formatDate, formatTime, formatRp } from "../utils/format";
 import type { Transaction, Colors } from "../types";
 import { StatChip } from "../components/ui/StatChip";
 import { LedgerSkeleton } from "../components/skeletons";
+import { useLangStore } from "../store/langStore";
 
 const GOLD    = PILLAR_COLORS.stewardship.primary;
 const GOLD_BG = PILLAR_COLORS.stewardship.bg;
@@ -49,6 +50,7 @@ export default function LedgerScreen() {
   const router             = useRouter();
   const userId             = useAuthStore((s) => s.userId);
   const { isDark, colors } = useThemeStore();
+  const { t }              = useLangStore();
   const { data: txs, isLoading, isError, refetch, isRefetching } = useLedger(userId);
   const { data: pillars } = usePillars(userId);
   const [filter, setFilter] = useState<Filter>("all");
@@ -111,7 +113,7 @@ export default function LedgerScreen() {
             <Text style={[S.back, { color: colors.textMuted }]}>←</Text>
           </Pressable>
           <View>
-            <Text style={[S.headerTitle, { color: colors.textPrimary }]}>Stewardship</Text>
+            <Text style={[S.headerTitle, { color: colors.textPrimary }]}>{t.stewardship}</Text>
             <Text style={[S.headerSub,   { color: colors.textMuted }]}>Wealth & Resources</Text>
           </View>
         </View>
@@ -165,9 +167,9 @@ export default function LedgerScreen() {
 
         {/* ── 3-stat row ── */}
         <View style={S.statsRow}>
-          <StatChip label="Invested" value={formatRp(summary.totalInvestment)}  color="#1D9E75" bg="#F0FBF7" />
-          <StatChip label="Spent"    value={formatRp(summary.totalConsumption)} color="#378ADD" bg="#F0F7FE" />
-          <StatChip label="Leaked"   value={formatRp(summary.totalLeak)}        color="#D85A30" bg="#FEF3EE" />
+          <StatChip label={t.invested} value={formatRp(summary.totalInvestment)}  color="#1D9E75" bg="#F0FBF7" />
+          <StatChip label={t.spent}    value={formatRp(summary.totalConsumption)} color="#378ADD" bg="#F0F7FE" />
+          <StatChip label={t.leaked}   value={formatRp(summary.totalLeak)}        color="#D85A30" bg="#FEF3EE" />
         </View>
 
         {/* ── Budget Goals ── */}

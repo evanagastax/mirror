@@ -24,6 +24,7 @@ import { calcBmi, bmiCategory, BMI_META, calcBmr, calcTdee, targetCalories, esti
 import { loadSavedPlan, addExerciseToPlanDay, SavedPlan } from "../services/vesselPlan";
 import { PILLAR_COLORS } from "../theme/pillars";
 import { LogModal } from "../components/Vessel/LogModal";
+import { useLangStore } from "../store/langStore";
 import type { Colors } from "../types";
 
 const VESSEL_COLOR = PILLAR_COLORS.vessel.primary;
@@ -75,6 +76,7 @@ export default function VesselScreen() {
   const router             = useRouter();
   const userId             = useAuthStore((s) => s.userId);
   const { isDark, colors } = useThemeStore();
+  const { t }              = useLangStore();
   const { data: pillars }  = usePillars(userId);
 
   // null = menu, string = drill-down into that body part
@@ -120,11 +122,11 @@ export default function VesselScreen() {
             <Text style={[S.headerTitle, { color: colors.textPrimary }]}>
               {activeCategory
                 ? (PART_META[activeCategory]?.label ?? cap(activeCategory))
-                : "Vessel"}
+                : t.vessel}
             </Text>
             <Text style={[S.headerSub, { color: colors.textMuted }]}>
               {activeCategory
-                ? (PART_META[activeCategory]?.desc ?? "Exercises")
+                ? (PART_META[activeCategory]?.desc ?? t.exercises)
                 : "Body & Strength"}
             </Text>
           </View>
@@ -166,6 +168,7 @@ function CategoryMenu({ colors, onSelect, profile, router, userId }: {
   router: ReturnType<typeof useRouter>;
   userId: string;
 }) {
+  const { t } = useLangStore();
   const bmi    = profile ? calcBmi(profile.weight, profile.height) : null;
   const bmiCat = bmi ? bmiCategory(bmi) : null;
   const bmiM   = bmiCat ? BMI_META[bmiCat] : null;
@@ -186,7 +189,7 @@ function CategoryMenu({ colors, onSelect, profile, router, userId }: {
           android_ripple={{ color: VESSEL_BG }}
         >
           <Text style={S.actionCardIcon}>📋</Text>
-          <Text style={[S.actionCardLabel, { color: VESSEL_COLOR }]}>My Profile</Text>
+          <Text style={[S.actionCardLabel, { color: VESSEL_COLOR }]}>{t.myProfile}</Text>
           {profile ? (
             <Text style={[S.actionCardSub, { color: VESSEL_COLOR }]}>
               {profile.weight}kg · {profile.height}cm · {GOAL_META[profile.goal].icon} {GOAL_META[profile.goal].label}
@@ -201,7 +204,7 @@ function CategoryMenu({ colors, onSelect, profile, router, userId }: {
           android_ripple={{ color: "#F0FBF7" }}
         >
           <Text style={S.actionCardIcon}>⚡</Text>
-          <Text style={[S.actionCardLabel, { color: "#1D9E75" }]}>My Plan</Text>
+          <Text style={[S.actionCardLabel, { color: "#1D9E75" }]}>{t.myPlan}</Text>
           {profile ? (
             <Text style={[S.actionCardSub, { color: "#1D9E75" }]}>
               {profile.daysPerWeek} days/week →
@@ -235,7 +238,7 @@ function CategoryMenu({ colors, onSelect, profile, router, userId }: {
       )}
 
       {/* ── Muscle group grid ── */}
-      <Text style={[S.menuSectionLabel, { color: colors.textMuted }]}>MUSCLE GROUPS</Text>
+      <Text style={[S.menuSectionLabel, { color: colors.textMuted }]}>{t.muscleGroups}</Text>
       <View style={S.menuGrid}>
         {GRID_PARTS.map((part) => {
           const meta = PART_META[part] ?? { emoji: "💪", label: cap(part), desc: "" };

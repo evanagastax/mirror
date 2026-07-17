@@ -18,6 +18,7 @@ import type { Goal, GoalStatus, Colors } from "../types";
 import { Snackbar } from "../components/Snackbar";
 import { useUndoableDelete } from "../hooks/useUndoableDelete";
 import { RoadmapSkeleton } from "../components/skeletons";
+import { useLangStore } from "../store/langStore";
 
 type Filter = "all" | PillarKey | "todo" | "in_progress" | "done";
 
@@ -44,6 +45,7 @@ export default function RoadmapScreen() {
   const router             = useRouter();
   const userId             = useAuthStore((s) => s.userId)!;
   const { isDark, colors } = useThemeStore();
+  const { t }              = useLangStore();
   const { data: goals, isLoading } = useGoals(userId);
   const addGoal    = useAddGoal(userId);
   const updateStatus = useUpdateGoalStatus(userId);
@@ -124,14 +126,14 @@ export default function RoadmapScreen() {
         <View style={S.headerCenter}>
           <Text style={[S.headerTitle, { color: colors.textPrimary }]}>Roadmap</Text>
           <Text style={[S.headerSub, { color: colors.textMuted }]}>
-            {totalDone}/{allGoals.length} done
+            {totalDone}/{allGoals.length} {t.done.toLowerCase()}
           </Text>
         </View>
         <Pressable
           onPress={() => setSheet("soul")}
           style={[S.addBtn, { backgroundColor: colors.bgSubtle, borderColor: colors.border }]}
         >
-          <Text style={[S.addBtnText, { color: colors.textPrimary }]}>+ Goal</Text>
+          <Text style={[S.addBtnText, { color: colors.textPrimary }]}>{t.addGoal}</Text>
         </Pressable>
       </View>
 

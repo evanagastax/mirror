@@ -22,6 +22,7 @@ import { LogHistorySkeleton } from "../components/skeletons";
 import { Snackbar } from "../components/Snackbar";
 import { useUndoableDelete } from "../hooks/useUndoableDelete";
 import { DATE_RANGES, dateRangeBounds, type DateRange } from "../utils/dateRange";
+import { useLangStore } from "../store/langStore";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -78,6 +79,7 @@ export default function LogHistoryScreen() {
   const router             = useRouter();
   const userId             = useAuthStore((s) => s.userId);
   const { isDark, colors } = useThemeStore();
+  const { t, lang }        = useLangStore();
 
   const [filter, setFilter] = useState<PillarFilter>("all");
   const [dateRange, setDateRange] = useState<DateRange>("all");
@@ -176,9 +178,9 @@ export default function LogHistoryScreen() {
       <SafeAreaView style={[S.flex, { backgroundColor: colors.bg }]} edges={["top"]}>
         <StatusBar style={isDark ? "light" : "dark"} />
         <View style={S.center}>
-          <Text style={[S.errorText, { color: colors.textMuted }]}>Couldn't load activity.</Text>
+          <Text style={[S.errorText, { color: colors.textMuted }]}>{lang === "id" ? "Tidak bisa memuat aktivitas." : "Couldn't load activity."}</Text>
           <Pressable onPress={refetch} style={[S.retryBtn, { borderColor: colors.border }]}>
-            <Text style={[S.retryText, { color: colors.textPrimary }]}>Retry</Text>
+            <Text style={[S.retryText, { color: colors.textPrimary }]}>{t.retry}</Text>
           </Pressable>
         </View>
       </SafeAreaView>
@@ -191,8 +193,8 @@ export default function LogHistoryScreen() {
 
       {/* ── Header ── */}
       <View style={[S.header, { borderBottomColor: colors.border }]}>
-        <Text style={[S.title, { color: colors.textPrimary }]}>Activity</Text>
-        <Text style={[S.totalCount, { color: colors.textMuted }]}>{totalEntries} entries</Text>
+        <Text style={[S.title, { color: colors.textPrimary }]}>{t.activity}</Text>
+        <Text style={[S.totalCount, { color: colors.textMuted }]}>{totalEntries} {t.entries}</Text>
       </View>
 
       <ScrollView
@@ -259,6 +261,9 @@ export default function LogHistoryScreen() {
         >
           {DATE_RANGES.map((r) => {
             const active = dateRange === r.key;
+            const labelMap: Record<DateRange, string> = {
+              all: t.all, today: t.today, week: t.week, month: t.month, year: t.year,
+            };
             return (
               <Pressable
                 key={r.key}
@@ -276,7 +281,7 @@ export default function LogHistoryScreen() {
                     active && { color: colors.bg, fontWeight: "700" },
                   ]}
                 >
-                  {r.label}
+                  {labelMap[r.key]}
                 </Text>
               </Pressable>
             );
@@ -287,9 +292,9 @@ export default function LogHistoryScreen() {
         {grouped.length === 0 ? (
           <View style={S.emptyWrap}>
             <Text style={S.emptyEmoji}>📭</Text>
-            <Text style={[S.emptyText, { color: colors.textMuted }]}>No activity yet.</Text>
+            <Text style={[S.emptyText, { color: colors.textMuted }]}>{t.noActivity}</Text>
             <Text style={[S.emptySub, { color: colors.textDisabled }]}>
-              Tap the + button to log your first entry.
+              {t.tapToLogFirst}
             </Text>
           </View>
         ) : (

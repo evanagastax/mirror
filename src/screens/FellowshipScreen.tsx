@@ -99,7 +99,7 @@ export default function ProfileScreen() {
   function handleSignOut() {
     Alert.alert("Sign out?", "You'll need to sign in again to access your data.", [
       { text: "Cancel", style: "cancel" },
-      { text: "Sign out", style: "destructive", onPress: () => supabase.auth.signOut() },
+      { text: t.signOut, style: "destructive", onPress: () => supabase.auth.signOut() },
     ]);
   }
 

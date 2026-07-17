@@ -17,6 +17,7 @@ import { formatDate, formatTime } from "../utils/format";
 import type { Log, Colors } from "../types";
 import { StatChip } from "../components/ui/StatChip";
 import { Skeleton } from "../components/ui/Skeleton";
+import { useLangStore } from "../store/langStore";
 
 const COLOR = PILLAR_COLORS.impact.primary;
 const BG    = PILLAR_COLORS.impact.bg;
@@ -35,6 +36,7 @@ export default function ImpactScreen() {
   const router             = useRouter();
   const userId             = useAuthStore((s) => s.userId);
   const { isDark, colors } = useThemeStore();
+  const { t, lang }        = useLangStore();
   const { data: logs, isLoading, isError, refetch, isRefetching } = useLogs(userId);
   const { data: pillars } = usePillars(userId);
 
@@ -62,7 +64,7 @@ export default function ImpactScreen() {
             <Text style={[S.back, { color: colors.textMuted }]}>←</Text>
           </Pressable>
           <View>
-            <Text style={[S.headerTitle, { color: colors.textPrimary }]}>Impact</Text>
+            <Text style={[S.headerTitle, { color: colors.textPrimary }]}>{t.impact}</Text>
             <Text style={[S.headerSub,   { color: colors.textMuted }]}>Work & Output</Text>
           </View>
         </View>
@@ -83,9 +85,9 @@ export default function ImpactScreen() {
       >
         {/* Stats row */}
         <View style={S.statsRow}>
-          <StatChip label="Score"      value={String(pillars?.impact ?? 0)} color={COLOR} bg={BG} />
-          <StatChip label="Avg effort" value={String(avgEffort)}            color={COLOR} bg={BG} />
-          <StatChip label="This week"  value={String(thisWeekCount)}        color={COLOR} bg={BG} />
+          <StatChip label={lang === "id" ? "Skor" : "Score"}      value={String(pillars?.impact ?? 0)} color={COLOR} bg={BG} />
+          <StatChip label={lang === "id" ? "Rata-rata" : "Avg effort"} value={String(avgEffort)}            color={COLOR} bg={BG} />
+          <StatChip label={lang === "id" ? "Minggu ini" : "This week"}  value={String(thisWeekCount)}        color={COLOR} bg={BG} />
         </View>
 
         {/* Quick actions */}

@@ -15,6 +15,7 @@ import { PILLAR_META, CAT_META } from "../theme/pillars";
 import type { PillarKey } from "../theme/pillars";
 import type { Colors } from "../types";
 import { Divider } from "../components/ui/Divider";
+import { useLangStore } from "../store/langStore";
 
 type Pillar = PillarKey;
 type Category = "investment" | "consumption" | "leak";
@@ -41,6 +42,7 @@ export default function LogScreen() {
   const router = useRouter();
   const userId = useAuthStore((s) => s.userId)!;
   const { isDark, colors } = useThemeStore();
+  const { t, lang } = useLangStore();
   const createLog = useCreateLog(userId);
   const createTransaction = useCreateTransaction(userId);
 
@@ -168,7 +170,7 @@ export default function LogScreen() {
           <Pressable onPress={() => router.back()} style={styles.closeBtn} hitSlop={12}>
             <Text style={[styles.closeIcon, { color: colors.textMuted }]}>✕</Text>
           </Pressable>
-          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Log an activity</Text>
+          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>{lang === "id" ? "Catat aktivitas" : "Log an activity"}</Text>
           <Pressable
             onPress={handleSubmit}
             disabled={isLoading}
@@ -176,7 +178,7 @@ export default function LogScreen() {
           >
             {isLoading
               ? <ActivityIndicator color="#fff" size="small" />
-              : <Text style={styles.saveBtnText}>Save</Text>
+              : <Text style={styles.saveBtnText}>{t.save}</Text>
             }
           </Pressable>
         </View>

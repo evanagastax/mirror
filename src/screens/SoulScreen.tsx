@@ -23,6 +23,7 @@ import { useLogs } from "../hooks/useLogs";
 import { buildPillarTrend } from "../services/pillarTrend";
 import { PillarTrendChart } from "../components/PillarTrendChart";
 import { SoulSkeleton } from "../components/skeletons";
+import { useLangStore } from "../store/langStore";
 import {
   loadPlan, savePlan, deletePlan, buildPlan, updateMilestone,
   planProgress, HafalanPlan, HafalanMilestone, MilestoneStatus,
@@ -63,6 +64,7 @@ const TABS: { key: Tab; label: string; icon: string }[] = [
 export default function SoulScreen() {
   const router = useRouter();
   const { isDark, colors } = useThemeStore();
+  const { t } = useLangStore();
   const userId = useAuthStore((s) => s.userId) ?? "";
   const [tab, setTab] = useState<Tab>("daily");
 
@@ -76,14 +78,14 @@ export default function SoulScreen() {
           <Text style={[S.back, { color: colors.textMuted }]}>←</Text>
         </Pressable>
         <View style={S.headerCenter}>
-          <Text style={[S.headerTitle, { color: colors.textPrimary }]}>Soul</Text>
+          <Text style={[S.headerTitle, { color: colors.textPrimary }]}>{t.soul}</Text>
           <Text style={[S.headerSub, { color: colors.textMuted }]}>Spirit & Devotion</Text>
         </View>
         <Pressable
           onPress={() => router.push("/log/new")}
           style={[S.logChip, { backgroundColor: SOUL_BG }]}
         >
-          <Text style={[S.logChipText, { color: SOUL_COLOR }]}>+ Log</Text>
+          <Text style={[S.logChipText, { color: SOUL_COLOR }]}>+ {t.log}</Text>
         </Pressable>
       </View>
 
@@ -93,13 +95,17 @@ export default function SoulScreen() {
         style={[S.tabScroll, { borderBottomColor: colors.border }]}
         contentContainerStyle={S.tabRow}
       >
-        {TABS.map((t) => {
-          const active = tab === t.key;
+        {TABS.map((tabItem) => {
+          const active = tab === tabItem.key;
+          const labelMap: Record<Tab, string> = {
+            daily: t.daily, dua: t.dua, dzikir: t.dzikir,
+            asmaul: t.asmaul, quran: t.quran, hafalan: t.hafalan,
+          };
           return (
-            <Pressable key={t.key} style={[S.tab, active && S.tabActive]} onPress={() => setTab(t.key)}>
-              <Text style={S.tabIcon}>{t.icon}</Text>
+            <Pressable key={tabItem.key} style={[S.tab, active && S.tabActive]} onPress={() => setTab(tabItem.key)}>
+              <Text style={S.tabIcon}>{tabItem.icon}</Text>
               <Text style={[S.tabText, { color: active ? SOUL_COLOR : colors.textMuted }, active && S.tabTextActive]}>
-                {t.label}
+                {labelMap[tabItem.key]}
               </Text>
             </Pressable>
           );
