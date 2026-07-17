@@ -23,6 +23,8 @@ import { OnboardingModal } from "../components/OnboardingModal";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { PILLAR_META, type PillarKey } from "../theme/pillars";
 import { CompassSkeleton } from "../components/skeletons";
+import { useLangStore } from "../store/langStore";
+import type { Translations } from "../i18n/translations";
 
 // ─── pillar config ────────────────────────────────────────────────────────────
 
@@ -40,15 +42,15 @@ const PILLARS = PILLAR_META.map((p) => ({
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
-function getRank(synergy: number): string {
-  if (synergy < 10) return "Novice";
-  if (synergy < 25) return "Apprentice";
-  if (synergy < 50) return "Adept";
-  if (synergy < 100) return "Journeyman";
-  if (synergy < 200) return "Expert";
-  if (synergy < 400) return "Master";
-  if (synergy < 700) return "Grandmaster";
-  return "Legend";
+function getRank(synergy: number, t: Translations): string {
+  if (synergy < 10) return t.novice;
+  if (synergy < 25) return t.apprentice;
+  if (synergy < 50) return t.adept;
+  if (synergy < 100) return t.journeyman;
+  if (synergy < 200) return t.expert;
+  if (synergy < 400) return t.master;
+  if (synergy < 700) return t.grandmaster;
+  return t.legend;
 }
 
 // ─── screen ───────────────────────────────────────────────────────────────────
@@ -57,6 +59,7 @@ export default function CompassScreen() {
   const router = useRouter();
   const userId = useAuthStore((s) => s.userId);
   const { isDark, colors } = useThemeStore();
+  const { t, lang } = useLangStore();
   const { data: pillars, isLoading, isError, refetch, isRefetching } = usePillars(userId);
   const { data: streak } = useStreak(userId);
   const { toasts, removeToast, trackScores } = useXPToast();
@@ -143,7 +146,7 @@ export default function CompassScreen() {
   }
 
   const synergy = calculateSynergy(pillars);
-  const rank = getRank(synergy);
+  const rank = getRank(synergy, t);
   const RANK_MILESTONES = [0, 10, 25, 50, 100, 200, 400, 700];
   const nextMilestone = RANK_MILESTONES.find((m) => m > synergy) ?? 700;
   const prevMilestone = [...RANK_MILESTONES].reverse().find((m) => m <= synergy) ?? 0;
@@ -151,7 +154,7 @@ export default function CompassScreen() {
   const rankPct = nextMilestone === prevMilestone
     ? 1
     : (synergy - prevMilestone) / (nextMilestone - prevMilestone);
-  const nextRank = getRank(nextMilestone);
+  const nextRank = getRank(nextMilestone, t);
 
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: colors.bg }]} edges={["top"]}>
@@ -175,8 +178,8 @@ export default function CompassScreen() {
         {/* ── Top bar ── */}
         <View style={styles.topBar}>
           <View style={styles.topLeft}>
-            <Text style={[styles.appTitle, { color: colors.textPrimary }]}>The Mirror</Text>
-            <Text style={[styles.appSub, { color: colors.textMuted }]}>Know thyself.</Text>
+            <Text style={[styles.appTitle, { color: colors.textPrimary }]}>{t.appName}</Text>
+            <Text style={[styles.appSub, { color: colors.textMuted }]}>{t.knowThyself}</Text>
           </View>
 
         </View>
@@ -197,14 +200,14 @@ export default function CompassScreen() {
                 <View style={styles.streakRow}>
                   <Text style={styles.streakFire}>🔥</Text>
                   <Text style={[styles.streakText, { color: "#D85A30" }]}>
-                    {streak.current} day streak
+                    {streak.current} {t.dayStreak}
                   </Text>
                 </View>
               )}
             </View>
           </View>
           <View style={styles.bannerRight}>
-            <Text style={[styles.synergyLabel, { color: colors.textMuted }]}>SYNERGY</Text>
+            <Text style={[styles.synergyLabel, { color: colors.textMuted }]}>{t.synergy}</Text>
             <Text style={[styles.synergyValue, { color: colors.textPrimary }]}>{synergy}</Text>
             {/* Rank progression bar */}
             <View style={styles.rankProgressWrap}>
@@ -215,12 +218,12 @@ export default function CompassScreen() {
                 }]} />
               </View>
               <Text style={[styles.rankProgressHint, { color: colors.textDisabled }]}>
-                {ptsToNext > 0 ? `${ptsToNext} pts → ${nextRank}` : "Max rank 🏆"}
+                {ptsToNext > 0 ? `${ptsToNext} ${t.ptsToNext} ${nextRank}` : t.maxRank}
               </Text>
             </View>
             {streak && streak.loggedToday && (
               <View style={[styles.todayBadge, { backgroundColor: "#F0FBF7" }]}>
-                <Text style={[styles.todayBadgeText, { color: "#1D9E75" }]}>✓ Logged today</Text>
+                <Text style={[styles.todayBadgeText, { color: "#1D9E75" }]}>{t.loggedToday}</Text>
               </View>
             )}
           </View>
@@ -228,9 +231,9 @@ export default function CompassScreen() {
 
         {/* ── Attributes ── */}
         <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>ATTRIBUTES</Text>
+          <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>{t.attributes}</Text>
           <Pressable onPress={() => router.push("/(app)/roadmap")}>
-            <Text style={[styles.sectionAction, { color: "#378ADD" }]}>Roadmap ›</Text>
+            <Text style={[styles.sectionAction, { color: "#378ADD" }]}>{t.roadmap}</Text>
           </Pressable>
         </View>
 
@@ -240,10 +243,10 @@ export default function CompassScreen() {
           <View style={[styles.emptyState, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
             <Text style={styles.emptyEmoji}>✦</Text>
             <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
-              Your journey starts here
+              {t.yourJourneyStarts}
             </Text>
             <Text style={[styles.emptySub, { color: colors.textMuted }]}>
-              Tap + to log your first activity and start building your Synergy score.
+              {t.tapToLog}
             </Text>
             <View style={styles.emptyPillars}>
               {PILLARS.map((p) => (
@@ -261,7 +264,7 @@ export default function CompassScreen() {
               style={[styles.emptyLogBtn, { backgroundColor: colors.textPrimary }]}
               onPress={() => router.push("/log/new" as any)}
             >
-              <Text style={[styles.emptyLogBtnText, { color: colors.bg }]}>+ Log your first activity</Text>
+              <Text style={[styles.emptyLogBtnText, { color: colors.bg }]}>{t.logYourFirst}</Text>
             </Pressable>
           </View>
         ) : (
@@ -299,7 +302,7 @@ export default function CompassScreen() {
 
         {/* ── Bottom hint ── */}
         <Text style={[styles.hint, { color: colors.textDisabled }]}>
-          Tap a pillar to drill in · Use + to log
+          {lang === "id" ? "Ketuk pillar untuk masuk · Gunakan + untuk log" : "Tap a pillar to drill in · Use + to log"}
         </Text>
       </ScrollView>
     </SafeAreaView>

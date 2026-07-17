@@ -9,6 +9,7 @@ import { useRouter } from "expo-router";
 import { supabase } from "../api/supabase";
 import { useAuthStore } from "../store/authStore";
 import { useThemeStore } from "../store/themeStore";
+import { useLangStore } from "../store/langStore";
 import { usePillars } from "../hooks/usePillars";
 import { useGoals } from "../hooks/useGoals";
 import { PILLAR_META, type PillarKey } from "../theme/pillars";
@@ -31,6 +32,7 @@ export default function ProfileScreen() {
   const { data: streak } = useStreak(userId);
   const badges = useMemo(() => computeBadges(pillars, logs, transactions, streak), [pillars, logs, transactions, streak]);
   const { isDark, colors, toggle: toggleTheme } = useThemeStore();
+  const { lang, setLang, t } = useLangStore();
   const router = useRouter();
 
   const [username, setUsername] = useState("");
@@ -323,6 +325,32 @@ export default function ProfileScreen() {
               thumbColor={isDark ? "#fff" : "#111"}
             />
           </View>
+        </View>
+
+        {/* ── Language ── */}
+        <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>{t.language}</Text>
+        <View style={[styles.settingCard, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
+          <Pressable
+            onPress={() => setLang("id")}
+            style={[styles.settingRow, lang === "id" && { backgroundColor: colors.bgSubtle }]}
+            android_ripple={{ color: colors.bgSubtle }}
+          >
+            <View style={styles.settingInfo}>
+              <Text style={[styles.settingTitle, { color: colors.textPrimary }]}>{t.bahasaIndonesia}</Text>
+            </View>
+            {lang === "id" && <Text style={{ color: "#1D9E75", fontSize: 18 }}>✓</Text>}
+          </Pressable>
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+          <Pressable
+            onPress={() => setLang("en")}
+            style={[styles.settingRow, lang === "en" && { backgroundColor: colors.bgSubtle }]}
+            android_ripple={{ color: colors.bgSubtle }}
+          >
+            <View style={styles.settingInfo}>
+              <Text style={[styles.settingTitle, { color: colors.textPrimary }]}>{t.english}</Text>
+            </View>
+            {lang === "en" && <Text style={{ color: "#1D9E75", fontSize: 18 }}>✓</Text>}
+          </Pressable>
         </View>
 
         {/* ── Notifications ── */}
