@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { View, Text, StyleSheet, Dimensions } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import type { MonthBucket } from "../services/pillarTrend";
 
 const BAR_AREA_H = 100;

@@ -16,6 +16,10 @@ export type Translations = {
   done: string;
   log: string;
   noData: string;
+  error: string;
+  ok: string;
+  setGoals: string;
+  monthlyBudget: string;
 
   // Tab bar
   tabCompass: string;
@@ -87,6 +91,12 @@ export type Translations = {
   language: string;
   bahasaIndonesia: string;
   english: string;
+  couldntSave: string;
+  usernameSaved: string;
+  usernameNow: string;
+  couldntUpdatePrivacy: string;
+  exportFailed: string;
+  couldntExport: string;
 
   // Notifications
   prayerAlerts: string;
@@ -96,6 +106,12 @@ export type Translations = {
   streakWarning: string;
   streakDesc: string;
   settingsSaved: string;
+  permissionDenied: string;
+  enableNotifInSettings: string;
+  couldntSaveNotif: string;
+  disableAll: string;
+  disableAllConfirm: string;
+  allScheduledCancelled: string;
 
   // Soul
   daily: string;
@@ -104,6 +120,26 @@ export type Translations = {
   asmaul: string;
   quran: string;
   hafalan: string;
+
+  // Hafalan
+  hafalanTitle: string;
+  hafalanDesc: string;
+  startHafalan: string;
+  resetProgress: string;
+  resetConfirm: string;
+  replace: string;
+  start: string;
+  notYet: string;
+  memorizing: string;
+  memorized: string;
+
+  // Salah
+  sholatToday: string;
+  timePeriods: string;
+  xpToday: string;
+  complete: string;
+  upcoming: string;
+  passed: string;
 
   // Vessel
   myProfile: string;
@@ -121,6 +157,29 @@ export type Translations = {
   howToPerform: string;
   logged: string;
   addedToPlan: string;
+  fullBodyA: string;
+  fullBodyB: string;
+  push: string;
+  pull: string;
+  legs: string;
+  chest: string;
+  backMuscle: string;
+  shoulders: string;
+  arms: string;
+  core: string;
+  coreCardio: string;
+  incomplete: string;
+  fillRequired: string;
+  selectEquipment: string;
+  target: string;
+  rest: string;
+  mon: string;
+  tue: string;
+  wed: string;
+  thu: string;
+  fri: string;
+  sat: string;
+  sun: string;
 
   // Stewardship
   invested: string;
@@ -130,11 +189,69 @@ export type Translations = {
   monthlyTrend: string;
   budgetGoals: string;
   zakat: string;
+  investment: string;
+  consumption: string;
+  leak: string;
+  healthScore: string;
+  reckless: string;
+  fragile: string;
+  careful: string;
+  stable: string;
+  disciplined: string;
+  frugal: string;
+  overTarget: string;
+  toGo: string;
+  overLimit: string;
+  remaining: string;
+  tapSetGoals: string;
 
   // Goals
   addGoal: string;
   todo: string;
   inProgress: string;
+  total: string;
+  toLearn: string;
+  learning: string;
+  learned: string;
+
+  // Impact
+  workOutput: string;
+  score: string;
+  avgEffort: string;
+  thisWeek: string;
+  career: string;
+  jobRoadmaps: string;
+  goals: string;
+  trackGoals: string;
+  newEntry: string;
+  couldntLoad: string;
+  foundation: string;
+  advanced: string;
+  optional: string;
+  beginner: string;
+  intermediate: string;
+
+  // Log form
+  activityLabel: string;
+  durationMinutes: string;
+  evidenceLink: string;
+  exerciseName: string;
+  type: string;
+  weight: string;
+  category: string;
+  note: string;
+  code: string;
+  design: string;
+  write: string;
+  manage: string;
+  learn: string;
+  other: string;
+  codeHint: string;
+  designHint: string;
+  writeHint: string;
+  manageHint: string;
+  learnHint: string;
+  otherHint: string;
 
   // Ranks
   novice: string;
@@ -184,6 +301,10 @@ export const translations: Record<Lang, Translations> = {
     done: "Selesai",
     log: "Log",
     noData: "Belum ada data",
+    error: "Kesalahan",
+    ok: "OK",
+    setGoals: "Atur Tujuan",
+    monthlyBudget: "Anggaran Bulanan",
 
     // Tab bar
     tabCompass: "Kompas",
@@ -255,6 +376,12 @@ export const translations: Record<Lang, Translations> = {
     language: "BAHASA",
     bahasaIndonesia: "🇮🇩 Bahasa Indonesia",
     english: "🇬🇧 English",
+    couldntSave: "Tidak dapat menyimpan.",
+    usernameSaved: "Username tersimpan ✓",
+    usernameNow: "Username-mu sekarang @",
+    couldntUpdatePrivacy: "Tidak dapat memperbarui pengaturan privasi.",
+    exportFailed: "Ekspor gagal",
+    couldntExport: "Tidak dapat mengekspor data.",
 
     // Notifications
     prayerAlerts: "Peringatan waktu sholat",
@@ -264,6 +391,12 @@ export const translations: Record<Lang, Translations> = {
     streakWarning: "Peringatan streak",
     streakDesc: "Notifikasi saat streak-mu dalam bahaya putus.",
     settingsSaved: "Pengaturan tersimpan ✓",
+    permissionDenied: "Izin ditolak",
+    enableNotifInSettings: "Aktifkan notifikasi di pengaturan perangkat untuk menggunakan fitur ini.",
+    couldntSaveNotif: "Tidak dapat menyimpan notifikasi.",
+    disableAll: "Nonaktifkan semua",
+    disableAllConfirm: "Nonaktifkan semua notifikasi?",
+    allScheduledCancelled: "Semua notifikasi terjadwal akan dibatalkan.",
 
     // Soul
     daily: "Harian",
@@ -272,6 +405,26 @@ export const translations: Record<Lang, Translations> = {
     asmaul: "Asmaul",
     quran: "Al-Qur'an",
     hafalan: "Hafalan",
+
+    // Hafalan
+    hafalanTitle: "Hafalan Al-Qur'an",
+    hafalanDesc: "Pilih surah dan tentukan berapa ayat per sesi. Kami akan membuat timeline hafalan untukmu.",
+    startHafalan: "Mulai Hafalan",
+    resetProgress: "Reset progres?",
+    resetConfirm: "Semua sesi akan dikembalikan ke awal. Surah tetap sama.",
+    replace: "Ganti",
+    start: "Mulai",
+    notYet: "Belum",
+    memorizing: "Dihafal",
+    memorized: "Hafal ✓",
+
+    // Salah
+    sholatToday: "Sholat Hari Ini",
+    timePeriods: "waktu",
+    xpToday: "XP hari ini",
+    complete: "✓ Lengkap",
+    upcoming: "Belum",
+    passed: "Lewat",
 
     // Vessel
     myProfile: "Profil Saya",
@@ -289,6 +442,29 @@ export const translations: Record<Lang, Translations> = {
     howToPerform: "📋 Cara melakukan",
     logged: "Tercatat! 💪",
     addedToPlan: "Ditambahkan ke rencana ✓",
+    fullBodyA: "Full Body A",
+    fullBodyB: "Full Body B",
+    push: "Push",
+    pull: "Pull",
+    legs: "Legs",
+    chest: "Dada",
+    backMuscle: "Punggung",
+    shoulders: "Bahu",
+    arms: "Lengan",
+    core: "Core",
+    coreCardio: "Core & Kardio",
+    incomplete: "Tidak lengkap",
+    fillRequired: "Isi berat, tinggi, dan usia.",
+    selectEquipment: "Pilih minimal satu opsi peralatan.",
+    target: "Target",
+    rest: "Istirahat",
+    mon: "Sen",
+    tue: "Sel",
+    wed: "Rab",
+    thu: "Kam",
+    fri: "Jum",
+    sat: "Sab",
+    sun: "Min",
 
     // Stewardship
     invested: "Investasi",
@@ -298,11 +474,69 @@ export const translations: Record<Lang, Translations> = {
     monthlyTrend: "Tren Bulanan",
     budgetGoals: "Tujuan Anggaran",
     zakat: "Zakat",
+    investment: "Investasi",
+    consumption: "Konsumsi",
+    leak: "Kebocoran",
+    healthScore: "SKOR KESEHATAN",
+    reckless: "Boros",
+    fragile: "Rapuh",
+    careful: "Hati-hati",
+    stable: "Stabil",
+    disciplined: "Disiplin",
+    frugal: "Hemat",
+    overTarget: "melampaui target 🎉",
+    toGo: "lagi",
+    overLimit: "melampaui batas ⚠️",
+    remaining: "tersisa",
+    tapSetGoals: 'Ketuk "Atur Tujuan" untuk menambahkan target dan batas bulanan.',
 
     // Goals
     addGoal: "+ Tujuan",
     todo: "Belum",
     inProgress: "Sedang",
+    total: "Total",
+    toLearn: "Belajar",
+    learning: "Belajar",
+    learned: "Sudah ✓",
+
+    // Impact
+    workOutput: "Pekerjaan & Output",
+    score: "Skor",
+    avgEffort: "Rata-rata",
+    thisWeek: "Minggu ini",
+    career: "Karir",
+    jobRoadmaps: "Roadmap karir",
+    goals: "Tujuan",
+    trackGoals: "Lacak tujuan",
+    newEntry: "Entri baru",
+    couldntLoad: "Tidak dapat memuat log.",
+    foundation: "Dasar",
+    advanced: "Lanjutan",
+    optional: "Opsional",
+    beginner: "Pemula",
+    intermediate: "Menengah",
+
+    // Log form
+    activityLabel: "Aktivitas",
+    durationMinutes: "Durasi (menit)",
+    evidenceLink: "Bukti tautan (opsional)",
+    exerciseName: "Nama latihan / sesi",
+    type: "Tipe",
+    weight: "Berat (kg)",
+    category: "Kategori",
+    note: "Catatan",
+    code: "Kode",
+    design: "Desain",
+    write: "Tulis",
+    manage: "Kelola",
+    learn: "Belajar",
+    other: "Lainnya",
+    codeHint: "PR, commit, bug fix",
+    designHint: "UI, mockup, prototipe",
+    writeHint: "Dokumen, artikel, laporan",
+    manageHint: "Rapat, perencanaan, review",
+    learnHint: "Kursus, buku, riset",
+    otherHint: "Apapun selain itu",
 
     // Ranks
     novice: "Pemula",
@@ -351,6 +585,10 @@ export const translations: Record<Lang, Translations> = {
     done: "Done",
     log: "Log",
     noData: "No data yet",
+    error: "Error",
+    ok: "OK",
+    setGoals: "Set Goals",
+    monthlyBudget: "Monthly Budget",
 
     // Tab bar
     tabCompass: "Compass",
@@ -422,6 +660,12 @@ export const translations: Record<Lang, Translations> = {
     language: "LANGUAGE",
     bahasaIndonesia: "🇮🇩 Bahasa Indonesia",
     english: "🇬🇧 English",
+    couldntSave: "Couldn't save.",
+    usernameSaved: "Username saved ✓",
+    usernameNow: "Your username is now @",
+    couldntUpdatePrivacy: "Couldn't update privacy setting.",
+    exportFailed: "Export failed",
+    couldntExport: "Could not export data.",
 
     // Notifications
     prayerAlerts: "Prayer time alerts",
@@ -431,6 +675,12 @@ export const translations: Record<Lang, Translations> = {
     streakWarning: "Streak at-risk warning",
     streakDesc: "Get notified when your streak is about to break.",
     settingsSaved: "Settings saved ✓",
+    permissionDenied: "Permission denied",
+    enableNotifInSettings: "Enable notifications in your device settings to use this feature.",
+    couldntSaveNotif: "Couldn't save notifications.",
+    disableAll: "Disable all",
+    disableAllConfirm: "Disable all notifications?",
+    allScheduledCancelled: "All scheduled notifications will be cancelled.",
 
     // Soul
     daily: "Daily",
@@ -439,6 +689,26 @@ export const translations: Record<Lang, Translations> = {
     asmaul: "Asmaul",
     quran: "Al-Qur'an",
     hafalan: "Hafalan",
+
+    // Hafalan
+    hafalanTitle: "Hafalan Al-Qur'an",
+    hafalanDesc: "Pick a surah and set how many ayat per session. We'll build a memorization timeline for you.",
+    startHafalan: "Start Memorization",
+    resetProgress: "Reset progress?",
+    resetConfirm: "All sessions will be reset. The surah stays the same.",
+    replace: "Replace",
+    start: "Start",
+    notYet: "Not yet",
+    memorizing: "Memorizing",
+    memorized: "Memorized ✓",
+
+    // Salah
+    sholatToday: "Prayers Today",
+    timePeriods: "periods",
+    xpToday: "XP today",
+    complete: "✓ Complete",
+    upcoming: "Not yet",
+    passed: "Missed",
 
     // Vessel
     myProfile: "My Profile",
@@ -456,6 +726,29 @@ export const translations: Record<Lang, Translations> = {
     howToPerform: "📋 How to perform",
     logged: "Logged! 💪",
     addedToPlan: "Added to plan ✓",
+    fullBodyA: "Full Body A",
+    fullBodyB: "Full Body B",
+    push: "Push",
+    pull: "Pull",
+    legs: "Legs",
+    chest: "Chest",
+    backMuscle: "Back",
+    shoulders: "Shoulders",
+    arms: "Arms",
+    core: "Core",
+    coreCardio: "Core & Cardio",
+    incomplete: "Incomplete",
+    fillRequired: "Please fill in weight, height, and age.",
+    selectEquipment: "Select at least one equipment option.",
+    target: "Target",
+    rest: "Rest",
+    mon: "Mon",
+    tue: "Tue",
+    wed: "Wed",
+    thu: "Thu",
+    fri: "Fri",
+    sat: "Sat",
+    sun: "Sun",
 
     // Stewardship
     invested: "Invested",
@@ -465,11 +758,69 @@ export const translations: Record<Lang, Translations> = {
     monthlyTrend: "Monthly Trend",
     budgetGoals: "Budget Goals",
     zakat: "Zakat",
+    investment: "Investment",
+    consumption: "Consumption",
+    leak: "Leak",
+    healthScore: "HEALTH SCORE",
+    reckless: "Reckless",
+    fragile: "Fragile",
+    careful: "Careful",
+    stable: "Stable",
+    disciplined: "Disciplined",
+    frugal: "Frugal",
+    overTarget: "over target 🎉",
+    toGo: "to go",
+    overLimit: "over limit ⚠️",
+    remaining: "remaining",
+    tapSetGoals: 'Tap "Set Goals" to add monthly targets and limits.',
 
     // Goals
     addGoal: "+ Goal",
     todo: "Todo",
     inProgress: "In Progress",
+    total: "Total",
+    toLearn: "To Learn",
+    learning: "Learning",
+    learned: "Learned ✓",
+
+    // Impact
+    workOutput: "Work & Output",
+    score: "Score",
+    avgEffort: "Avg effort",
+    thisWeek: "This week",
+    career: "Career",
+    jobRoadmaps: "Job roadmaps",
+    goals: "Goals",
+    trackGoals: "Track goals",
+    newEntry: "New entry",
+    couldntLoad: "Couldn't load logs.",
+    foundation: "Foundation",
+    advanced: "Advanced",
+    optional: "Optional",
+    beginner: "Beginner",
+    intermediate: "Intermediate",
+
+    // Log form
+    activityLabel: "Activity",
+    durationMinutes: "Duration (minutes)",
+    evidenceLink: "Evidence link (optional)",
+    exerciseName: "Exercise / session name",
+    type: "Type",
+    weight: "Weight (kg)",
+    category: "Category",
+    note: "Note",
+    code: "Code",
+    design: "Design",
+    write: "Write",
+    manage: "Manage",
+    learn: "Learn",
+    other: "Other",
+    codeHint: "PR, commit, bug fix",
+    designHint: "UI, mockup, prototype",
+    writeHint: "Docs, article, report",
+    manageHint: "Meeting, planning, review",
+    learnHint: "Course, book, research",
+    otherHint: "Anything else",
 
     // Ranks
     novice: "Novice",

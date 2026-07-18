@@ -8,6 +8,7 @@ import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
 import { useAuthStore } from "../store/authStore";
 import { useThemeStore } from "../store/themeStore";
+import { useLangStore } from "../store/langStore";
 import {
   CAREER_ROADMAPS, getRoadmapById,
   CareerRoadmap, Section, Topic, TopicLevel,
@@ -24,28 +25,34 @@ import type { Colors } from "../types";
 const IMPACT_COLOR = PILLAR_COLORS.impact.primary;
 const IMPACT_BG    = PILLAR_COLORS.impact.bg;
 
-const LEVEL_META: Record<TopicLevel, { label: string; color: string; bg: string }> = {
-  foundation: { label: "Foundation", color: "#1D9E75", bg: "#F0FBF7" },
-  core:       { label: "Core",       color: "#378ADD", bg: "#F0F7FE" },
-  advanced:   { label: "Advanced",   color: "#D85A30", bg: "#FEF3EE" },
-  optional:   { label: "Optional",   color: "#888",    bg: "#f5f5f5" },
-};
+function getLevelMeta(t: { foundation: string; core: string; advanced: string; optional: string }): Record<TopicLevel, { label: string; color: string; bg: string }> {
+  return {
+    foundation: { label: t.foundation, color: "#1D9E75", bg: "#F0FBF7" },
+    core:       { label: t.core,       color: "#378ADD", bg: "#F0F7FE" },
+    advanced:   { label: t.advanced,   color: "#D85A30", bg: "#FEF3EE" },
+    optional:   { label: t.optional,   color: "#888",    bg: "#f5f5f5" },
+  };
+}
 
-const STATUS_META: Record<TopicStatus, { icon: string; color: string; bg: string; label: string }> = {
-  todo:        { icon: "○", color: "#aaa",    bg: "#f5f5f5", label: "To Learn"   },
-  in_progress: { icon: "◑", color: "#378ADD", bg: "#F0F7FE", label: "Learning"   },
-  done:        { icon: "●", color: "#1D9E75", bg: "#F0FBF7", label: "Learned ✓"  },
-};
+function getStatusMeta(t: { todo: string; learning: string; learned: string }): Record<TopicStatus, { icon: string; color: string; bg: string; label: string }> {
+  return {
+    todo:        { icon: "○", color: "#aaa",    bg: "#f5f5f5", label: t.todo   },
+    in_progress: { icon: "◑", color: "#378ADD", bg: "#F0F7FE", label: t.learning   },
+    done:        { icon: "●", color: "#1D9E75", bg: "#F0FBF7", label: t.learned  },
+  };
+}
 
 const RESOURCE_ICONS: Record<string, string> = {
   article: "📄", video: "▶️", course: "🎓", docs: "📚", book: "📖",
 };
 
-const DIFF_META: Record<import("../data/careerRoadmaps").ProjectDifficulty, { label: string; color: string; bg: string }> = {
-  beginner:     { label: "Beginner",     color: "#1D9E75", bg: "#F0FBF7" },
-  intermediate: { label: "Intermediate", color: "#D97706", bg: "#FFFBEB" },
-  advanced:     { label: "Advanced",     color: "#D85A30", bg: "#FEF3EE" },
-};
+function getDiffMeta(t: { beginner: string; intermediate: string; advanced: string }): Record<import("../data/careerRoadmaps").ProjectDifficulty, { label: string; color: string; bg: string }> {
+  return {
+    beginner:     { label: t.beginner,     color: "#1D9E75", bg: "#F0FBF7" },
+    intermediate: { label: t.intermediate, color: "#D97706", bg: "#FFFBEB" },
+    advanced:     { label: t.advanced,     color: "#D85A30", bg: "#FEF3EE" },
+  };
+}
 
 // ─── Main screen ─────────────────────────────────────────────────────────────
 
@@ -53,6 +60,10 @@ export default function ImpactRoadmapScreen() {
   const router             = useRouter();
   const userId             = useAuthStore((s) => s.userId)!;
   const { isDark, colors } = useThemeStore();
+  const { t }              = useLangStore();
+  const LEVEL_META         = getLevelMeta(t);
+  const STATUS_META        = getStatusMeta(t);
+  const DIFF_META          = getDiffMeta(t);
 
   const [progress,      setProgress]      = useState<AllProgress>({});
   const [loading,       setLoading]       = useState(true);
@@ -183,6 +194,9 @@ export default function ImpactRoadmapScreen() {
           onClose={() => setActiveRoadmap(null)}
           onStatusChange={(topicId, status) => handleStatusChange(activeRoadmap, topicId, status)}
           onReset={() => { handleReset(activeRoadmap.id); setActiveRoadmap(null); }}
+          levelMeta={LEVEL_META}
+          statusMeta={STATUS_META}
+          diffMeta={DIFF_META}
         />
       )}
     </SafeAreaView>
@@ -191,13 +205,16 @@ export default function ImpactRoadmapScreen() {
 
 // ─── Roadmap detail modal ─────────────────────────────────────────────────────
 
-function RoadmapDetail({ roadmap: rm, progress, colors, isDark, onClose, onStatusChange, onReset }: {
+function RoadmapDetail({ roadmap: rm, progress, colors, isDark, onClose, onStatusChange, onReset, levelMeta, statusMeta, diffMeta }: {
   roadmap: CareerRoadmap;
   progress: import("../services/careerProgress").RoadmapProgress | undefined;
   colors: Colors; isDark: boolean;
   onClose: () => void;
   onStatusChange: (topicId: string, status: TopicStatus) => void;
   onReset: () => void;
+  levelMeta: Record<TopicLevel, { label: string; color: string; bg: string }>;
+  statusMeta: Record<TopicStatus, { icon: string; color: string; bg: string; label: string }>;
+  diffMeta: Record<import("../data/careerRoadmaps").ProjectDifficulty, { label: string; color: string; bg: string }>;
 }) {
   const [activeTopic, setActiveTopic] = useState<Topic | null>(null);
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set([rm.sections[0]?.id]));
@@ -272,7 +289,7 @@ function RoadmapDetail({ roadmap: rm, progress, colors, isDark, onClose, onStatu
           {/* Projects to build */}
           <Text style={[S.sectionLabel, { color: colors.textMuted }]}>PROJECTS TO BUILD</Text>
           {rm.projects.map((project, i) => {
-            const diffMeta = DIFF_META[project.difficulty];
+            const dm = diffMeta[project.difficulty];
             return (
               <View
                 key={i}
@@ -283,8 +300,8 @@ function RoadmapDetail({ roadmap: rm, progress, colors, isDark, onClose, onStatu
                     <Text style={[S.projectTitle, { color: colors.textPrimary }]}>{project.title}</Text>
                     <Text style={[S.projectDesc, { color: colors.textMuted }]}>{project.description}</Text>
                   </View>
-                  <View style={[S.diffBadge, { backgroundColor: diffMeta.bg }]}>
-                    <Text style={[S.diffBadgeText, { color: diffMeta.color }]}>{diffMeta.label}</Text>
+                  <View style={[S.diffBadge, { backgroundColor: dm.bg }]}>
+                    <Text style={[S.diffBadgeText, { color: dm.color }]}>{dm.label}</Text>
                   </View>
                 </View>
                 <View style={S.skillsRow}>
@@ -300,8 +317,8 @@ function RoadmapDetail({ roadmap: rm, progress, colors, isDark, onClose, onStatu
 
           {/* Legend */}
           <View style={S.legendRow}>
-            {(Object.keys(STATUS_META) as TopicStatus[]).map((s) => {
-              const m = STATUS_META[s];
+            {(Object.keys(statusMeta) as TopicStatus[]).map((s) => {
+              const m = statusMeta[s];
               return (
                 <View key={s} style={S.legendItem}>
                   <Text style={[S.legendIcon, { color: m.color }]}>{m.icon}</Text>
@@ -338,8 +355,8 @@ function RoadmapDetail({ roadmap: rm, progress, colors, isDark, onClose, onStatu
                   <View style={[S.topicList, { borderColor: colors.border }]}>
                     {section.topics.map((topic, ti) => {
                       const status = progress?.topics[topic.id] ?? "todo";
-                      const sm     = STATUS_META[status];
-                      const lm     = LEVEL_META[topic.level];
+                      const sm     = statusMeta[status];
+                      const lm     = levelMeta[topic.level];
                       const isLast = ti === section.topics.length - 1;
                       return (
                         <Pressable
@@ -392,6 +409,8 @@ function RoadmapDetail({ roadmap: rm, progress, colors, isDark, onClose, onStatu
             isDark={isDark}
             onClose={() => setActiveTopic(null)}
             onStatusChange={(s) => { onStatusChange(activeTopic.id, s); setActiveTopic(null); }}
+            levelMeta={levelMeta}
+            statusMeta={statusMeta}
           />
         )}
       </SafeAreaView>
@@ -401,12 +420,14 @@ function RoadmapDetail({ roadmap: rm, progress, colors, isDark, onClose, onStatu
 
 // ─── Topic detail bottom sheet ────────────────────────────────────────────────
 
-function TopicSheet({ topic, status, colors, isDark, onClose, onStatusChange }: {
+function TopicSheet({ topic, status, colors, isDark, onClose, onStatusChange, levelMeta, statusMeta }: {
   topic: Topic; status: TopicStatus; colors: Colors; isDark: boolean;
   onClose: () => void;
   onStatusChange: (s: TopicStatus) => void;
+  levelMeta: Record<TopicLevel, { label: string; color: string; bg: string }>;
+  statusMeta: Record<TopicStatus, { icon: string; color: string; bg: string; label: string }>;
 }) {
-  const lm = LEVEL_META[topic.level];
+  const lm = levelMeta[topic.level];
   return (
     <Modal visible animationType="slide" transparent onRequestClose={onClose}>
       <Pressable style={S.sheetBackdrop} onPress={onClose} />
@@ -430,8 +451,8 @@ function TopicSheet({ topic, status, colors, isDark, onClose, onStatusChange }: 
 
         {/* Status selector */}
         <View style={S.statusRow}>
-          {(Object.keys(STATUS_META) as TopicStatus[]).map((s) => {
-            const m      = STATUS_META[s];
+          {(Object.keys(statusMeta) as TopicStatus[]).map((s) => {
+            const m      = statusMeta[s];
             const active = status === s;
             return (
               <Pressable key={s} onPress={() => onStatusChange(s)}

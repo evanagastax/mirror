@@ -24,11 +24,13 @@ type Filter = "all" | PillarKey | "todo" | "in_progress" | "done";
 
 const PILLARS = Object.values(PILLAR_META_MAP);
 
-const STATUS_META: Record<GoalStatus, { label: string; color: string; bg: string; icon: string }> = {
-  todo:        { label: "Todo",        color: "#888",    bg: "#f5f5f5", icon: "○" },
-  in_progress: { label: "In Progress", color: "#378ADD", bg: "#F0F7FE", icon: "◑" },
-  done:        { label: "Done",        color: "#1D9E75", bg: "#F0FBF7", icon: "●" },
-};
+function getStatusMeta(t: { todo: string; inProgress: string; done: string }): Record<GoalStatus, { label: string; color: string; bg: string; icon: string }> {
+  return {
+    todo:        { label: t.todo,        color: "#888",    bg: "#f5f5f5", icon: "○" },
+    in_progress: { label: t.inProgress, color: "#378ADD", bg: "#F0F7FE", icon: "◑" },
+    done:        { label: t.done,        color: "#1D9E75", bg: "#F0FBF7", icon: "●" },
+  };
+}
 
 const STATUS_ORDER: GoalStatus[] = ["todo", "in_progress", "done"];
 
@@ -46,6 +48,7 @@ export default function RoadmapScreen() {
   const userId             = useAuthStore((s) => s.userId)!;
   const { isDark, colors } = useThemeStore();
   const { t }              = useLangStore();
+  const STATUS_META = getStatusMeta(t);
   const { data: goals, isLoading } = useGoals(userId);
   const addGoal    = useAddGoal(userId);
   const updateStatus = useUpdateGoalStatus(userId);
@@ -143,10 +146,10 @@ export default function RoadmapScreen() {
           <View style={[S.progressFill, { width: `${overallPct * 100}%` as any }]} />
         </View>
         <View style={S.counters}>
-          <Counter label="Todo"        count={totalTodo}   color={STATUS_META.todo.color} />
-          <Counter label="In Progress" count={totalInProg} color={STATUS_META.in_progress.color} />
-          <Counter label="Done"        count={totalDone}   color={STATUS_META.done.color} />
-          <Counter label="Total"       count={allGoals.length} color={colors.textMuted} />
+          <Counter label={t.todo}           count={totalTodo}   color={STATUS_META.todo.color} />
+          <Counter label={t.inProgress}     count={totalInProg} color={STATUS_META.in_progress.color} />
+          <Counter label={t.done}           count={totalDone}   color={STATUS_META.done.color} />
+          <Counter label={t.total}          count={allGoals.length} color={colors.textMuted} />
         </View>
       </View>
 
@@ -159,7 +162,7 @@ export default function RoadmapScreen() {
         {/* Status filters */}
         {(["all", "todo", "in_progress", "done"] as const).map((f) => {
           const active = filter === f;
-          const label  = f === "all" ? "All" : STATUS_META[f as GoalStatus]?.label ?? f;
+          const label  = f === "all" ? t.all : STATUS_META[f as GoalStatus]?.label ?? f;
           const color  = f === "all" ? colors.textPrimary : STATUS_META[f as GoalStatus]?.color ?? colors.textMuted;
           const bg     = f === "all" ? colors.bgSubtle    : STATUS_META[f as GoalStatus]?.bg ?? colors.bgSubtle;
           return (
@@ -240,6 +243,7 @@ export default function RoadmapScreen() {
                     onLongPress={() => handleLongPress(goal)}
                     onDelete={() => handleDelete(goal)}
                     statusMenuOpen={statusMenu === goal.id}
+                    statusMeta={STATUS_META}
                     onStatusSelect={async (s) => {
                       setStatusMenu(null);
                       await updateStatus.mutateAsync({ id: goal.id, status: s });
@@ -325,14 +329,15 @@ export default function RoadmapScreen() {
 // ─── Goal row component ───────────────────────────────────────────────────────
 
 function GoalRow({ goal, pillar: p, colors, last, onTap, onLongPress, onDelete,
-  statusMenuOpen, onStatusSelect, onMenuClose }: {
+  statusMenuOpen, onStatusSelect, onMenuClose, statusMeta }: {
   goal: Goal; pillar: typeof PILLARS[0]; colors: Colors; last: boolean;
   onTap: () => void; onLongPress: () => void; onDelete: () => void;
   statusMenuOpen: boolean;
   onStatusSelect: (s: GoalStatus) => void;
   onMenuClose: () => void;
+  statusMeta: Record<GoalStatus, { label: string; color: string; bg: string; icon: string }>;
 }) {
-  const sm = STATUS_META[goal.status];
+  const sm = statusMeta[goal.status];
   return (
     <View style={[S.row, !last && { borderBottomColor: colors.border, borderBottomWidth: 1 }]}>
       {/* Status badge — tap to cycle */}
@@ -369,7 +374,7 @@ function GoalRow({ goal, pillar: p, colors, last, onTap, onLongPress, onDelete,
       {statusMenuOpen && (
         <View style={[S.statusMenu, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
           {STATUS_ORDER.map((s) => {
-            const meta = STATUS_META[s];
+            const meta = statusMeta[s];
             return (
               <Pressable key={s} onPress={() => onStatusSelect(s)}
                 style={[S.statusMenuItem, { borderBottomColor: colors.border },

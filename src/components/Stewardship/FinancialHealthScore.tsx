@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { calcHealthScore, getHealthTier } from "../../services/stewardshipStats";
+import { useLangStore } from "../../store/langStore";
 
 type C = {
   textPrimary: string; textMuted: string; textDisabled: string;
@@ -18,6 +19,7 @@ export function FinancialHealthScore({
   leak: number;
   colors: C;
 }) {
+  const { t } = useLangStore();
   const score = calcHealthScore(investment, consumption, leak);
   const tier  = getHealthTier(score);
 
@@ -29,7 +31,7 @@ export function FinancialHealthScore({
       <View style={S.topRow}>
         {/* Score + tier */}
         <View style={S.left}>
-          <Text style={[S.scoreLabel, { color: tier.color }]}>HEALTH SCORE</Text>
+          <Text style={[S.scoreLabel, { color: tier.color }]}>{t.healthScore}</Text>
           <Text style={[S.scoreValue, { color: tier.color }]}>{score}</Text>
           <View style={[S.tierBadge, { backgroundColor: tier.color }]}>
             <Text style={S.tierText}>{tier.label}</Text>
@@ -50,11 +52,11 @@ export function FinancialHealthScore({
 
       {/* Breakdown mini-row */}
       <View style={[S.breakdownRow, { borderTopColor: tier.color + "30" }]}>
-        <MiniStat label="Invested" value={formatRp(investment)} color="#1D9E75" />
+        <MiniStat label={t.invested} value={formatRp(investment)} color="#1D9E75" />
         <View style={[S.divider, { backgroundColor: tier.color + "30" }]} />
-        <MiniStat label="Spent"    value={formatRp(consumption)} color="#378ADD" />
+        <MiniStat label={t.spent}    value={formatRp(consumption)} color="#378ADD" />
         <View style={[S.divider, { backgroundColor: tier.color + "30" }]} />
-        <MiniStat label="Leaked"   value={formatRp(leak)}        color="#D85A30" />
+        <MiniStat label={t.leaked}   value={formatRp(leak)}        color="#D85A30" />
       </View>
 
       {/* Progress bar */}
@@ -66,11 +68,11 @@ export function FinancialHealthScore({
         ))}
       </View>
       <View style={S.tierLabelRow}>
-        {["Reckless", "Fragile", "Careful", "Stable", "Disciplined", "Frugal"].map((t) => (
-          <Text key={t} style={[S.tierStep, { color: tier.color + "80" },
-            tier.label === t && { color: tier.color, fontWeight: "800" }]}
+        {[t.reckless, t.fragile, t.careful, t.stable, t.disciplined, t.frugal].map((label) => (
+          <Text key={label} style={[S.tierStep, { color: tier.color + "80" },
+            tier.label === label && { color: tier.color, fontWeight: "800" }]}
             numberOfLines={1}>
-            {t}
+            {label}
           </Text>
         ))}
       </View>
@@ -85,7 +87,6 @@ function RingChart({ pct, color }: { pct: number; color: string }) {
   const R = (SIZE - STROKE) / 2;
   const CIRC = 2 * Math.PI * R;
   const dash = pct * CIRC;
-  const gap  = CIRC - dash;
 
   // React Native can't do SVG natively without a lib — use concentric views instead
   // Outer ring = background, inner ring = progress using border + rotation trick

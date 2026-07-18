@@ -26,6 +26,7 @@ import { PILLAR_COLORS } from "../theme/pillars";
 import { LogModal } from "../components/Vessel/LogModal";
 import { useLangStore } from "../store/langStore";
 import type { Colors } from "../types";
+import { hapticSelection, hapticLight } from "../utils/haptics";
 
 const VESSEL_COLOR = PILLAR_COLORS.vessel.primary;
 const VESSEL_BG    = PILLAR_COLORS.vessel.bg;
@@ -110,11 +111,11 @@ export default function VesselScreen() {
       <View style={[S.header, { borderBottomColor: colors.border }]}>
         <View style={S.headerLeft}>
           {activeCategory ? (
-            <Pressable onPress={() => setActiveCategory(null)} hitSlop={12}>
+            <Pressable onPress={() => { hapticLight(); setActiveCategory(null); }} hitSlop={12}>
               <Text style={[S.back, { color: colors.textMuted }]}>←</Text>
             </Pressable>
           ) : (
-            <Pressable onPress={() => router.back()} hitSlop={12}>
+            <Pressable onPress={() => { hapticLight(); router.back(); }} hitSlop={12}>
               <Text style={[S.back, { color: colors.textMuted }]}>←</Text>
             </Pressable>
           )}
@@ -124,19 +125,19 @@ export default function VesselScreen() {
                 ? (PART_META[activeCategory]?.label ?? cap(activeCategory))
                 : t.vessel}
             </Text>
-            <Text style={[S.headerSub, { color: colors.textMuted }]}>
+            <Text style={[S.headerSub, { color: colors.gold }]}>
               {activeCategory
                 ? (PART_META[activeCategory]?.desc ?? t.exercises)
                 : "Body & Strength"}
             </Text>
           </View>
         </View>
-        <View style={[S.levelBadge, { backgroundColor: VESSEL_BG }]}>
-          <Text style={[S.levelNum, { color: VESSEL_COLOR }]}>Lv {level}</Text>
-          <View style={[S.levelTrack, { backgroundColor: "#f5c9b5" }]}>
-            <View style={[S.levelFill, { width: `${barPct * 100}%` as any }]} />
+        <View style={[S.levelBadge, { backgroundColor: colors.gold + "15" }]}>
+          <Text style={[S.levelNum, { color: colors.gold }]}>Lv {level}</Text>
+          <View style={[S.levelTrack, { backgroundColor: colors.gold + "30" }]}>
+            <View style={[S.levelFill, { width: `${barPct * 100}%` as any, backgroundColor: colors.gold }]} />
           </View>
-          <Text style={[S.levelXp, { color: VESSEL_COLOR }]}>{xp}/{xpMax} xp</Text>
+          <Text style={[S.levelXp, { color: colors.gold }]}>{xp}/{xpMax} xp</Text>
         </View>
       </View>
 

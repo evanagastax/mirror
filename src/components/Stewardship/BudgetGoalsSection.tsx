@@ -3,6 +3,7 @@ import { View, Text, Pressable, StyleSheet } from "react-native";
 import { BudgetGoals } from "../../services/stewardshipBudget";
 import type { Transaction } from "../../types";
 import { currentMonthTransactions } from "../../services/stewardshipStats";
+import { useLangStore } from "../../store/langStore";
 
 const GOLD = "#BA7517";
 const GOLD_BG = "#FEF9EE";
@@ -32,6 +33,7 @@ export function BudgetGoalsSection({
   colors: C;
   onEdit: () => void;
 }) {
+  const { t } = useLangStore();
   const monthTxs = currentMonthTransactions(transactions);
 
   const monthInvest  = monthTxs.filter((t) => t.category === "investment")
@@ -54,7 +56,7 @@ export function BudgetGoalsSection({
           <Text style={S.icon}>🎯</Text>
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={[S.title, { color: colors.textPrimary }]}>Monthly Budget</Text>
+          <Text style={[S.title, { color: colors.textPrimary }]}>{t.monthlyBudget}</Text>
           <Text style={[S.sub, { color: colors.textMuted }]}>{nowMonth()}</Text>
         </View>
         <Pressable
@@ -63,7 +65,7 @@ export function BudgetGoalsSection({
           android_ripple={{ color: GOLD_BG }}
         >
           <Text style={[S.editBtnText, { color: GOLD }]}>
-            {hasAnyGoal ? "Edit" : "Set Goals"}
+            {hasAnyGoal ? t.edit : t.setGoals}
           </Text>
         </Pressable>
       </View>
@@ -72,14 +74,14 @@ export function BudgetGoalsSection({
         /* Empty state */
         <Pressable onPress={onEdit} style={[S.emptyBanner, { backgroundColor: GOLD_BG, borderColor: GOLD + "40" }]}>
           <Text style={[S.emptyText, { color: GOLD }]}>
-            Tap "Set Goals" to add monthly targets and limits.
+            {t.tapSetGoals}
           </Text>
         </Pressable>
       ) : (
         <View style={S.goals}>
           {budget.investmentTarget > 0 && (
             <BudgetBar
-              label="Investment"
+              label={t.investment}
               icon="↑"
               current={monthInvest}
               target={budget.investmentTarget}
@@ -91,7 +93,7 @@ export function BudgetGoalsSection({
           )}
           {budget.consumptionLimit > 0 && (
             <BudgetBar
-              label="Consumption"
+              label={t.consumption}
               icon="→"
               current={monthSpend}
               target={budget.consumptionLimit}
@@ -102,7 +104,7 @@ export function BudgetGoalsSection({
           )}
           {budget.leakLimit > 0 && (
             <BudgetBar
-              label="Leak"
+              label={t.leak}
               icon="↓"
               current={monthLeak}
               target={budget.leakLimit}
@@ -123,6 +125,7 @@ function BudgetBar({
   label: string; icon: string; current: number; target: number;
   color: string; bg: string; isTarget?: boolean; colors: C;
 }) {
+  const { t } = useLangStore();
   const pct     = Math.min(current / target, 1);
   const over    = current > target;
   // For targets (investment): over is good. For limits (spend/leak): over is bad.
@@ -131,11 +134,11 @@ function BudgetBar({
     : (over ? "#D85A30" : color);
   const statusText = isTarget
     ? (over
-        ? `+${formatRp(current - target)} over target 🎉`
-        : `${formatRp(target - current)} to go`)
+        ? `+${formatRp(current - target)} ${t.overTarget}`
+        : `${formatRp(target - current)} ${t.toGo}`)
     : (over
-        ? `${formatRp(current - target)} over limit ⚠️`
-        : `${formatRp(target - current)} remaining`);
+        ? `${formatRp(current - target)} ${t.overLimit}`
+        : `${formatRp(target - current)} ${t.remaining}`);
 
   return (
     <View style={S.barWrap}>

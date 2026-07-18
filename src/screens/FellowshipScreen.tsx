@@ -77,10 +77,10 @@ export default function ProfileScreen() {
       .update({ username: newUsername.toLowerCase().trim() })
       .eq("id", userId);
     setSaving(false);
-    if (error) return Alert.alert("Couldn't save.", error.message);
+    if (error) return Alert.alert(t.couldntSave, error.message);
     setUsername(newUsername.toLowerCase().trim());
     setEditingUsername(false);
-    Alert.alert("Username saved ✓", `Your username is now @${newUsername.toLowerCase().trim()}.`);
+    Alert.alert(t.usernameSaved, `${t.usernameNow}@${newUsername.toLowerCase().trim()}.`);
   }
 
   async function togglePrivacy(key: keyof Privacy) {
@@ -92,13 +92,13 @@ export default function ProfileScreen() {
       .eq("id", userId);
     if (error) {
       setPrivacy(privacy);
-      Alert.alert("Couldn't update privacy setting.", error.message);
+      Alert.alert(t.couldntUpdatePrivacy, error.message);
     }
   }
 
   function handleSignOut() {
-    Alert.alert("Sign out?", "You'll need to sign in again to access your data.", [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t.signOut + "?", t.signOutConfirm, [
+      { text: t.cancel, style: "cancel" },
       { text: t.signOut, style: "destructive", onPress: () => supabase.auth.signOut() },
     ]);
   }
@@ -107,9 +107,9 @@ export default function ProfileScreen() {
     try {
       await exportUserData(userId);
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Could not export data.";
+      const msg = e instanceof Error ? e.message : t.couldntExport;
       if (msg !== "User did not share") {
-        Alert.alert("Export failed", msg);
+        Alert.alert(t.exportFailed, msg);
       }
     }
   }

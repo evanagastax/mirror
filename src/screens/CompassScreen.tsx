@@ -25,6 +25,10 @@ import { PILLAR_META, type PillarKey } from "../theme/pillars";
 import { CompassSkeleton } from "../components/skeletons";
 import { useLangStore } from "../store/langStore";
 import type { Translations } from "../i18n/translations";
+import { OctagonalRingSimple } from "../components/ui/OctagonalRing";
+import { AnimatedCounter } from "../components/ui/AnimatedCounter";
+import { hapticLight } from "../utils/haptics";
+import { RevealOnScroll } from "../components/ui/RevealOnScroll";
 
 // ─── pillar config ────────────────────────────────────────────────────────────
 
@@ -185,57 +189,65 @@ export default function CompassScreen() {
         </View>
 
         {/* ── Character / Synergy banner ── */}
-        <View style={[styles.banner, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
-          <View style={styles.bannerLeft}>
-            <View style={[styles.avatar, { backgroundColor: colors.bgSubtle, borderColor: colors.border }]}>
-              <Text style={[styles.avatarText, { color: colors.textPrimary }]}>{initial}</Text>
-              <View style={[styles.avatarLevel, { backgroundColor: "#BA7517" }]}>
-                <Text style={styles.avatarLevelText}>{Math.floor(synergy / 100) + 1}</Text>
+        <RevealOnScroll delay={100}>
+          <View style={[styles.banner, { backgroundColor: colors.bgCard, borderColor: colors.gold + "30" }]}>
+            <View style={styles.bannerLeft}>
+              <View style={[styles.avatar, { backgroundColor: colors.gold + "15", borderColor: colors.gold + "40" }]}>
+                <Text style={[styles.avatarText, { color: colors.gold }]}>{initial}</Text>
+                <View style={[styles.avatarLevel, { backgroundColor: colors.gold }]}>
+                  <Text style={styles.avatarLevelText}>{Math.floor(synergy / 100) + 1}</Text>
+                </View>
+              </View>
+              <View>
+                <Text style={[styles.characterName, { color: colors.textPrimary }]}>{displayName}</Text>
+                <Text style={[styles.rankBadge, { color: colors.gold }]}>{rank}</Text>
+                {streak && streak.current > 0 && (
+                  <View style={styles.streakRow}>
+                    <Text style={styles.streakFire}>🔥</Text>
+                    <Text style={[styles.streakText, { color: "#D85A30" }]}>
+                      {streak.current} {t.dayStreak}
+                    </Text>
+                  </View>
+                )}
               </View>
             </View>
-            <View>
-              <Text style={[styles.characterName, { color: colors.textPrimary }]}>{displayName}</Text>
-              <Text style={[styles.rankBadge, { color: "#BA7517" }]}>{rank}</Text>
-              {streak && streak.current > 0 && (
-                <View style={styles.streakRow}>
-                  <Text style={styles.streakFire}>🔥</Text>
-                  <Text style={[styles.streakText, { color: "#D85A30" }]}>
-                    {streak.current} {t.dayStreak}
-                  </Text>
+            <View style={styles.bannerRight}>
+              <Text style={[styles.synergyLabel, { color: colors.textMuted }]}>{t.synergy}</Text>
+              <AnimatedCounter
+                value={synergy}
+                duration={1000}
+                style={[styles.synergyValue, { color: colors.gold }]}
+              />
+              {/* Rank progression bar */}
+              <View style={styles.rankProgressWrap}>
+                <View style={[styles.rankProgressTrack, { backgroundColor: colors.goldMuted }]}>
+                  <View style={[styles.rankProgressFill, {
+                    width: `${Math.min(rankPct * 100, 100)}%` as any,
+                    backgroundColor: colors.gold,
+                  }]} />
+                </View>
+                <Text style={[styles.rankProgressHint, { color: colors.textDisabled }]}>
+                  {ptsToNext > 0 ? `${ptsToNext} ${t.ptsToNext} ${nextRank}` : t.maxRank}
+                </Text>
+              </View>
+              {streak && streak.loggedToday && (
+                <View style={[styles.todayBadge, { backgroundColor: colors.gold + "15" }]}>
+                  <Text style={[styles.todayBadgeText, { color: colors.gold }]}>{t.loggedToday}</Text>
                 </View>
               )}
             </View>
           </View>
-          <View style={styles.bannerRight}>
-            <Text style={[styles.synergyLabel, { color: colors.textMuted }]}>{t.synergy}</Text>
-            <Text style={[styles.synergyValue, { color: colors.textPrimary }]}>{synergy}</Text>
-            {/* Rank progression bar */}
-            <View style={styles.rankProgressWrap}>
-              <View style={[styles.rankProgressTrack, { backgroundColor: colors.border }]}>
-                <View style={[styles.rankProgressFill, {
-                  width: `${Math.min(rankPct * 100, 100)}%` as any,
-                  backgroundColor: "#BA7517",
-                }]} />
-              </View>
-              <Text style={[styles.rankProgressHint, { color: colors.textDisabled }]}>
-                {ptsToNext > 0 ? `${ptsToNext} ${t.ptsToNext} ${nextRank}` : t.maxRank}
-              </Text>
-            </View>
-            {streak && streak.loggedToday && (
-              <View style={[styles.todayBadge, { backgroundColor: "#F0FBF7" }]}>
-                <Text style={[styles.todayBadgeText, { color: "#1D9E75" }]}>{t.loggedToday}</Text>
-              </View>
-            )}
-          </View>
-        </View>
+        </RevealOnScroll>
 
         {/* ── Attributes ── */}
-        <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>{t.attributes}</Text>
-          <Pressable onPress={() => router.push("/(app)/roadmap")}>
-            <Text style={[styles.sectionAction, { color: "#378ADD" }]}>{t.roadmap}</Text>
-          </Pressable>
-        </View>
+        <RevealOnScroll delay={200}>
+          <View style={styles.sectionHeader}>
+            <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>{t.attributes}</Text>
+            <Pressable onPress={() => router.push("/(app)/roadmap")}>
+              <Text style={[styles.sectionAction, { color: colors.gold }]}>{t.roadmap}</Text>
+            </Pressable>
+          </View>
+        </RevealOnScroll>
 
         {/* Empty state — shown when all pillars are 0 and onboarding is done */}
         {pillars.soul === 0 && pillars.vessel === 0 &&
@@ -268,42 +280,52 @@ export default function CompassScreen() {
             </Pressable>
           </View>
         ) : (
-          <View style={styles.pillarGrid}>
-            {PILLARS.map((pillar) => {
+          <RevealOnScroll delay={300}>
+            <View style={styles.pillarGrid}>
+              {PILLARS.map((pillar) => {
               const { level, xp, xpMax } = scoreToLevel(pillars[pillar.key]);
               const barPct = xp / xpMax;
               return (
                 <Pressable
                   key={pillar.key}
-                  style={[styles.pillarCard, { backgroundColor: colors.bgCard, borderColor: colors.border }]}
-                  onPress={() => router.push(pillar.route as any)}
+                  style={[styles.pillarCard, { backgroundColor: colors.bgCard, borderColor: pillar.color + "20" }]}
+                  onPress={() => { hapticLight(); router.push(pillar.route as any); }}
                   android_ripple={{ color: pillar.bg, borderless: false }}
                 >
-                  <View style={[styles.pillarIconBg, { backgroundColor: pillar.bg }]}>
-                    <Text style={[styles.pillarIcon, { color: pillar.color }]}>{pillar.icon}</Text>
+                  <View style={styles.pillarTopRow}>
+                    <View style={[styles.pillarIconBg, { backgroundColor: pillar.bg }]}>
+                      <Text style={[styles.pillarIcon, { color: pillar.color }]}>{pillar.icon}</Text>
+                    </View>
+                    <OctagonalRingSimple
+                      progress={barPct}
+                      size={36}
+                      strokeWidth={2}
+                      color={pillar.color}
+                    />
                   </View>
                   <Text style={[styles.pillarName, { color: colors.textPrimary }]}>{pillar.label}</Text>
                   <Text style={[styles.pillarSub, { color: colors.textMuted }]} numberOfLines={1}>
                     {pillar.subtitle}
                   </Text>
                   <View style={styles.pillarFooter}>
-                    <View style={[styles.xpTrack, { backgroundColor: colors.border }]}>
-                      <View
-                        style={[styles.xpFill, { width: `${barPct * 100}%` as any, backgroundColor: pillar.color }]}
-                      />
-                    </View>
                     <Text style={[styles.pillarLevel, { color: pillar.color }]}>Lv {level}</Text>
+                    <Text style={[styles.pillarXp, { color: colors.textDisabled }]}>
+                      {xp}/{xpMax} xp
+                    </Text>
                   </View>
                 </Pressable>
               );
             })}
-          </View>
+            </View>
+          </RevealOnScroll>
         )}
 
         {/* ── Bottom hint ── */}
-        <Text style={[styles.hint, { color: colors.textDisabled }]}>
-          {lang === "id" ? "Ketuk pillar untuk masuk · Gunakan + untuk log" : "Tap a pillar to drill in · Use + to log"}
-        </Text>
+        <RevealOnScroll delay={400}>
+          <Text style={[styles.hint, { color: colors.textDisabled }]}>
+            {lang === "id" ? "Ketuk pillar untuk masuk · Gunakan + untuk log" : "Tap a pillar to drill in · Use + to log"}
+          </Text>
+        </RevealOnScroll>
       </ScrollView>
     </SafeAreaView>
   );
@@ -333,20 +355,20 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 16,
+    marginBottom: 20,
   },
-  topLeft: { gap: 1 },
-  appTitle: { fontSize: 18, fontWeight: "800", letterSpacing: -0.5 },
-  appSub: { fontSize: 11, letterSpacing: 0.5 },
+  topLeft: { gap: 2 },
+  appTitle: { fontSize: 20, fontWeight: "800", letterSpacing: -0.5 },
+  appSub: { fontSize: 11, letterSpacing: 1.5, textTransform: "uppercase" },
   // Banner
   banner: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     borderWidth: 1,
-    borderRadius: 20,
-    padding: 16,
-    marginBottom: 24,
+    borderRadius: 24,
+    padding: 20,
+    marginBottom: 28,
   },
   bannerLeft: { flexDirection: "row", alignItems: "center", gap: 12 },
   avatar: {
@@ -370,8 +392,8 @@ const styles = StyleSheet.create({
   characterName: { fontSize: 16, fontWeight: "700" },
   rankBadge: { fontSize: 12, fontWeight: "600", marginTop: 2 },
   bannerRight: { alignItems: "flex-end" },
-  synergyLabel: { fontSize: 9, fontWeight: "700", letterSpacing: 1.5, textTransform: "uppercase" },
-  synergyValue: { fontSize: 44, fontWeight: "800", letterSpacing: -2, lineHeight: 50 },
+  synergyLabel: { fontSize: 9, fontWeight: "700", letterSpacing: 2, textTransform: "uppercase" },
+  synergyValue: { fontSize: 48, fontWeight: "900", letterSpacing: -2, lineHeight: 52 },
   synergyHint: { fontSize: 10, marginTop: 2 },
 
   // Rank progression
@@ -395,31 +417,35 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 12,
-    marginBottom: 24,
+    marginBottom: 28,
   },
   pillarCard: {
     width: "47.5%",
     borderWidth: 1,
-    borderRadius: 18,
-    padding: 14,
-    gap: 6,
+    borderRadius: 20,
+    padding: 16,
+    gap: 8,
     overflow: "hidden",
   },
+  pillarTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 4,
+  },
   pillarIconBg: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 2,
   },
-  pillarIcon: { fontSize: 18 },
+  pillarIcon: { fontSize: 20 },
   pillarName: { fontSize: 15, fontWeight: "700" },
   pillarSub: { fontSize: 11 },
-  pillarFooter: { gap: 5, marginTop: 2 },
-  xpTrack: { height: 4, borderRadius: 99, overflow: "hidden" },
-  xpFill: { height: 4, borderRadius: 99 },
+  pillarFooter: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 4 },
   pillarLevel: { fontSize: 11, fontWeight: "700" },
+  pillarXp: { fontSize: 10 },
 
   hint: { textAlign: "center", fontSize: 11, marginTop: 4 },
 

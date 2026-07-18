@@ -34,7 +34,7 @@ export function initSentry() {
   }
 
   // Lazy-require so the module isn't evaluated during the web bundle parse.
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
+   
   Sentry = require("@sentry/react-native");
 
   Sentry.init({

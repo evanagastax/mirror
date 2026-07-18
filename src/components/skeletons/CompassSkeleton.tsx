@@ -16,7 +16,7 @@ export function CompassSkeleton() {
       </View>
 
       {/* Banner card */}
-      <View style={[S.banner, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
+      <View style={[S.banner, { backgroundColor: colors.bgCard, borderColor: colors.gold + "30" }]}>
         <View style={S.bannerLeft}>
           <Skeleton width={52} height={52} borderRadius={26} />
           <View style={S.bannerText}>
@@ -43,12 +43,15 @@ export function CompassSkeleton() {
       <View style={S.grid}>
         {[0, 1, 2, 3].map((i) => (
           <View key={i} style={[S.card, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
-            <Skeleton width={40} height={40} borderRadius={12} />
+            <View style={S.cardTopRow}>
+              <Skeleton width={44} height={44} borderRadius={14} />
+              <Skeleton width={36} height={36} borderRadius={12} />
+            </View>
             <Skeleton width={70} height={15} borderRadius={6} style={{ marginTop: 8 }} />
             <Skeleton width={90} height={11} borderRadius={6} style={{ marginTop: 6 }} />
             <View style={S.cardFooter}>
-              <Skeleton width="100%" height={4} borderRadius={99} />
-              <Skeleton width={30} height={11} borderRadius={4} style={{ marginTop: 5 }} />
+              <Skeleton width={30} height={11} borderRadius={4} />
+              <Skeleton width={50} height={10} borderRadius={4} />
             </View>
           </View>
         ))}
@@ -76,7 +79,13 @@ const S = StyleSheet.create({
   },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: 12, marginBottom: 24 },
   card: {
-    width: "47.5%", borderWidth: 1, borderRadius: 18, padding: 14, gap: 0,
+    width: "47.5%", borderWidth: 1, borderRadius: 20, padding: 16, gap: 0,
   },
-  cardFooter: { gap: 5, marginTop: 8 },
+  cardTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 4,
+  },
+  cardFooter: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 8 },
 });

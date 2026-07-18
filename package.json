@@ -9,6 +9,7 @@
     "@supabase/supabase-js": "^2.110.0",
     "@tanstack/react-query": "^5.101.2",
     "expo": "~57.0.1",
+    "expo-haptics": "~57.0.1",
     "expo-linking": "~57.0.1",
     "expo-notifications": "~57.0.3",
     "expo-router": "~57.0.3",
@@ -24,6 +25,7 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@react-native/jest-preset": "^0.86.0",
     "@testing-library/jest-native": "^5.4.3",
     "@testing-library/react-hooks": "^8.0.1",
@@ -31,8 +33,14 @@
     "@types/jest": "^30.0.0",
     "@types/react": "~19.2.2",
     "@types/react-test-renderer": "^19.1.0",
+    "@typescript-eslint/eslint-plugin": "^8.64.0",
+    "@typescript-eslint/parser": "^8.64.0",
     "babel-jest": "^30.4.1",
     "cross-env": "^10.1.0",
+    "eslint": "^10.7.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-native": "^5.0.0",
     "jest": "^30.4.2",
     "jest-expo": "^57.0.1",
     "react-test-renderer": "^19.2.7",
@@ -45,7 +53,9 @@
     "web": "cross-env NODE_OPTIONS=--max-old-space-size=4096 expo start --web",
     "test": "jest --runInBand",
     "test:coverage": "jest --runInBand --coverage",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "lint": "eslint src/ --ext .ts,.tsx",
+    "lint:fix": "eslint src/ --ext .ts,.tsx --fix"
   },
   "private": true
 }

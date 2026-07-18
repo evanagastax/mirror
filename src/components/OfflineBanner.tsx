@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, Animated } from "react-native";
+import React, { useEffect, useState, useRef } from "react";
+import { Text, StyleSheet, Animated } from "react-native";
 import NetInfo from "@react-native-community/netinfo";
 
 /**
@@ -12,7 +12,8 @@ import NetInfo from "@react-native-community/netinfo";
  */
 export function OfflineBanner() {
   const [isOffline, setIsOffline] = useState(false);
-  const opacity = React.useRef(new Animated.Value(0)).current;
+  const [visible, setVisible] = useState(false);
+  const opacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener((state) => {
@@ -30,15 +31,23 @@ export function OfflineBanner() {
   }, []);
 
   useEffect(() => {
-    Animated.timing(opacity, {
-      toValue: isOffline ? 1 : 0,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
+    if (isOffline) {
+      setVisible(true);
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(() => setVisible(false));
+    }
   }, [isOffline]);
 
-  // Keep in the tree but invisible when online so the animation works
-  if (!isOffline && opacity.__getValue() === 0) return null;
+  if (!visible) return null;
 
   return (
     <Animated.View style={[styles.banner, { opacity }]}>

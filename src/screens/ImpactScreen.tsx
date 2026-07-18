@@ -18,6 +18,7 @@ import type { Log, Colors } from "../types";
 import { StatChip } from "../components/ui/StatChip";
 import { Skeleton } from "../components/ui/Skeleton";
 import { useLangStore } from "../store/langStore";
+import { hapticLight } from "../utils/haptics";
 
 const COLOR = PILLAR_COLORS.impact.primary;
 const BG    = PILLAR_COLORS.impact.bg;
@@ -60,20 +61,20 @@ export default function ImpactScreen() {
       {/* Header */}
       <View style={[S.header, { borderBottomColor: colors.border }]}>
         <View style={S.headerLeft}>
-          <Pressable onPress={() => router.back()} hitSlop={12}>
+          <Pressable onPress={() => { hapticLight(); router.back(); }} hitSlop={12}>
             <Text style={[S.back, { color: colors.textMuted }]}>←</Text>
           </Pressable>
           <View>
             <Text style={[S.headerTitle, { color: colors.textPrimary }]}>{t.impact}</Text>
-            <Text style={[S.headerSub,   { color: colors.textMuted }]}>Work & Output</Text>
+            <Text style={[S.headerSub, { color: colors.gold }]}>{t.workOutput}</Text>
           </View>
         </View>
-        <View style={[S.levelBadge, { backgroundColor: BG }]}>
-          <Text style={[S.levelNum, { color: COLOR }]}>Lv {level}</Text>
-          <View style={[S.levelTrack, { backgroundColor: "#b8d5f5" }]}>
-            <View style={[S.levelFill, { width: `${barPct * 100}%` as any }]} />
+        <View style={[S.levelBadge, { backgroundColor: colors.gold + "15" }]}>
+          <Text style={[S.levelNum, { color: colors.gold }]}>Lv {level}</Text>
+          <View style={[S.levelTrack, { backgroundColor: colors.gold + "30" }]}>
+            <View style={[S.levelFill, { width: `${barPct * 100}%` as any, backgroundColor: colors.gold }]} />
           </View>
-          <Text style={[S.levelXp, { color: COLOR }]}>{xp}/{xpMax} xp</Text>
+          <Text style={[S.levelXp, { color: colors.gold }]}>{xp}/{xpMax} xp</Text>
         </View>
       </View>
 
@@ -85,34 +86,34 @@ export default function ImpactScreen() {
       >
         {/* Stats row */}
         <View style={S.statsRow}>
-          <StatChip label={lang === "id" ? "Skor" : "Score"}      value={String(pillars?.impact ?? 0)} color={COLOR} bg={BG} />
-          <StatChip label={lang === "id" ? "Rata-rata" : "Avg effort"} value={String(avgEffort)}            color={COLOR} bg={BG} />
-          <StatChip label={lang === "id" ? "Minggu ini" : "This week"}  value={String(thisWeekCount)}        color={COLOR} bg={BG} />
+          <StatChip label={t.score}      value={String(pillars?.impact ?? 0)} color={COLOR} bg={BG} />
+          <StatChip label={t.avgEffort} value={String(avgEffort)}            color={COLOR} bg={BG} />
+          <StatChip label={t.thisWeek}  value={String(thisWeekCount)}        color={COLOR} bg={BG} />
         </View>
 
         {/* Quick actions */}
         <View style={S.actionsRow}>
-          <ActionCard icon="🗺️" label="Career" sub="Job roadmaps" color={COLOR} bg={BG}
+          <ActionCard icon="🗺️" label={t.career} sub={t.jobRoadmaps} color={COLOR} bg={BG}
             onPress={() => router.push("/impact-roadmap" as any)} colors={colors} />
-          <ActionCard icon="◈" label="Goals" sub="Track goals" color={COLOR} bg={BG}
+          <ActionCard icon="◈" label={t.goals} sub={t.trackGoals} color={COLOR} bg={BG}
             onPress={() => router.push("/(app)/roadmap")} colors={colors} />
-          <ActionCard icon="+" label="Log" sub="New entry" color={COLOR} bg={BG}
+          <ActionCard icon="+" label={t.log} sub={t.newEntry} color={COLOR} bg={BG}
             onPress={() => router.push("/log/new")} colors={colors} />
         </View>
 
         {/* Activity list */}
         <View style={S.sectionRow}>
-          <Text style={[S.sectionLabel, { color: colors.textMuted }]}>ACTIVITY</Text>
-          <Text style={[S.sectionCount, { color: colors.textDisabled }]}>{impactLogs.length} entries</Text>
+          <Text style={[S.sectionLabel, { color: colors.textMuted }]}>{t.activity}</Text>
+          <Text style={[S.sectionCount, { color: colors.textDisabled }]}>{impactLogs.length} {t.entries}</Text>
         </View>
 
         {isLoading ? (
           <ImpactListSkeleton colors={colors} />
         ) : isError ? (
           <View style={S.center}>
-            <Text style={[S.stateText, { color: colors.textMuted }]}>Couldn't load logs.</Text>
+            <Text style={[S.stateText, { color: colors.textMuted }]}>{t.couldntLoad}</Text>
             <Pressable onPress={() => refetch()} style={[S.retryBtn, { borderColor: colors.border }]}>
-              <Text style={[S.retryText, { color: colors.textPrimary }]}>Retry</Text>
+              <Text style={[S.retryText, { color: colors.textPrimary }]}>{t.retry}</Text>
             </Pressable>
           </View>
         ) : impactLogs.length === 0 ? (

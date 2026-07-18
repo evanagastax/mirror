@@ -57,8 +57,8 @@ export default function NotificationSettingsScreen() {
     setPermission(granted ? "granted" : "denied");
     if (!granted) {
       Alert.alert(
-        "Permission denied",
-        "Enable notifications in your device settings to use this feature.",
+        t.permissionDenied,
+        t.enableNotifInSettings,
         [{ text: "OK" }]
       );
     }
@@ -83,21 +83,21 @@ export default function NotificationSettingsScreen() {
       await saveNotifSettings(settings);
       await applyNotificationSettings(settings);
     } catch (e: unknown) {
-      Alert.alert("Error", e instanceof Error ? e.message : "Couldn't save notifications.");
+      Alert.alert(t.error, e instanceof Error ? e.message : t.couldntSaveNotif);
       setSaving(false);
       return;
     }
     setSaving(false);
-    Alert.alert(t.settingsSaved, lang === "id" ? "Preferensi notifikasi telah diperbarui." : "Your notification preferences have been updated.", [
+    Alert.alert(t.settingsSaved, t.settingsSaved, [
       { text: "OK", onPress: goBack },
     ]);
   }
 
   async function handleDisableAll() {
-    Alert.alert("Disable all notifications?", "All scheduled notifications will be cancelled.", [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t.disableAllConfirm, t.allScheduledCancelled, [
+      { text: t.cancel, style: "cancel" },
       {
-        text: "Disable all", style: "destructive", onPress: async () => {
+        text: t.disableAll, style: "destructive", onPress: async () => {
           const off: NotifSettings = {
             ...settings,
             prayerEnabled: false,

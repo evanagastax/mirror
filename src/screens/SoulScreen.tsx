@@ -40,6 +40,7 @@ import { captureError } from "../services/sentry";
 
 import { PILLAR_COLORS } from "../theme/pillars";
 import type { Colors } from "../types";
+import { hapticSelection, hapticLight } from "../utils/haptics";
 
 type Tab = "daily" | "dua" | "dzikir" | "asmaul" | "quran" | "hafalan";
 type Lang = "id" | "en";
@@ -76,18 +77,18 @@ export default function SoulScreen() {
 
       {/* Header */}
       <View style={[S.header, { borderBottomColor: colors.border }]}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
+        <Pressable onPress={() => { hapticLight(); router.back(); }} hitSlop={12}>
           <Text style={[S.back, { color: colors.textMuted }]}>←</Text>
         </Pressable>
         <View style={S.headerCenter}>
           <Text style={[S.headerTitle, { color: colors.textPrimary }]}>{t.soul}</Text>
-          <Text style={[S.headerSub, { color: colors.textMuted }]}>Spirit & Devotion</Text>
+          <Text style={[S.headerSub, { color: colors.gold }]}>Spirit & Devotion</Text>
         </View>
         <Pressable
-          onPress={() => router.push("/log/new")}
-          style={[S.logChip, { backgroundColor: SOUL_BG }]}
+          onPress={() => { hapticLight(); router.push("/log/new"); }}
+          style={[S.logChip, { backgroundColor: colors.gold + "15" }]}
         >
-          <Text style={[S.logChipText, { color: SOUL_COLOR }]}>+ {t.log}</Text>
+          <Text style={[S.logChipText, { color: colors.gold }]}>+ {t.log}</Text>
         </Pressable>
       </View>
 
@@ -104,9 +105,9 @@ export default function SoulScreen() {
             asmaul: t.asmaul, quran: t.quran, hafalan: t.hafalan,
           };
           return (
-            <Pressable key={tabItem.key} style={[S.tab, active && S.tabActive]} onPress={() => setTab(tabItem.key)}>
+            <Pressable key={tabItem.key} style={[S.tab, active && S.tabActive]} onPress={() => { hapticSelection(); setTab(tabItem.key); }}>
               <Text style={S.tabIcon}>{tabItem.icon}</Text>
-              <Text style={[S.tabText, { color: active ? SOUL_COLOR : colors.textMuted }, active && S.tabTextActive]}>
+              <Text style={[S.tabText, { color: active ? colors.gold : colors.textMuted }, active && S.tabTextActive]}>
                 {labelMap[tabItem.key]}
               </Text>
             </Pressable>

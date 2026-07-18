@@ -208,13 +208,13 @@ export default function LogHistoryScreen() {
         {/* ── Stats row ── */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={S.statsRow}>
           {streak && streak.current > 0 && (
-            <StatChip label="Streak" value={`🔥 ${streak.current}d`} color="#D85A30" bg="#FEF3EE" />
+            <StatChip label={t.dayStreak} value={`🔥 ${streak.current}d`} color="#D85A30" bg="#FEF3EE" />
           )}
-          <StatChip label="Soul"    value={`${totalSoul}m`}                     color="#1D9E75" bg="#F0FBF7" />
-          <StatChip label="Vessel"  value={`${totalVessel.toLocaleString()}vol`} color="#D85A30" bg="#FEF3EE" />
-          <StatChip label="Impact"  value={`${totalImpact}pts`}                  color="#378ADD" bg="#F0F7FE" />
+          <StatChip label={t.soul}    value={`${totalSoul}m`}                     color="#1D9E75" bg="#F0FBF7" />
+          <StatChip label={t.vessel}  value={`${totalVessel.toLocaleString()}vol`} color="#D85A30" bg="#FEF3EE" />
+          <StatChip label={t.impact}  value={`${totalImpact}pts`}                  color="#378ADD" bg="#F0F7FE" />
           <StatChip
-            label="Wealth"
+            label={t.stewardship}
             value={(netWealth >= 0 ? "+" : "-") + formatRp(Math.abs(netWealth))}
             color="#BA7517"
             bg="#FEF9EE"
@@ -332,7 +332,7 @@ export default function LogHistoryScreen() {
       {snackbar && (
         <Snackbar
           message={snackbar.message}
-          action="Undo"
+          action={t.undo}
           onAction={snackbar.onUndo}
           onDismiss={dismissSnackbar}
         />

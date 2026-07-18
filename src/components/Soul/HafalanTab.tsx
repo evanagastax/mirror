@@ -9,24 +9,27 @@ import {
   Surah, Ayah,
 } from "../../services/quranApi";
 import {
-  loadPlan, savePlan, deletePlan, buildPlan, updateMilestone,
+  loadPlan, savePlan, buildPlan, updateMilestone,
   planProgress, HafalanPlan, HafalanMilestone, MilestoneStatus,
   loadHistory, recordCompletion, HafalanHistoryEntry,
 } from "../../services/hafalanStore";
 import { captureError } from "../../services/sentry";
 import { PILLAR_COLORS } from "../../theme/pillars";
 import type { Colors } from "../../types";
+import { useLangStore } from "../../store/langStore";
 
 const SOUL_COLOR = PILLAR_COLORS.soul.primary;
 const SOUL_BG    = PILLAR_COLORS.soul.bg;
 
 const CHUNK_OPTIONS = [3, 5, 7, 10];
 
-const MILESTONE_META: Record<MilestoneStatus, { label: string; color: string; bg: string; icon: string }> = {
-  todo:       { label: "Belum",      color: "#aaa",    bg: "#f5f5f5", icon: "○" },
-  memorizing: { label: "Dihafal",    color: "#378ADD", bg: "#F0F7FE", icon: "◑" },
-  done:       { label: "Hafal ✓",    color: "#1D9E75", bg: "#F0FBF7", icon: "●" },
-};
+function getMilestoneMeta(t: { notYet: string; memorizing: string; memorized: string }): Record<MilestoneStatus, { label: string; color: string; bg: string; icon: string }> {
+  return {
+    todo:       { label: t.notYet,      color: "#aaa",    bg: "#f5f5f5", icon: "○" },
+    memorizing: { label: t.memorizing,    color: "#378ADD", bg: "#F0F7FE", icon: "◑" },
+    done:       { label: t.memorized,    color: "#1D9E75", bg: "#F0FBF7", icon: "●" },
+  };
+}
 
 export function HafalanTab({ colors, userId }: { colors: Colors; userId: string }) {
   const [plan,        setPlan]        = useState<HafalanPlan | null>(null);
@@ -42,6 +45,9 @@ export function HafalanTab({ colors, userId }: { colors: Colors; userId: string 
   const [ayahs,       setAyahs]       = useState<Ayah[]>([]);
   const [ayahLoading, setAyahLoading] = useState(false);
   const [history,     setHistory]     = useState<HafalanHistoryEntry[]>([]);
+
+  const { t } = useLangStore();
+  const MILESTONE_META = getMilestoneMeta(t);
 
   useEffect(() => {
     Promise.all([loadPlan(userId), loadHistory(userId)]).then(([p, h]) => {
@@ -117,10 +123,10 @@ export function HafalanTab({ colors, userId }: { colors: Colors; userId: string 
 
   async function handleReset() {
     Alert.alert(
-      "Reset progres?",
-      "Semua sesi akan dikembalikan ke awal. Surah tetap sama.",
+      t.resetProgress,
+      t.resetConfirm,
       [
-        { text: "Batal", style: "cancel" },
+        { text: t.cancel, style: "cancel" },
         {
           text: "Reset", style: "destructive", onPress: async () => {
             if (!plan) return;
@@ -154,9 +160,9 @@ export function HafalanTab({ colors, userId }: { colors: Colors; userId: string 
       <ScrollView contentContainerStyle={[S.tabContent, { alignItems: "center" }]} showsVerticalScrollIndicator={false}>
         <View style={[S.hafalanHero, { backgroundColor: SOUL_BG }]}>
           <Text style={S.hafalanHeroEmoji}>🧠</Text>
-          <Text style={[S.hafalanHeroTitle, { color: colors.textPrimary }]}>Hafalan Al-Qur'an</Text>
+          <Text style={[S.hafalanHeroTitle, { color: colors.textPrimary }]}>{t.hafalanTitle}</Text>
           <Text style={[S.hafalanHeroSub, { color: "#666" }]}>
-            Pilih surah dan tentukan berapa ayat per sesi. Kami akan membuat timeline hafalan untukmu.
+            {t.hafalanDesc}
           </Text>
         </View>
         <Pressable
@@ -164,7 +170,7 @@ export function HafalanTab({ colors, userId }: { colors: Colors; userId: string 
           onPress={() => setShowPicker(true)}
           android_ripple={{ color: "#1a8060" }}
         >
-          <Text style={S.hafalanStartBtnText}>Mulai Hafalan</Text>
+          <Text style={S.hafalanStartBtnText}>{t.startHafalan}</Text>
         </Pressable>
 
         <SurahPickerModal
@@ -273,21 +279,21 @@ export function HafalanTab({ colors, userId }: { colors: Colors; userId: string 
             </Text>
           </View>
           <Pressable onPress={handleGanti} style={S.hafalanResetBtn} hitSlop={10}>
-            <Text style={[S.hafalanResetBtnText, { color: "#D85A30" }]}>🔄 Ganti</Text>
+            <Text style={[S.hafalanResetBtnText, { color: "#D85A30" }]}>{"🔄 " + t.replace}</Text>
           </Pressable>
         </View>
         <View style={S.hafalanStats}>
           <View style={S.hafalanStat}>
             <Text style={[S.hafalanStatNum, { color: "#1D9E75" }]}>{prog.done}</Text>
-            <Text style={[S.hafalanStatLabel, { color: "#666" }]}>Hafal</Text>
+            <Text style={[S.hafalanStatLabel, { color: "#666" }]}>{t.memorized}</Text>
           </View>
           <View style={S.hafalanStat}>
             <Text style={[S.hafalanStatNum, { color: "#378ADD" }]}>{prog.memorizing}</Text>
-            <Text style={[S.hafalanStatLabel, { color: "#666" }]}>Dihafal</Text>
+            <Text style={[S.hafalanStatLabel, { color: "#666" }]}>{t.memorizing}</Text>
           </View>
           <View style={S.hafalanStat}>
             <Text style={[S.hafalanStatNum, { color: "#aaa" }]}>{prog.total - prog.done - prog.memorizing}</Text>
-            <Text style={[S.hafalanStatLabel, { color: "#666" }]}>Belum</Text>
+            <Text style={[S.hafalanStatLabel, { color: "#666" }]}>{t.notYet}</Text>
           </View>
           <View style={S.hafalanStat}>
             <Text style={[S.hafalanStatNum, { color: "#1D9E75" }]}>{prog.ayatDone}</Text>
@@ -455,6 +461,7 @@ function SurahPickerModal({
   isReplacing: boolean;
   colors: Colors;
 }) {
+  const { t } = useLangStore();
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <SafeAreaView style={[S.readerRoot, { backgroundColor: colors.bg }]} edges={["top", "bottom"]}>
@@ -535,7 +542,7 @@ function SurahPickerModal({
               </Text>
             </View>
             <Pressable style={[S.pickerConfirmBtn, { backgroundColor: SOUL_COLOR }]} onPress={onConfirm}>
-              <Text style={S.pickerConfirmText}>{isReplacing ? "Ganti" : "Mulai"}</Text>
+              <Text style={S.pickerConfirmText}>{isReplacing ? t.replace : t.start}</Text>
             </Pressable>
           </View>
         )}

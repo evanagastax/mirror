@@ -1,11 +1,9 @@
 import React, { useMemo } from "react";
-import { View, Text, StyleSheet, Dimensions } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import { MonthBucket } from "../../services/stewardshipStats";
+import { useLangStore } from "../../store/langStore";
 
-const SCREEN_W = Dimensions.get("window").width;
 const BAR_AREA_H = 100;
-
-const GOLD = "#BA7517";
 
 type C = { textPrimary: string; textMuted: string; textDisabled: string; border: string; bgCard: string; bgSubtle: string };
 
@@ -16,6 +14,7 @@ export function MonthlyTrendChart({
   data: MonthBucket[];
   colors: C;
 }) {
+  const { t } = useLangStore();
   const maxVal = useMemo(() => {
     let m = 0;
     for (const b of data) {
@@ -38,11 +37,11 @@ export function MonthlyTrendChart({
     <View style={[S.card, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
       {/* Title */}
       <View style={S.titleRow}>
-        <Text style={[S.title, { color: colors.textPrimary }]}>Monthly Trend</Text>
+        <Text style={[S.title, { color: colors.textPrimary }]}>{t.monthlyTrend}</Text>
         <View style={S.legend}>
-          <LegendDot color="#1D9E75" label="Invest" />
-          <LegendDot color="#378ADD" label="Spend" />
-          <LegendDot color="#D85A30" label="Leak" />
+          <LegendDot color="#1D9E75" label={t.invested} />
+          <LegendDot color="#378ADD" label={t.spent} />
+          <LegendDot color="#D85A30" label={t.leaked} />
         </View>
       </View>
 

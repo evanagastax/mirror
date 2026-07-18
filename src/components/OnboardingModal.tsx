@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import {
   View, Text, Modal, Pressable, TextInput,
-  StyleSheet, ActivityIndicator, Animated,
+  StyleSheet, ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { PILLAR_META } from "../theme/pillars";
@@ -16,7 +16,7 @@ type PillarKey = typeof PILLARS[number]["key"];
 
 type Props = {
   visible: boolean;
-  onDone: (username: string, focusPillar: PillarKey) => Promise<void>;
+  onDone: (_username: string, _focusPillar: PillarKey) => Promise<void>;
 };
 
 export function OnboardingModal({ visible, onDone }: Props) {

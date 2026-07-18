@@ -11,32 +11,27 @@ import { useAuthStore } from "../store/authStore";
 import { useThemeStore } from "../store/themeStore";
 import { useCreateLog, useCreateTransaction } from "../hooks/useCreateLog";
 import { isSafeUrl } from "../utils/url";
-import { PILLAR_META, CAT_META } from "../theme/pillars";
+import { pillarMetaTranslated, catMetaArrayTranslated } from "../theme/pillars";
 import type { PillarKey } from "../theme/pillars";
 import type { Colors } from "../types";
 import { Divider } from "../components/ui/Divider";
 import { useLangStore } from "../store/langStore";
+import { hapticLight, hapticSuccess, hapticError } from "../utils/haptics";
 
 type Pillar = PillarKey;
 type Category = "investment" | "consumption" | "leak";
 type ImpactCategory = "code" | "design" | "write" | "manage" | "learn" | "other";
 
-const IMPACT_CATEGORIES: { key: ImpactCategory; label: string; icon: string; hint: string }[] = [
-  { key: "code",   label: "Code",    icon: "💻", hint: "PR, commit, bug fix" },
-  { key: "design", label: "Design",  icon: "🎨", hint: "UI, mockup, prototype" },
-  { key: "write",  label: "Write",   icon: "✍️",  hint: "Docs, article, report" },
-  { key: "manage", label: "Manage",  icon: "📋", hint: "Meeting, planning, review" },
-  { key: "learn",  label: "Learn",   icon: "📚", hint: "Course, book, research" },
-  { key: "other",  label: "Other",   icon: "⚡", hint: "Anything else" },
-];
-
-const PILLARS = PILLAR_META.map((p) => ({ ...p }));
-
-const CATEGORIES = Object.entries(CAT_META).map(([key, meta]) => ({
-  key: key as Category,
-  label: meta.label,
-  icon: meta.icon,
-}));
+function getImpactCategories(t: { code: string; design: string; write: string; manage: string; learn: string; other: string; codeHint: string; designHint: string; writeHint: string; manageHint: string; learnHint: string; otherHint: string }): { key: ImpactCategory; label: string; icon: string; hint: string }[] {
+  return [
+    { key: "code",   label: t.code,    icon: "💻", hint: t.codeHint },
+    { key: "design", label: t.design,  icon: "🎨", hint: t.designHint },
+    { key: "write",  label: t.write,   icon: "✍️",  hint: t.writeHint },
+    { key: "manage", label: t.manage,  icon: "📋", hint: t.manageHint },
+    { key: "learn",  label: t.learn,   icon: "📚", hint: t.learnHint },
+    { key: "other",  label: t.other,   icon: "⚡", hint: t.otherHint },
+  ];
+}
 
 export default function LogScreen() {
   const router = useRouter();
@@ -45,6 +40,10 @@ export default function LogScreen() {
   const { t, lang } = useLangStore();
   const createLog = useCreateLog(userId);
   const createTransaction = useCreateTransaction(userId);
+
+  const IMPACT_CATEGORIES = getImpactCategories(t);
+  const pillars = pillarMetaTranslated({ ...t, wealth: t.stewardship });
+  const categories = catMetaArrayTranslated(t);
 
   const [pillar, setPillar] = useState<Pillar>("soul");
   const [soulActivity, setSoulActivity] = useState("");
@@ -83,12 +82,11 @@ export default function LogScreen() {
   }
 
   const isLoading = createLog.isPending || createTransaction.isPending;
-  const activePillar = PILLARS.find((p) => p.key === pillar)!;
 
   async function handleSubmit() {
     try {
       if (pillar === "stewardship") {
-        if (!amount) return Alert.alert("Enter an amount.");
+        if (!amount) { hapticError(); return Alert.alert("Enter an amount."); }
         await createTransaction.mutateAsync({ amount: parseAmount(amount), category, note: note || undefined });
       } else {
         let value = 0;
@@ -96,7 +94,7 @@ export default function LogScreen() {
         let metadata: Record<string, unknown> = {};
 
         if (pillar === "soul") {
-          if (!soulMinutes) return Alert.alert("Enter duration.");
+          if (!soulMinutes) { hapticError(); return Alert.alert("Enter duration."); }
           value = parseInt(soulMinutes, 10);
           if (soulEvidence && !isSafeUrl(soulEvidence)) {
             return Alert.alert("Invalid URL", "Evidence link must start with https://");
@@ -134,6 +132,7 @@ export default function LogScreen() {
 
         await createLog.mutateAsync({ pillar_type: pillar, value, evidence_url, metadata });
       }
+      hapticSuccess();
       router.back();
     } catch (e: unknown) {
       // Supabase wraps Postgres trigger errors in e.message.
@@ -167,18 +166,18 @@ export default function LogScreen() {
 
         {/* ── Header ── */}
         <View style={[styles.header, { borderBottomColor: colors.border }]}>
-          <Pressable onPress={() => router.back()} style={styles.closeBtn} hitSlop={12}>
+          <Pressable onPress={() => { hapticLight(); router.back(); }} style={styles.closeBtn} hitSlop={12}>
             <Text style={[styles.closeIcon, { color: colors.textMuted }]}>✕</Text>
           </Pressable>
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>{lang === "id" ? "Catat aktivitas" : "Log an activity"}</Text>
           <Pressable
             onPress={handleSubmit}
             disabled={isLoading}
-            style={[styles.saveBtn, { backgroundColor: activePillar.color }, isLoading && { opacity: 0.5 }]}
+            style={[styles.saveBtn, { backgroundColor: colors.gold }, isLoading && { opacity: 0.5 }]}
           >
             {isLoading
-              ? <ActivityIndicator color="#fff" size="small" />
-              : <Text style={styles.saveBtnText}>{t.save}</Text>
+              ? <ActivityIndicator color="#0A0A0F" size="small" />
+              : <Text style={[styles.saveBtnText, { color: "#0A0A0F" }]}>{t.save}</Text>
             }
           </Pressable>
         </View>
@@ -191,7 +190,7 @@ export default function LogScreen() {
         >
           {/* ── Pillar selector ── */}
           <View style={styles.pillarGrid}>
-            {PILLARS.map((p) => {
+            {pillars.map((p) => {
               const active = pillar === p.key;
               return (
                 <Pressable
@@ -223,7 +222,7 @@ export default function LogScreen() {
           <View style={[styles.fieldsCard, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
 
             {pillar === "soul" && <>
-              <Field label="Activity" colors={colors}>
+              <Field label={t.activityLabel} colors={colors}>
                 <TextInput
                   style={inputStyle}
                   placeholder="Morning prayer, Quran, meditation…"
@@ -233,7 +232,7 @@ export default function LogScreen() {
                 />
               </Field>
               <Divider color={colors.border} />
-              <Field label="Duration (minutes)" colors={colors}>
+              <Field label={t.durationMinutes} colors={colors}>
                 <TextInput
                   style={inputStyle}
                   placeholder="30"
@@ -244,7 +243,7 @@ export default function LogScreen() {
                 />
               </Field>
               <Divider color={colors.border} />
-              <Field label="Evidence link (optional)" colors={colors}>
+              <Field label={t.evidenceLink} colors={colors}>
                 <TextInput
                   style={inputStyle}
                   placeholder="https://…"
@@ -257,7 +256,7 @@ export default function LogScreen() {
             </>}
 
             {pillar === "vessel" && <>
-              <Field label="Exercise / session name" colors={colors}>
+              <Field label={t.exerciseName} colors={colors}>
                 <TextInput
                   style={inputStyle}
                   placeholder="Bench press, Morning run, Yoga…"
@@ -267,7 +266,7 @@ export default function LogScreen() {
                 />
               </Field>
               <Divider color={colors.border} />
-              <Field label="Type" colors={colors}>
+              <Field label={t.type} colors={colors}>
                 <View style={styles.catRow}>
                   {(["strength", "cardio"] as const).map((m) => {
                     const active = vesselMode === m;
@@ -282,7 +281,7 @@ export default function LogScreen() {
                         <Text style={{ fontSize: 16 }}>{m === "strength" ? "🏋️" : "🫀"}</Text>
                         <Text style={[styles.catText, { color: active ? "#D85A30" : colors.textMuted },
                           active && { fontWeight: "700" }]}>
-                          {m === "strength" ? "Strength" : "Cardio"}
+                          {m === "strength" ? t.strength : t.cardio}
                         </Text>
                       </Pressable>
                     );
@@ -291,11 +290,11 @@ export default function LogScreen() {
               </Field>
               <Divider color={colors.border} />
               {vesselMode === "strength" ? <>
-                <Field label="Sets · Reps · Weight (kg)" colors={colors}>
+                <Field label={`${t.sets} · ${t.reps} · ${t.weight}`} colors={colors}>
                   <View style={styles.triRow}>
                     <TextInput
                       style={[inputStyle, styles.triInput]}
-                      placeholder="Sets"
+                      placeholder={t.sets}
                       placeholderTextColor={colors.textMuted}
                       keyboardType="number-pad"
                       value={vesselSets}
@@ -304,7 +303,7 @@ export default function LogScreen() {
                     <Text style={[styles.triSep, { color: colors.textMuted }]}>×</Text>
                     <TextInput
                       style={[inputStyle, styles.triInput]}
-                      placeholder="Reps"
+                      placeholder={t.reps}
                       placeholderTextColor={colors.textMuted}
                       keyboardType="number-pad"
                       value={vesselReps}
@@ -331,7 +330,7 @@ export default function LogScreen() {
                   )}
                 </Field>
               </> : <>
-                <Field label="Duration (minutes)" colors={colors}>
+                <Field label={t.durationMinutes} colors={colors}>
                   <TextInput
                     style={inputStyle}
                     placeholder="30"
@@ -345,7 +344,7 @@ export default function LogScreen() {
             </>}
 
             {pillar === "impact" && <>
-              <Field label="What did you ship?" colors={colors}>
+              <Field label={t.activityLabel} colors={colors}>
                 <TextInput
                   style={inputStyle}
                   placeholder="Fixed auth bug, wrote API docs, shipped v2…"
@@ -355,7 +354,7 @@ export default function LogScreen() {
                 />
               </Field>
               <Divider color={colors.border} />
-              <Field label="Activity type" colors={colors}>
+              <Field label={t.type} colors={colors}>
                 <View style={styles.catGrid}>
                   {IMPACT_CATEGORIES.map((c) => {
                     const active = impactCategory === c.key;
@@ -408,7 +407,7 @@ export default function LogScreen() {
                 </View>
               </Field>
               <Divider color={colors.border} />
-              <Field label="Evidence link (optional)" colors={colors}>
+              <Field label={t.evidenceLink} colors={colors}>
                 <TextInput
                   style={inputStyle}
                   placeholder="GitHub PR, Jira, Notion, Figma…"
@@ -422,7 +421,7 @@ export default function LogScreen() {
             </>}
 
             {pillar === "stewardship" && <>
-              <Field label="Amount (Rp)" colors={colors}>
+              <Field label={t.category} colors={colors}>
                 <View style={[inputStyle, styles.amountWrap]}>
                   <Text style={[styles.amountPrefix, { color: colors.textMuted }]}>Rp</Text>
                   <TextInput
@@ -441,9 +440,9 @@ export default function LogScreen() {
                 ) : null}
               </Field>
               <Divider color={colors.border} />
-              <Field label="Category" colors={colors}>
+              <Field label={t.category} colors={colors}>
                 <View style={styles.catRow}>
-                  {CATEGORIES.map((c) => {
+                  {categories.map((c) => {
                     const active = category === c.key;
                     return (
                       <Pressable
@@ -467,7 +466,7 @@ export default function LogScreen() {
                 </View>
               </Field>
               <Divider color={colors.border} />
-              <Field label="Note" colors={colors}>
+              <Field label={t.note} colors={colors}>
                 <TextInput
                   style={inputStyle}
                   placeholder="BBCA shares, groceries, subscription…"

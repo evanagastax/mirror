@@ -8,6 +8,7 @@ import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
 import { useAuthStore } from "../store/authStore";
 import { useThemeStore } from "../store/themeStore";
+import { useLangStore } from "../store/langStore";
 import { loadProfile, VesselProfile, GOAL_META, EQUIPMENT_META } from "../services/vesselProfile";
 import {
   calcBmi, bmiCategory, BMI_META,
@@ -28,40 +29,44 @@ const VESSEL_BG    = PILLAR_COLORS.vessel.bg;
 
 // ─── Day split templates ──────────────────────────────────────────────────────
 
-const SPLITS: Record<number, DayTemplate[]> = {
-  2: [
-    { label: "Full Body A", bodyParts: ["chest", "lats", "quadriceps"], icon: "💪" },
-    { label: "Full Body B", bodyParts: ["shoulders", "hamstrings", "abdominals"], icon: "🏋️" },
-  ],
-  3: [
-    { label: "Push",  bodyParts: ["chest", "shoulders", "triceps"], icon: "⬆️" },
-    { label: "Pull",  bodyParts: ["lats", "middle back", "biceps"], icon: "⬇️" },
-    { label: "Legs",  bodyParts: ["quadriceps", "hamstrings", "calves"], icon: "🦵" },
-  ],
-  4: [
-    { label: "Chest & Triceps",  bodyParts: ["chest", "triceps"],                         icon: "💪" },
-    { label: "Back & Biceps",    bodyParts: ["lats", "middle back", "biceps"],             icon: "🔙" },
-    { label: "Legs & Core",      bodyParts: ["quadriceps", "hamstrings", "abdominals"],    icon: "🦵" },
-    { label: "Shoulders & Arms", bodyParts: ["shoulders", "triceps", "biceps"],            icon: "🏋️" },
-  ],
-  5: [
-    { label: "Chest",         bodyParts: ["chest", "triceps"],                          icon: "💪" },
-    { label: "Back",          bodyParts: ["lats", "middle back", "lower back"],         icon: "🔙" },
-    { label: "Legs",          bodyParts: ["quadriceps", "hamstrings", "glutes"],        icon: "🦵" },
-    { label: "Shoulders",     bodyParts: ["shoulders", "traps"],                        icon: "🏋️" },
-    { label: "Arms & Core",   bodyParts: ["biceps", "triceps", "abdominals"],           icon: "🦾" },
-  ],
-  6: [
-    { label: "Chest",         bodyParts: ["chest", "triceps"],                          icon: "💪" },
-    { label: "Back",          bodyParts: ["lats", "middle back", "lower back"],         icon: "🔙" },
-    { label: "Legs",          bodyParts: ["quadriceps", "hamstrings", "glutes"],        icon: "🦵" },
-    { label: "Shoulders",     bodyParts: ["shoulders", "traps"],                        icon: "🏋️" },
-    { label: "Arms",          bodyParts: ["biceps", "triceps", "forearms"],             icon: "🦾" },
-    { label: "Core & Cardio", bodyParts: ["abdominals", "cardio"],                      icon: "🫀" },
-  ],
-};
+function getSplits(t: { fullBodyA: string; fullBodyB: string; push: string; pull: string; legs: string; chest: string; backMuscle: string; shoulders: string; arms: string; core: string; coreCardio: string }): Record<number, DayTemplate[]> {
+  return {
+    2: [
+      { label: t.fullBodyA, bodyParts: ["chest", "lats", "quadriceps"], icon: "💪" },
+      { label: t.fullBodyB, bodyParts: ["shoulders", "hamstrings", "abdominals"], icon: "🏋️" },
+    ],
+    3: [
+      { label: t.push,  bodyParts: ["chest", "shoulders", "triceps"], icon: "⬆️" },
+      { label: t.pull,  bodyParts: ["lats", "middle back", "biceps"], icon: "⬇️" },
+      { label: t.legs,  bodyParts: ["quadriceps", "hamstrings", "calves"], icon: "🦵" },
+    ],
+    4: [
+      { label: `${t.chest} & ${t.arms}`,  bodyParts: ["chest", "triceps"],                         icon: "💪" },
+      { label: `${t.backMuscle} & Biceps`,    bodyParts: ["lats", "middle back", "biceps"],             icon: "🔙" },
+      { label: `${t.legs} & ${t.core}`,      bodyParts: ["quadriceps", "hamstrings", "abdominals"],    icon: "🦵" },
+      { label: `${t.shoulders} & ${t.arms}`, bodyParts: ["shoulders", "triceps", "biceps"],            icon: "🏋️" },
+    ],
+    5: [
+      { label: t.chest,         bodyParts: ["chest", "triceps"],                          icon: "💪" },
+      { label: t.backMuscle,          bodyParts: ["lats", "middle back", "lower back"],         icon: "🔙" },
+      { label: t.legs,          bodyParts: ["quadriceps", "hamstrings", "glutes"],        icon: "🦵" },
+      { label: t.shoulders,     bodyParts: ["shoulders", "traps"],                        icon: "🏋️" },
+      { label: `${t.arms} & ${t.core}`,   bodyParts: ["biceps", "triceps", "abdominals"],           icon: "🦾" },
+    ],
+    6: [
+      { label: t.chest,         bodyParts: ["chest", "triceps"],                          icon: "💪" },
+      { label: t.backMuscle,          bodyParts: ["lats", "middle back", "lower back"],         icon: "🔙" },
+      { label: t.legs,          bodyParts: ["quadriceps", "hamstrings", "glutes"],        icon: "🦵" },
+      { label: t.shoulders,     bodyParts: ["shoulders", "traps"],                        icon: "🏋️" },
+      { label: t.arms,          bodyParts: ["biceps", "triceps", "forearms"],             icon: "🦾" },
+      { label: t.coreCardio, bodyParts: ["abdominals", "cardio"],                      icon: "🫀" },
+    ],
+  };
+}
 
-const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+function getDayNames(t: { mon: string; tue: string; wed: string; thu: string; fri: string; sat: string; sun: string }): string[] {
+  return [t.mon, t.tue, t.wed, t.thu, t.fri, t.sat, t.sun];
+}
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
@@ -75,6 +80,10 @@ export default function VesselPlanScreen() {
   const [loading,    setLoading]    = useState(true);
   const [generating, setGenerating] = useState(false);
   const [activeDay,  setActiveDay]  = useState<number>(0);
+
+  const { t } = useLangStore();
+  const SPLITS = getSplits(t);
+  const DAY_NAMES = getDayNames(t);
 
   useEffect(() => {
     Promise.all([loadProfile(userId), loadSavedPlan(userId)]).then(([p, saved]) => {

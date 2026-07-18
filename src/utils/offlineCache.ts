@@ -92,7 +92,7 @@ export async function cacheHas(key: string): Promise<boolean> {
 export async function cacheClear(key: string): Promise<void> {
   try {
     await AsyncStorage.removeItem(key);
-  } catch {}
+  } catch { /* ignore */ }
 }
 
 /**
@@ -103,7 +103,7 @@ export async function cacheClearAll(): Promise<void> {
     const all = await AsyncStorage.getAllKeys();
     const ours = (all as string[]).filter((k) => k.startsWith(NS));
     if (ours.length) await AsyncStorage.multiRemove(ours);
-  } catch {}
+  } catch { /* ignore */ }
 }
 
 /**
@@ -119,7 +119,7 @@ export async function clearStaleExerciseCache(): Promise<void> {
         !k.includes(":all:v3") // keep only the current key
     );
     if (stale.length) await AsyncStorage.multiRemove(stale);
-  } catch {}
+  } catch { /* ignore */ }
 }
 
 // ─── stale-while-revalidate ───────────────────────────────────────────────────
@@ -137,6 +137,7 @@ export async function cacheStaleWhileRevalidate<T>(opts: {
   key: string;
   ttl: number;
   fetcher: () => Promise<T>;
+  // eslint-disable-next-line no-unused-vars
   onFresh?: (data: T) => void;
 }): Promise<{ data: T; fromCache: boolean }> {
   const { key, ttl, fetcher, onFresh } = opts;

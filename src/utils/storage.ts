@@ -10,10 +10,13 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export interface UserStore<T> {
   /** Returns the stored value, or `fallback` (default: null) on miss/error. */
+  // eslint-disable-next-line no-unused-vars
   load(userId: string): Promise<T | null>;
   /** Persists a value under the user's key. */
+  // eslint-disable-next-line no-unused-vars
   save(userId: string, data: T): Promise<void>;
   /** Removes the stored value. */
+  // eslint-disable-next-line no-unused-vars
   remove(userId: string): Promise<void>;
 }
 
@@ -58,6 +61,7 @@ export function createUserStore<T>(
  */
 export interface GlobalStore<T> {
   load(): Promise<T | null>;
+  // eslint-disable-next-line no-unused-vars
   save(data: T): Promise<void>;
   remove(): Promise<void>;
 }

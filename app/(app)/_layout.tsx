@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuthStore } from "../../src/store/authStore";
 import { useThemeStore } from "../../src/store/themeStore";
+import { hapticSelection, hapticLight } from "../../src/utils/haptics";
 
 const TABS = [
   { name: "index",      route: "/(app)",          label: "Compass",  icon: "◎" },
@@ -73,10 +74,10 @@ function CustomTabBar({
             <Pressable
               key={tab.name}
               style={styles.tabItem}
-              onPress={() => router.push(tab.route as any)}
+              onPress={() => { hapticSelection(); router.push(tab.route as any); }}
               android_ripple={{ color: colors.border, borderless: false, radius: 40 }}
             >
-              <View style={[styles.iconWrap, active && { backgroundColor: colors.bgSubtle }]}>
+              <View style={[styles.iconWrap, active && { backgroundColor: colors.goldMuted }]}>
                 <Text style={[styles.tabIcon, { color: active ? colors.tabActive : colors.tabInactive }]}>
                   {tab.icon}
                 </Text>
@@ -97,11 +98,11 @@ function CustomTabBar({
         {/* Center FAB — Log */}
         <View style={styles.fabWrap}>
           <Pressable
-            onPress={() => router.push("/log/new")}
-            style={[styles.fab, { backgroundColor: colors.tabActive }]}
+            onPress={() => { hapticLight(); router.push("/log/new"); }}
+            style={[styles.fab, { backgroundColor: colors.gold }]}
             android_ripple={{ color: "rgba(255,255,255,0.3)", borderless: true, radius: 30 }}
           >
-            <Text style={[styles.fabIcon, { color: colors.tabBar }]}>+</Text>
+            <Text style={[styles.fabIcon, { color: "#0A0A0F" }]}>+</Text>
           </Pressable>
           <Text style={[styles.fabLabel, { color: colors.tabInactive }]}>Log</Text>
         </View>
@@ -113,10 +114,10 @@ function CustomTabBar({
             <Pressable
               key={tab.name}
               style={styles.tabItem}
-              onPress={() => router.push(tab.route as any)}
+              onPress={() => { hapticSelection(); router.push(tab.route as any); }}
               android_ripple={{ color: colors.border, borderless: false, radius: 40 }}
             >
-              <View style={[styles.iconWrap, active && { backgroundColor: colors.bgSubtle }]}>
+              <View style={[styles.iconWrap, active && { backgroundColor: colors.goldMuted }]}>
                 <Text style={[styles.tabIcon, { color: active ? colors.tabActive : colors.tabInactive }]}>
                   {tab.icon}
                 </Text>
@@ -176,21 +177,21 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: -22,
-    gap: 3,
+    marginTop: -24,
+    gap: 4,
   },
   fab: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 54,
+    height: 54,
+    borderRadius: 18, // Octagonal feel
     alignItems: "center",
     justifyContent: "center",
-    elevation: 6,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.18,
-    shadowRadius: 6,
+    elevation: 8,
+    shadowColor: "#C9A84C",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
   },
   fabIcon: { fontSize: 26, lineHeight: 30, fontWeight: "300" },
-  fabLabel: { fontSize: 10, fontWeight: "500", letterSpacing: 0.2 },
+  fabLabel: { fontSize: 10, fontWeight: "600", letterSpacing: 0.5 },
 });

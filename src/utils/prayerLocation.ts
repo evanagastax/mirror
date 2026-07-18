@@ -23,7 +23,7 @@ export async function loadPrayerLocation(): Promise<PrayerLocation> {
         return { ...DEFAULT, ...parsed };
       }
     }
-  } catch {}
+  } catch { /* ignore parse errors */ }
   return DEFAULT;
 }
 
@@ -45,6 +45,6 @@ export async function geocodeCity(name: string): Promise<PrayerLocation | null> 
         label: data[0].display_name?.split(",")[0] ?? name,
       };
     }
-  } catch {}
+  } catch { /* ignore network errors */ }
   return null;
 }

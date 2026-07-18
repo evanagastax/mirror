@@ -37,6 +37,21 @@ export const PILLAR_META: PillarMeta[] = [
   { key: "stewardship", label: "Stewardship", color: "#BA7517", bg: "#FEF9EE", icon: "◎", hint: "Investments, expenses, leaks" },
 ];
 
+type T = {
+  soul: string; vessel: string; impact: string; stewardship: string;
+  soulHint: string; vesselHint: string; impactHint: string; stewardshipHint: string;
+  all: string; wealth: string;
+};
+
+export function pillarMetaTranslated(t: T): PillarMeta[] {
+  return [
+    { key: "soul",        label: t.soul,        color: "#1D9E75", bg: "#F0FBF7", icon: "✦", hint: t.soulHint },
+    { key: "vessel",      label: t.vessel,      color: "#D85A30", bg: "#FEF3EE", icon: "⬡", hint: t.vesselHint },
+    { key: "impact",      label: t.impact,      color: "#378ADD", bg: "#F0F7FE", icon: "◈", hint: t.impactHint },
+    { key: "stewardship", label: t.stewardship, color: "#BA7517", bg: "#FEF9EE", icon: "◎", hint: t.stewardshipHint },
+  ];
+}
+
 /** Lookup pillar meta by key. Returns undefined for unknown keys. */
 export function pillarMeta(key: PillarKey): PillarMeta {
   return PILLAR_META.find((p) => p.key === key)!;
@@ -62,6 +77,22 @@ export const CAT_META: Record<CategoryKey, CategoryMeta> = {
   leak:        { color: "#D85A30", bg: "#FEF3EE", icon: "↓", label: "Leak" },
 };
 
+export function catMetaTranslated(t: { investment: string; consumption: string; leak: string }): Record<CategoryKey, CategoryMeta> {
+  return {
+    investment:  { color: "#1D9E75", bg: "#F0FBF7", icon: "↑", label: t.investment },
+    consumption: { color: "#378ADD", bg: "#F0F7FE", icon: "→", label: t.consumption },
+    leak:        { color: "#D85A30", bg: "#FEF3EE", icon: "↓", label: t.leak },
+  };
+}
+
+export function catMetaArrayTranslated(t: { investment: string; consumption: string; leak: string }): { key: CategoryKey; label: string; icon: string; color: string; bg: string }[] {
+  return [
+    { key: "investment",  label: t.investment,  icon: "↑", color: "#1D9E75", bg: "#F0FBF7" },
+    { key: "consumption", label: t.consumption, icon: "→", color: "#378ADD", bg: "#F0F7FE" },
+    { key: "leak",        label: t.leak,        icon: "↓", color: "#D85A30", bg: "#FEF3EE" },
+  ];
+}
+
 // ─── Pillar filter pills (for Activity / Ledger screens) ──────────────────────
 
 export type PillarFilter = "all" | PillarKey;
@@ -73,3 +104,13 @@ export const PILLAR_FILTERS: { key: PillarFilter; label: string }[] = [
   { key: "impact",      label: "Impact" },
   { key: "stewardship", label: "Wealth" },
 ];
+
+export function pillarFiltersTranslated(t: { all: string; soul: string; vessel: string; impact: string; stewardship: string }): { key: PillarFilter; label: string }[] {
+  return [
+    { key: "all",         label: t.all },
+    { key: "soul",        label: t.soul },
+    { key: "vessel",      label: t.vessel },
+    { key: "impact",      label: t.impact },
+    { key: "stewardship", label: t.stewardship },
+  ];
+}

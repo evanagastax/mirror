@@ -23,18 +23,20 @@ import type { Transaction, Colors } from "../types";
 import { StatChip } from "../components/ui/StatChip";
 import { LedgerSkeleton } from "../components/skeletons";
 import { useLangStore } from "../store/langStore";
+import { hapticLight, hapticSelection } from "../utils/haptics";
 
-const GOLD    = PILLAR_COLORS.stewardship.primary;
-const GOLD_BG = PILLAR_COLORS.stewardship.bg;
+const GOLD = PILLAR_COLORS.stewardship.primary;
 
 type Filter = "all" | "investment" | "consumption" | "leak";
 
-const FILTERS: { key: Filter; label: string }[] = [
-  { key: "all",         label: "All" },
-  { key: "investment",  label: "Invest" },
-  { key: "consumption", label: "Spend" },
-  { key: "leak",        label: "Leak" },
-];
+function getFilters(t: { all: string; investment: string; consumption: string; leak: string }): { key: Filter; label: string }[] {
+  return [
+    { key: "all",         label: t.all },
+    { key: "investment",  label: t.investment },
+    { key: "consumption", label: t.consumption },
+    { key: "leak",        label: t.leak },
+  ];
+}
 
 function groupByDate(txs: Transaction[]) {
   const groups: Record<string, Transaction[]> = {};
@@ -55,6 +57,7 @@ export default function LedgerScreen() {
   const { data: pillars } = usePillars(userId);
   const [filter, setFilter] = useState<Filter>("all");
   const [budget, setBudget] = useState<BudgetGoals | null>(null);
+  const FILTERS = getFilters(t);
 
   const { level, xp, xpMax } = scoreToLevel(pillars?.stewardship ?? 0);
   const barPct = xp / xpMax;
@@ -109,20 +112,20 @@ export default function LedgerScreen() {
       {/* ── Header ── */}
       <View style={[S.header, { borderBottomColor: colors.border }]}>
         <View style={S.headerLeft}>
-          <Pressable onPress={() => router.back()} hitSlop={12}>
+          <Pressable onPress={() => { hapticLight(); router.back(); }} hitSlop={12}>
             <Text style={[S.back, { color: colors.textMuted }]}>←</Text>
           </Pressable>
           <View>
             <Text style={[S.headerTitle, { color: colors.textPrimary }]}>{t.stewardship}</Text>
-            <Text style={[S.headerSub,   { color: colors.textMuted }]}>Wealth & Resources</Text>
+            <Text style={[S.headerSub, { color: colors.gold }]}>Wealth & Resources</Text>
           </View>
         </View>
-        <View style={[S.levelBadge, { backgroundColor: GOLD_BG }]}>
-          <Text style={[S.levelNum, { color: GOLD }]}>Lv {level}</Text>
-          <View style={[S.levelTrack, { backgroundColor: "#e8cfa0" }]}>
-            <View style={[S.levelFill, { width: `${barPct * 100}%` as any }]} />
+        <View style={[S.levelBadge, { backgroundColor: colors.gold + "15" }]}>
+          <Text style={[S.levelNum, { color: colors.gold }]}>Lv {level}</Text>
+          <View style={[S.levelTrack, { backgroundColor: colors.gold + "30" }]}>
+            <View style={[S.levelFill, { width: `${barPct * 100}%` as any, backgroundColor: colors.gold }]} />
           </View>
-          <Text style={[S.levelXp, { color: GOLD }]}>{xp}/{xpMax} xp</Text>
+          <Text style={[S.levelXp, { color: colors.gold }]}>{xp}/{xpMax} xp</Text>
         </View>
       </View>
 
@@ -189,13 +192,13 @@ export default function LedgerScreen() {
 
         {/* ── Log CTA ── */}
         <Pressable
-          onPress={() => router.push("/log/new")}
-          style={[S.logCta, { backgroundColor: GOLD_BG, borderColor: "#e8cfa0" }]}
-          android_ripple={{ color: "#e8cfa0" }}
+          onPress={() => { hapticLight(); router.push("/log/new"); }}
+          style={[S.logCta, { backgroundColor: colors.gold + "15", borderColor: colors.gold + "30" }]}
+          android_ripple={{ color: colors.gold + "20" }}
         >
-          <Text style={[S.logCtaIcon, { color: GOLD }]}>◎</Text>
-          <Text style={[S.logCtaText, { color: GOLD }]}>Log a transaction</Text>
-          <Text style={[S.logCtaArrow, { color: GOLD }]}>›</Text>
+          <Text style={[S.logCtaIcon, { color: colors.gold }]}>◎</Text>
+          <Text style={[S.logCtaText, { color: colors.gold }]}>Log a transaction</Text>
+          <Text style={[S.logCtaArrow, { color: colors.gold }]}>›</Text>
         </Pressable>
 
         {/* ── Filter pills ── */}
@@ -205,12 +208,12 @@ export default function LedgerScreen() {
             return (
               <Pressable
                 key={f.key}
-                onPress={() => setFilter(f.key)}
+                onPress={() => { hapticSelection(); setFilter(f.key); }}
                 style={[S.filterPill, { borderColor: colors.border },
-                  active && { backgroundColor: colors.textPrimary, borderColor: colors.textPrimary }]}
+                  active && { backgroundColor: colors.gold, borderColor: colors.gold }]}
               >
                 <Text style={[S.filterText, { color: colors.textMuted },
-                  active && { color: colors.bg, fontWeight: "700" }]}>
+                  active && { color: "#0A0A0F", fontWeight: "700" }]}>
                   {f.label}
                 </Text>
               </Pressable>

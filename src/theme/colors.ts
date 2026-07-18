@@ -1,68 +1,78 @@
 /**
  * App-wide color palette for light and dark modes.
- * Import `useTheme` to access the active palette at runtime.
+ * Direction: Geometric Islamic — ink, gold, parchment.
  */
 
 export type ThemeColors = {
   // Backgrounds
-  bg: string;           // main screen background
-  bgCard: string;       // card / elevated surface
-  bgInput: string;      // text input background
-  bgSubtle: string;     // slightly-off background (fafafa / 111111)
+  bg: string;
+  bgCard: string;
+  bgInput: string;
+  bgSubtle: string;
 
   // Borders
-  border: string;       // standard border
-  borderStrong: string; // stronger divider
+  border: string;
+  borderStrong: string;
 
   // Text
-  textPrimary: string;  // headings, body
-  textSecondary: string;// labels, metadata
-  textMuted: string;    // placeholder, faint labels
-  textDisabled: string; // very faint
+  textPrimary: string;
+  textSecondary: string;
+  textMuted: string;
+  textDisabled: string;
 
   // Interactive
-  tabBar: string;        // tab bar background
-  tabBarBorder: string;  // tab bar top border
-  tabActive: string;     // active tab icon / label
-  tabInactive: string;   // inactive tab icon / label
+  tabBar: string;
+  tabBarBorder: string;
+  tabActive: string;
+  tabInactive: string;
+
+  // Signature
+  gold: string;
+  goldMuted: string;
 };
 
 export const light: ThemeColors = {
-  bg: "#ffffff",
-  bgCard: "#ffffff",
-  bgInput: "#fafafa",
-  bgSubtle: "#fafafa",
+  bg: "#F5F0E5",           // parchment
+  bgCard: "#FFFFFF",
+  bgInput: "#EDE8DA",
+  bgSubtle: "#EDE8DA",
 
-  border: "#e5e5e5",
-  borderStrong: "#f0f0f0",
+  border: "#D4CFC2",
+  borderStrong: "#B8B3A6",
 
-  textPrimary: "#111111",
-  textSecondary: "#888888",
-  textMuted: "#aaaaaa",
-  textDisabled: "#cccccc",
+  textPrimary: "#0A0A0F",  // ink
+  textSecondary: "#4A4A50",
+  textMuted: "#8A8A90",
+  textDisabled: "#B0B0B5",
 
-  tabBar: "#ffffff",
-  tabBarBorder: "#e5e5e5",
-  tabActive: "#111111",
-  tabInactive: "#aaaaaa",
+  tabBar: "#F5F0E5",
+  tabBarBorder: "#D4CFC2",
+  tabActive: "#0A0A0F",
+  tabInactive: "#8A8A90",
+
+  gold: "#C9A84C",
+  goldMuted: "#C9A84C40",
 };
 
 export const dark: ThemeColors = {
-  bg: "#0D0D0D",
-  bgCard: "#1a1a1a",
-  bgInput: "#1a1a1a",
-  bgSubtle: "#111111",
+  bg: "#0A0A0F",           // ink
+  bgCard: "#141419",
+  bgInput: "#1A1A20",
+  bgSubtle: "#121217",
 
-  border: "#2a2a2a",
-  borderStrong: "#222222",
+  border: "#2A2A30",
+  borderStrong: "#222228",
 
-  textPrimary: "#ffffff",
-  textSecondary: "#888888",
-  textMuted: "#555555",
-  textDisabled: "#333333",
+  textPrimary: "#F5F0E5",  // parchment
+  textSecondary: "#A0A0A5",
+  textMuted: "#606068",
+  textDisabled: "#3A3A42",
 
-  tabBar: "#0D0D0D",
-  tabBarBorder: "#1a1a1a",
-  tabActive: "#ffffff",
-  tabInactive: "#444444",
+  tabBar: "#0A0A0F",
+  tabBarBorder: "#1A1A20",
+  tabActive: "#C9A84C",    // gold for active in dark mode
+  tabInactive: "#505058",
+
+  gold: "#C9A84C",
+  goldMuted: "#C9A84C30",
 };

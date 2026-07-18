@@ -11,7 +11,7 @@ type LangState = {
   hydrate: () => Promise<void>;
 };
 
-export const useLangStore = create<LangState>((set, get) => ({
+export const useLangStore = create<LangState>((set, _get) => ({
   lang: "id",
   t: translations.id,
 

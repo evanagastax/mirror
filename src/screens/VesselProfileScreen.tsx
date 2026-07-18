@@ -8,6 +8,7 @@ import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
 import { useAuthStore } from "../store/authStore";
 import { useThemeStore } from "../store/themeStore";
+import { useLangStore } from "../store/langStore";
 import {
   loadProfile, saveProfile,
   VesselProfile, Sex, FitnessGoal,
@@ -45,6 +46,8 @@ export default function VesselProfileScreen() {
   const [goal,        setGoal]        = useState<FitnessGoal>("muscle_gain");
   const [daysPerWeek, setDaysPerWeek] = useState(4);
   const [equipment,   setEquipment]   = useState<EquipmentKey[]>(["body_weight", "dumbbell"]);
+
+  const { t } = useLangStore();
 
   useEffect(() => {
     loadProfile(userId).then((p) => {
@@ -85,11 +88,11 @@ export default function VesselProfileScreen() {
 
   async function handleSave() {
     if (!wKg || !hCm || !aYr) {
-      Alert.alert("Incomplete", "Please fill in weight, height, and age.");
+      Alert.alert(t.incomplete, t.fillRequired);
       return;
     }
     if (equipment.length === 0) {
-      Alert.alert("Equipment", "Select at least one equipment option.");
+      Alert.alert(t.selectEquipment, t.selectEquipment);
       return;
     }
     setSaving(true);
@@ -225,7 +228,7 @@ export default function VesselProfileScreen() {
               <View style={S.calorieRow}>
                 <CalCard label="BMR"    value={bmr}    sub="Base metabolic rate"        color={colors.textSecondary} bg={colors.bgSubtle} />
                 <CalCard label="TDEE"   value={tdee}   sub="Total daily expenditure"    color="#378ADD" bg="#F0F7FE" />
-                <CalCard label="Target" value={target} sub={GOAL_META[goal].label}      color={VESSEL_COLOR} bg={VESSEL_BG} />
+                <CalCard label={t.target} value={target} sub={GOAL_META[goal].label}      color={VESSEL_COLOR} bg={VESSEL_BG} />
               </View>
             </>
           )}
@@ -262,9 +265,9 @@ export default function VesselProfileScreen() {
           <View style={[S.volCard, { backgroundColor: VESSEL_BG, borderColor: VESSEL_COLOR + "40" }]}>
             <Text style={[S.volTitle, { color: VESSEL_COLOR }]}>Recommended volume for {GOAL_META[goal].label}</Text>
             <View style={S.volRow}>
-              <VolStat label="Sets"    value={String(vol.sets)} />
-              <VolStat label="Reps"    value={`${vol.repsMin}–${vol.repsMax}`} />
-              <VolStat label="Rest"    value={`${vol.restSec}s`} />
+              <VolStat label={t.sets}    value={String(vol.sets)} />
+              <VolStat label={t.reps}    value={`${vol.repsMin}–${vol.repsMax}`} />
+              <VolStat label={t.rest}    value={`${vol.restSec}s`} />
             </View>
             <Text style={[S.volHint, { color: VESSEL_COLOR }]}>{vol.label}</Text>
           </View>

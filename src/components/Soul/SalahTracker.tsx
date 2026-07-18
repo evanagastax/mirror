@@ -11,6 +11,8 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { invalidateCore } from "../../hooks/invalidate";
 import { PILLAR_COLORS } from "../../theme/pillars";
+import { hapticMedium, hapticSuccess } from "../../utils/haptics";
+import { useLangStore } from "../../store/langStore";
 
 const SOUL_COLOR = PILLAR_COLORS.soul.primary;
 const SOUL_BG    = PILLAR_COLORS.soul.bg;
@@ -36,6 +38,8 @@ export function SalahTracker({
   const [loading, setLoading] = useState(true);
   const [pending, setPending] = useState<PrayerName | null>(null);
 
+  const { t } = useLangStore();
+
   const load = useCallback(async () => {
     const r = await loadTodaySalah(userId);
     setRecord(r);
@@ -51,6 +55,10 @@ export function SalahTracker({
       const updated = await togglePrayer(userId, prayer, record);
       setRecord(updated);
       invalidateCore(queryClient, userId);
+      // Haptic feedback based on completion
+      const allNow = countCompleted(updated) === PRAYERS.length;
+      if (allNow) hapticSuccess();
+      else hapticMedium();
     } finally {
       setPending(null);
     }
@@ -77,14 +85,14 @@ export function SalahTracker({
           <Text style={S.icon}>🕌</Text>
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={[S.title, { color: colors.textPrimary }]}>Sholat Hari Ini</Text>
+          <Text style={[S.title, { color: colors.textPrimary }]}>{t.sholatToday}</Text>
           <Text style={[S.sub, { color: colors.textMuted }]}>
-            {doneCount}/5 waktu · +{totalXP} XP hari ini
+            {doneCount}/5 {t.timePeriods} · +{totalXP} {t.xpToday}
           </Text>
         </View>
         {allDone && (
           <View style={[S.completeBadge, { backgroundColor: SOUL_COLOR }]}>
-            <Text style={S.completeBadgeText}>✓ Lengkap</Text>
+            <Text style={S.completeBadgeText}>✓ {t.complete}</Text>
           </View>
         )}
       </View>
@@ -112,8 +120,8 @@ export function SalahTracker({
           const locked     = !tappable;
 
           const statusLabel =
-            !isDone && status === "upcoming" ? "Belum" :
-            !isDone && status === "passed"   ? "Lewat" :
+            !isDone && status === "upcoming" ? t.upcoming :
+            !isDone && status === "passed"   ? t.passed :
             null;
 
           return (

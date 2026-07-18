@@ -20,7 +20,7 @@ export function StatChip({ label, value, color, bg }: Props) {
 }
 
 const S = StyleSheet.create({
-  chip: { borderRadius: 12, padding: 12, gap: 2, minWidth: 90 },
-  label: { fontSize: 10, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5 },
-  value: { fontSize: 13, fontWeight: "700" },
+  chip: { borderRadius: 14, padding: 12, gap: 3, minWidth: 90 },
+  label: { fontSize: 9, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.8 },
+  value: { fontSize: 14, fontWeight: "800" },
 });
